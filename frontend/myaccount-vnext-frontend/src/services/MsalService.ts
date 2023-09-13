@@ -52,7 +52,7 @@ const authenticateRequest = async <T>(
     const tokenResponse = await msalInstance.acquireTokenPopup({
       claims: window.atob(wwwAuthenticateHeader.claims), // decode the base64 string
       scopes: [
-        `api://${msalInstance.getConfiguration().auth.clientId}/.default`,
+        `api://fc97e872-bf3b-4531-82b0-8b85272982e2/.default`,
       ],
       redirectUri: "/redirect",
     });
@@ -86,7 +86,7 @@ const getBearerToken = async (): Promise<string> => {
     throw new Error("User not signed in");
   }
   const request = {
-    scopes: [`api://${msalInstance.getConfiguration().auth.clientId}/.default`],
+    scopes: [`api://fc97e872-bf3b-4531-82b0-8b85272982e2/.default`],
     account: accounts[0],
   };
 
@@ -96,7 +96,7 @@ const getBearerToken = async (): Promise<string> => {
       console.warn("acquire token silently failed", error);
       msalInstance.acquireTokenRedirect({
         scopes: [
-          `api://${msalInstance.getConfiguration().auth.clientId}/.default`,
+          `api://fc97e872-bf3b-4531-82b0-8b85272982e2/.default`,
         ],
       });
     });
