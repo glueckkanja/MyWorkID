@@ -13,13 +13,6 @@ namespace c4a8.MyAccountVNext.API.Controllers
     [Authorize(Roles = "MyAccount.VNext.DismissUserRisk")]
     public class DismissUserRiskController : ControllerBase
     {
-        private readonly MicrosoftIdentityConsentAndConditionalAccessHandler _consentHandler;
-
-        public DismissUserRiskController(MicrosoftIdentityConsentAndConditionalAccessHandler consentHandler)
-        {
-            _consentHandler = consentHandler;
-        }
-
         [HttpPut]
         public IActionResult Get()
         {
