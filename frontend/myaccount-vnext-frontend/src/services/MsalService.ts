@@ -1,6 +1,6 @@
 import { PublicClientApplication, Configuration } from "@azure/msal-browser";
 import { REQUEST_TYPE } from "../types";
-import axios, { AxiosResponse } from "axios";
+import axios, { AxiosError, AxiosResponse } from "axios";
 import { parseChallenges } from "../utils";
 
 var _msalInstance: PublicClientApplication | undefined;
@@ -50,44 +50,51 @@ export const authenticateRequest = async <T>(
   let msalInstance = await getMsalInstance();
   let response: AxiosResponse<T, any> | undefined;
   let token = await getBearerToken();
-  response = await sendAxiosRequest<T>(url, requestType, token, body);
-
-  // Handle Auth challenge
-  if (response.status === 401) {
-    if (!response.headers["www-authenticate"]) {
-      throw new Error("Authentication failed - no chanllenge provided");
+  try {
+    response = await sendAxiosRequest<T>(url, requestType, token, body);
+  } catch (error: any) {
+    response = error.response;
+    if(!response){
+      throw new Error("No Axios error response returned")
     }
-    let wwwAuthenticateHeader = parseChallenges(
-      response.headers["www-authenticate"]
-    );
-    const tokenResponse = await msalInstance.acquireTokenPopup({
-      claims: window.atob(wwwAuthenticateHeader.claims), // decode the base64 string
-      scopes: [`api://fc97e872-bf3b-4531-82b0-8b85272982e2/Access`],
-    });
-    if (tokenResponse.accessToken) {
-      response = await sendAxiosRequest<T>(
-        url,
-        requestType,
-        tokenResponse.accessToken,
-        body
+    if (response.status === 401) {
+      if (!response.headers["www-authenticate"]) {
+        throw new Error("Authentication failed - no chanllenge provided");
+      }
+      let wwwAuthenticateHeader = parseChallenges(
+        response.headers["www-authenticate"]
       );
+      const tokenResponse = await msalInstance.acquireTokenPopup({
+        claims: window.atob(wwwAuthenticateHeader.claims), // decode the base64 string
+        scopes: [`api://fc97e872-bf3b-4531-82b0-8b85272982e2/Access`],
+      });
+      if (tokenResponse.accessToken) {
+        response = await sendAxiosRequest<T>(
+          url,
+          requestType,
+          tokenResponse.accessToken,
+          body
+        );
+      }
     }
   }
+
+  // Handle Auth challenge
 
   return response?.data;
 };
 
 const getBearerToken = async (): Promise<string> => {
   let msalInstance = await getMsalInstance();
-  const account = msalInstance.getActiveAccount()
-  
-  if (!account) {
+  const accounts = msalInstance.getAllAccounts();
+
+  if (accounts.length === 0) {
     throw new Error("User not signed in");
   }
 
   const request = {
     scopes: [`api://fc97e872-bf3b-4531-82b0-8b85272982e2/Access`],
-    account: account,
+    account: accounts[0],
   };
 
   const authResult = await msalInstance
