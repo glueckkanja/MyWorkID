@@ -20,7 +20,7 @@ export const getMsalInstance = (): Promise<PublicClientApplication> => {
   });
 };
 
-const authenticateRequest = async <T>(
+export const authenticateRequest = async <T>(
   url: string,
   requestType: REQUEST_TYPE,
   body?: any
@@ -28,7 +28,7 @@ const authenticateRequest = async <T>(
   let msalInstance = await getMsalInstance();
 
   let header = {
-    Authorization: `Bearer ${getBearerToken()}`,
+    Authorization: `Bearer ${await getBearerToken()}`,
   };
 
   let response: AxiosResponse<T, any> | undefined;
@@ -40,6 +40,9 @@ const authenticateRequest = async <T>(
     case REQUEST_TYPE.POST:
       response = await axios.post<T>(url, body, { headers: header });
       break;
+      case REQUEST_TYPE.PUT:
+        response = await axios.put<T>(url, body, { headers: header });
+        break;
     default:
       throw new Error("Invalid request type");
   }
@@ -52,14 +55,14 @@ const authenticateRequest = async <T>(
     const tokenResponse = await msalInstance.acquireTokenPopup({
       claims: window.atob(wwwAuthenticateHeader.claims), // decode the base64 string
       scopes: [
-        `api://fc97e872-bf3b-4531-82b0-8b85272982e2/.default`,
+        `api://fc97e872-bf3b-4531-82b0-8b85272982e2/Access`,
       ],
       redirectUri: "/redirect",
     });
 
     if (tokenResponse.accessToken) {
       let header = {
-        Authorization: `Bearer ${getBearerToken()}`,
+        Authorization: `Bearer ${await getBearerToken()}`,
       };
 
       switch (requestType) {
@@ -69,6 +72,9 @@ const authenticateRequest = async <T>(
         case REQUEST_TYPE.POST:
           response = await axios.post<T>(url, { headers: header });
           break;
+          case REQUEST_TYPE.PUT:
+            response = await axios.put<T>(url, { headers: header });
+            break;
         default:
           throw new Error("Invalid request type");
       }
@@ -86,7 +92,7 @@ const getBearerToken = async (): Promise<string> => {
     throw new Error("User not signed in");
   }
   const request = {
-    scopes: [`api://fc97e872-bf3b-4531-82b0-8b85272982e2/.default`],
+    scopes: [`api://fc97e872-bf3b-4531-82b0-8b85272982e2/Access`],
     account: accounts[0],
   };
 
@@ -96,7 +102,7 @@ const getBearerToken = async (): Promise<string> => {
       console.warn("acquire token silently failed", error);
       msalInstance.acquireTokenRedirect({
         scopes: [
-          `api://fc97e872-bf3b-4531-82b0-8b85272982e2/.default`,
+          `api://fc97e872-bf3b-4531-82b0-8b85272982e2/Access`,
         ],
       });
     });
