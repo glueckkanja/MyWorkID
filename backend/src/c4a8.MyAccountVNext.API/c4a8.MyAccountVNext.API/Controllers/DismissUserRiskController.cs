@@ -27,6 +27,7 @@ namespace c4a8.MyAccountVNext.API.Controllers
             var base64str = Convert.ToBase64String(Encoding.UTF8.GetBytes("{\"access_token\":{\"acrs\":{\"essential\":true,\"value\":\"" + missingAuthContextId + "\"}}}"));
             var context = HttpContext;
             context.Response.Headers.Append("WWW-Authenticate", $"Bearer realm=\"\", authorization_uri=\"https://login.microsoftonline.com/common/oauth2/authorize\", error=\"insufficient_claims\", claims=\"" + base64str + "\"");
+            context.Response.Headers.Append("Access-Control-Expose-Headers", "WWW-Authenticate");
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             string message = string.Format(CultureInfo.InvariantCulture, "The presented access tokens had insufficient claims. Please request for claims requested in the WWW-Authentication header and try again.");
             context.Response.WriteAsync(message);
