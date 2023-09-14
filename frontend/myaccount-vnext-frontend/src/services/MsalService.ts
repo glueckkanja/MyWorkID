@@ -20,64 +20,57 @@ export const getMsalInstance = (): Promise<PublicClientApplication> => {
   });
 };
 
+const sendAxiosRequest = async <T>(
+  url: string,
+  requestType: REQUEST_TYPE,
+  bearerToken: string,
+  body?: any
+): Promise<AxiosResponse<T, any>> => {
+  let header = {
+    Authorization: `Bearer ${bearerToken}`,
+  };
+
+  switch (requestType) {
+    case REQUEST_TYPE.GET:
+      return await axios.get<T>(url, { headers: header });
+    case REQUEST_TYPE.POST:
+      return await axios.post<T>(url, body, { headers: header });
+    case REQUEST_TYPE.PUT:
+      return await axios.put<T>(url, body, { headers: header });
+    default:
+      throw new Error("Invalid request type");
+  }
+};
+
 export const authenticateRequest = async <T>(
   url: string,
   requestType: REQUEST_TYPE,
   body?: any
 ): Promise<T | undefined> => {
   let msalInstance = await getMsalInstance();
-
-  let header = {
-    Authorization: `Bearer ${await getBearerToken()}`,
-  };
-
   let response: AxiosResponse<T, any> | undefined;
+  let token = await getBearerToken();
+  response = await sendAxiosRequest<T>(url, requestType, token, body);
 
-  switch (requestType) {
-    case REQUEST_TYPE.GET:
-      response = await axios.get<T>(url, { headers: header });
-      break;
-    case REQUEST_TYPE.POST:
-      response = await axios.post<T>(url, body, { headers: header });
-      break;
-      case REQUEST_TYPE.PUT:
-        response = await axios.put<T>(url, body, { headers: header });
-        break;
-    default:
-      throw new Error("Invalid request type");
-  }
-
+  // Handle Auth challenge
   if (response.status === 401) {
+    if (!response.headers["www-authenticate"]) {
+      throw new Error("Authentication failed - no chanllenge provided");
+    }
     let wwwAuthenticateHeader = parseChallenges(
       response.headers["www-authenticate"]
     );
-
     const tokenResponse = await msalInstance.acquireTokenPopup({
       claims: window.atob(wwwAuthenticateHeader.claims), // decode the base64 string
-      scopes: [
-        `api://fc97e872-bf3b-4531-82b0-8b85272982e2/Access`,
-      ],
-      redirectUri: "/redirect",
+      scopes: [`api://fc97e872-bf3b-4531-82b0-8b85272982e2/Access`],
     });
-
     if (tokenResponse.accessToken) {
-      let header = {
-        Authorization: `Bearer ${await getBearerToken()}`,
-      };
-
-      switch (requestType) {
-        case REQUEST_TYPE.GET:
-          response = await axios.get<T>(url, { headers: header });
-          break;
-        case REQUEST_TYPE.POST:
-          response = await axios.post<T>(url, { headers: header });
-          break;
-          case REQUEST_TYPE.PUT:
-            response = await axios.put<T>(url, { headers: header });
-            break;
-        default:
-          throw new Error("Invalid request type");
-      }
+      response = await sendAxiosRequest<T>(
+        url,
+        requestType,
+        tokenResponse.accessToken,
+        body
+      );
     }
   }
 
@@ -86,14 +79,15 @@ export const authenticateRequest = async <T>(
 
 const getBearerToken = async (): Promise<string> => {
   let msalInstance = await getMsalInstance();
-  const accounts = msalInstance.getAllAccounts();
-
-  if (accounts.length === 0) {
+  const account = msalInstance.getActiveAccount()
+  
+  if (!account) {
     throw new Error("User not signed in");
   }
+
   const request = {
     scopes: [`api://fc97e872-bf3b-4531-82b0-8b85272982e2/Access`],
-    account: accounts[0],
+    account: account,
   };
 
   const authResult = await msalInstance
@@ -101,9 +95,7 @@ const getBearerToken = async (): Promise<string> => {
     .catch((error: Error) => {
       console.warn("acquire token silently failed", error);
       msalInstance.acquireTokenRedirect({
-        scopes: [
-          `api://fc97e872-bf3b-4531-82b0-8b85272982e2/Access`,
-        ],
+        scopes: [`api://fc97e872-bf3b-4531-82b0-8b85272982e2/Access`],
       });
     });
 
