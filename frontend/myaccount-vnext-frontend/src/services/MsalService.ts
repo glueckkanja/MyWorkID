@@ -64,18 +64,19 @@ export const authenticateRequest = async <T>(
       let wwwAuthenticateHeader = parseChallenges(
         response.headers["www-authenticate"]
       );
-      const tokenResponse = await msalInstance.acquireTokenPopup({
+      const tokenResponse = await msalInstance.acquireTokenRedirect({
         claims: window.atob(wwwAuthenticateHeader.claims), // decode the base64 string
         scopes: [`api://fc97e872-bf3b-4531-82b0-8b85272982e2/Access`],
+        redirectUri: "/redirectors/resetPassword"
       });
-      if (tokenResponse.accessToken) {
-        response = await sendAxiosRequest<T>(
-          url,
-          requestType,
-          tokenResponse.accessToken,
-          body
-        );
-      }
+      // if (tokenResponse.accessToken) {
+      //   response = await sendAxiosRequest<T>(
+      //     url,
+      //     requestType,
+      //     tokenResponse.accessToken,
+      //     body
+      //   );
+      // }
     }
   }
 
