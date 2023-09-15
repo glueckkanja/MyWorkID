@@ -3,9 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Graph;
 using Microsoft.Identity.Web;
-using System.Globalization;
-using System.Security.Claims;
-using System.Text;
 
 namespace c4a8.MyAccountVNext.API.Controllers
 {
@@ -39,7 +36,7 @@ namespace c4a8.MyAccountVNext.API.Controllers
                 return Ok();
             }
             await _authContextService.AddClaimsChallengeHeader(HttpContext, missingAuthContextId);
-            return StatusCode(StatusCodes.Status401Unauthorized);
+            return Unauthorized(_authContextService.GetClaimsChallengeMessage());
         }
     }
 }
