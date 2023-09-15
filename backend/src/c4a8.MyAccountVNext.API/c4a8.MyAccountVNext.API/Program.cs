@@ -1,6 +1,8 @@
+using Azure.Identity;
 using c4a8.MyAccountVNext.API.Options;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Graph;
 using Microsoft.Identity.Web;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,6 +29,18 @@ builder.Services.AddCors(options =>
 
 builder.Services.Configure<FrontendOptions>(
     builder.Configuration.GetSection("Frontend"));
+builder.Services.Configure<MsGraphOptions>(
+    builder.Configuration.GetSection("MsGraph"));
+
+
+MsGraphOptions msGraphOptions = new();
+builder.Configuration.GetSection("MsGraph").Bind(msGraphOptions);
+
+var graphSettings = new ClientSecretCredential(msGraphOptions.TenantId, msGraphOptions.ClientId, msGraphOptions.ClientSecret);
+
+builder.Services.AddSingleton(new GraphServiceClient(graphSettings));
+
+
 
 var app = builder.Build();
 

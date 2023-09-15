@@ -16,7 +16,7 @@ export const DismissUserRiskRedirector = () => {
     ).then(() => {
       navigate("/");
     }).catch((err) => {
-      navigate("/error");
+      navigate("/");
     });
   }, [navigate]);
 

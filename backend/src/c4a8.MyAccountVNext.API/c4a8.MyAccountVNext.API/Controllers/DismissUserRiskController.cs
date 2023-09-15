@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Graph;
 using Microsoft.Identity.Web;
 using System.Globalization;
 using System.Net;
@@ -13,16 +14,26 @@ namespace c4a8.MyAccountVNext.API.Controllers
     [Authorize(Roles = "MyAccount.VNext.DismissUserRisk")]
     public class DismissUserRiskController : ControllerBase
     {
+        private readonly GraphServiceClient _graphServiceClient;
+        public DismissUserRiskController(GraphServiceClient graphClient)
+        {
+            _graphServiceClient = graphClient;
+        }
+
         [HttpPut]
         public IActionResult Get()
         {
-            //string claimsChallenge = CheckForRequiredAuthContext(Request.Method);
-            //if (!string.IsNullOrWhiteSpace(claimsChallenge))
-            //{
-            //    _consentHandler.ChallengeUser(new string[] { "MyAccount.VNext.DismissUserRisk" }, claimsChallenge);
-
-            //    return new EmptyResult();
-            //}
+            string claimsChallenge = CheckForRequiredAuthContext(Request.Method);
+            if (string.IsNullOrWhiteSpace(claimsChallenge))
+            {
+                var userId = User.GetObjectId();
+                if(userId == null)
+                {
+                    return StatusCode(StatusCodes.Status412PreconditionFailed, "UserId not provided");
+                }
+                _graphServiceClient.IdentityProtection.RiskyUsers.Dismiss.PostAsync(new Microsoft.Graph.IdentityProtection.RiskyUsers.Dismiss.DismissPostRequestBody() { UserIds = new List<string> { userId } });
+                return Ok();
+            }
             string missingAuthContextId = "c1";
             var base64str = Convert.ToBase64String(Encoding.UTF8.GetBytes("{\"access_token\":{\"acrs\":{\"essential\":true,\"value\":\"" + missingAuthContextId + "\"}}}"));
             var context = HttpContext;
@@ -32,7 +43,8 @@ namespace c4a8.MyAccountVNext.API.Controllers
             string message = string.Format(CultureInfo.InvariantCulture, "The presented access tokens had insufficient claims. Please request for claims requested in the WWW-Authentication header and try again.");
             context.Response.WriteAsync(message);
             context.Response.CompleteAsync();
-            throw new UnauthorizedAccessException(message);
+            //throw new UnauthorizedAccessException(message);
+            return StatusCode(401);
         }
 
         private string CheckForRequiredAuthContext(string method)
