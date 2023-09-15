@@ -3,27 +3,32 @@ import { REQUEST_TYPE, TFrontendOptions } from "../types";
 import axios, { AxiosError, AxiosResponse } from "axios";
 import { parseChallenges } from "../utils";
 
-var _msalInstance: PublicClientApplication | undefined;
-var _backendClientId: string | undefined;
+var _msalInfo: TMsalInfo | undefined;
 
-export const getMsalInstance = async (): Promise<PublicClientApplication> => {
-  var frontendOptions = await axios.get<TFrontendOptions>(
-    "https://localhost:7093/FrontendOptions"
-  );
-  console.log("response", frontendOptions)
-  console.log("responseData", frontendOptions.data)
-  if (!_msalInstance) {
-    _backendClientId = frontendOptions.data.backendClientId;
+export type TMsalInfo = {
+  msalInstance: PublicClientApplication;
+  backendClientId: string;
+};
+
+export const getMsalInfo = async (): Promise<TMsalInfo> => {
+  if (!_msalInfo) {
+    var frontendOptions = await axios.get<TFrontendOptions>(
+      "https://localhost:7093/FrontendOptions"
+    );
     var msalConfig: Configuration = {
       auth: {
         clientId: frontendOptions.data.frontendClientId,
         authority: `https://login.microsoftonline.com/${frontendOptions.data.tenantId}`,
       },
     };
-    _msalInstance = new PublicClientApplication(msalConfig);
+
+    _msalInfo = _msalInfo ?? {
+      msalInstance: new PublicClientApplication(msalConfig),
+      backendClientId: frontendOptions.data.backendClientId,
+    }; // null check necessary so the debug process that follows the fucking main process doesnt fuck shit up completly :)
   }
 
-  return _msalInstance;
+  return _msalInfo;
 };
 
 const sendAxiosRequest = async <T>(
@@ -54,7 +59,7 @@ export const authenticateRequest = async <T>(
   redirectState?: string,
   body?: any
 ): Promise<T | undefined> => {
-  let msalInstance = await getMsalInstance();
+  let msalInfo = await getMsalInfo();
   let response: AxiosResponse<T, any> | undefined;
   let token = await getBearerToken();
   try {
@@ -72,9 +77,9 @@ export const authenticateRequest = async <T>(
       let wwwAuthenticateHeader = parseChallenges(
         response.headers["www-authenticate"]
       );
-      const tokenResponse = await msalInstance.acquireTokenRedirect({
+      const tokenResponse = await msalInfo.msalInstance.acquireTokenRedirect({
         claims: window.atob(wwwAuthenticateHeader.claims), // decode the base64 string
-        scopes: [`api://${_backendClientId}/Access`],
+        scopes: [`api://${msalInfo.backendClientId}/Access`],
         state: redirectState,
       });
       // if (tokenResponse.accessToken) {
@@ -94,24 +99,24 @@ export const authenticateRequest = async <T>(
 };
 
 const getBearerToken = async (): Promise<string> => {
-  let msalInstance = await getMsalInstance();
-  const accounts = msalInstance.getAllAccounts();
+  let msalInfo = await getMsalInfo();
+  const accounts = msalInfo.msalInstance.getAllAccounts();
 
   if (accounts.length === 0) {
     throw new Error("User not signed in");
   }
 
   const request = {
-    scopes: [`api://${_backendClientId}/Access`],
+    scopes: [`api://${msalInfo.backendClientId}/Access`],
     account: accounts[0],
   };
 
-  const authResult = await msalInstance
+  const authResult = await msalInfo.msalInstance
     .acquireTokenSilent(request)
     .catch((error: Error) => {
       console.warn("acquire token silently failed", error);
-      msalInstance.acquireTokenRedirect({
-        scopes: [`api://${_backendClientId}/Access`],
+      msalInfo.msalInstance.acquireTokenRedirect({
+        scopes: [`api://${msalInfo.backendClientId}/Access`],
       });
     });
 
