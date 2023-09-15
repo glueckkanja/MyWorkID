@@ -3,5 +3,6 @@
     public interface IAuthContextService
     {
         string? GetAuthContextId(AppFunctions appFunction);
+        string? CheckForRequiredAuthContext(HttpContext context, AppFunctions appFunction);
     }
 }

@@ -26,8 +26,8 @@ namespace c4a8.MyAccountVNext.API.Controllers
         [HttpPut]
         public IActionResult Get()
         {
+            string? claimsChallenge = _authContextService.CheckForRequiredAuthContext(HttpContext, AppFunctions.DismissUserRisk);
             string? missingAuthContextId = _authContextService.GetAuthContextId(AppFunctions.DismissUserRisk);
-            string claimsChallenge = CheckForRequiredAuthContext(missingAuthContextId);
             if (string.IsNullOrWhiteSpace(claimsChallenge))
             {
                 var userId = User.GetObjectId();
@@ -46,33 +46,6 @@ namespace c4a8.MyAccountVNext.API.Controllers
             context.Response.WriteAsync(message);
             context.Response.CompleteAsync();
             return StatusCode(StatusCodes.Status401Unauthorized);
-        }
-
-        private string CheckForRequiredAuthContext(string? authContextId)
-        {
-            string claimsChallenge = string.Empty;
-
-            if (!string.IsNullOrEmpty(authContextId))
-            {
-                HttpContext context = this.HttpContext;
-
-                string authenticationContextClassReferencesClaim = "acrs";
-
-                if (context == null || context.User == null || context.User.Claims == null || !context.User.Claims.Any())
-                {
-                    throw new ArgumentNullException("No Usercontext is available to pick claims from");
-                }
-
-                Claim acrsClaim = context.User.FindAll(authenticationContextClassReferencesClaim).FirstOrDefault(x => x.Value == authContextId);
-
-                if (acrsClaim?.Value != authContextId)
-                {
-                    claimsChallenge = "{\"id_token\":{\"acrs\":{\"essential\":true,\"value\":\"" + authContextId + "\"}}}";
-
-                }
-            }
-
-            return claimsChallenge;
         }
     }
 }
