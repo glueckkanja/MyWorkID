@@ -29,7 +29,7 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.Configure<FrontendOptions>(
-    builder.Configuration.GetSection("Frontend"));
+    builder.Configuration.GetSection("FrontendOptions"));
 builder.Services.Configure<MsGraphOptions>(
     builder.Configuration.GetSection("MsGraph"));
 builder.Services.Configure<AppFunctionsOptions>(

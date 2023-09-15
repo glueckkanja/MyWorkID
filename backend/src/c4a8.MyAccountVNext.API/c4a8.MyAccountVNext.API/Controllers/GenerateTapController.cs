@@ -11,23 +11,23 @@ namespace c4a8.MyAccountVNext.API.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    [Authorize(Roles = "MyAccount.VNext.DismissUserRisk")]
-    public class DismissUserRiskController : ControllerBase
+    [Authorize(Roles = "MyAccount.VNext.CreateTAP")]
+    public class GenerateTapController : ControllerBase
     {
         private readonly GraphServiceClient _graphServiceClient;
         private readonly IAuthContextService _authContextService;
 
-        public DismissUserRiskController(GraphServiceClient graphClient, IAuthContextService authContextService)
+        public GenerateTapController(GraphServiceClient graphClient, IAuthContextService authContextService)
         {
             _graphServiceClient = graphClient;
             _authContextService = authContextService;
         }
 
-        [HttpPut]
-        public async Task<IActionResult> Get()
+        [HttpGet("")]
+        public async Task<IActionResult> GenerateTap()
         {
-            string? claimsChallenge = _authContextService.CheckForRequiredAuthContext(HttpContext, AppFunctions.DismissUserRisk);
-            string? missingAuthContextId = _authContextService.GetAuthContextId(AppFunctions.DismissUserRisk);
+            string? claimsChallenge = _authContextService.CheckForRequiredAuthContext(HttpContext, AppFunctions.GenerateTap);
+            string? missingAuthContextId = _authContextService.GetAuthContextId(AppFunctions.GenerateTap);
             if (string.IsNullOrWhiteSpace(claimsChallenge))
             {
                 var userId = User.GetObjectId();
@@ -35,8 +35,8 @@ namespace c4a8.MyAccountVNext.API.Controllers
                 {
                     return StatusCode(StatusCodes.Status412PreconditionFailed, "UserId not provided");
                 }
-                await _graphServiceClient.IdentityProtection.RiskyUsers.Dismiss.PostAsync(new Microsoft.Graph.IdentityProtection.RiskyUsers.Dismiss.DismissPostRequestBody() { UserIds = new List<string> { userId } });
-                return Ok();
+                var tapResponse = await _graphServiceClient.Users[userId].Authentication.TemporaryAccessPassMethods.PostAsync(new Microsoft.Graph.Models.TemporaryAccessPassAuthenticationMethod());
+                return Ok(tapResponse.TemporaryAccessPass);
             }
             await _authContextService.AddClaimsChallengeHeader(HttpContext, missingAuthContextId);
             return StatusCode(StatusCodes.Status401Unauthorized);

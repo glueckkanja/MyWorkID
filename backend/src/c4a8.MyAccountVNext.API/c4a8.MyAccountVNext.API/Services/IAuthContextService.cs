@@ -3,5 +3,7 @@
     public interface IAuthContextService
     {
         string? GetAuthContextId(AppFunctions appFunction);
+        string? CheckForRequiredAuthContext(HttpContext context, AppFunctions appFunction);
+        Task AddClaimsChallengeHeader(HttpContext httpContext, string authContextId);
     }
 }
