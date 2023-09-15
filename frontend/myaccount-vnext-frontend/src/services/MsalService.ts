@@ -10,11 +10,13 @@ export const getMsalInstance = async (): Promise<PublicClientApplication> => {
   var frontendOptions = await axios.get<TFrontendOptions>(
     "https://localhost:7093/FrontendOptions"
   );
+  console.log("response", frontendOptions)
+  console.log("responseData", frontendOptions.data)
   if (!_msalInstance) {
     _backendClientId = frontendOptions.data.backendClientId;
     var msalConfig: Configuration = {
       auth: {
-        clientId: frontendOptions.data.clientId,
+        clientId: frontendOptions.data.frontendClientId,
         authority: `https://login.microsoftonline.com/${frontendOptions.data.tenantId}`,
       },
     };
