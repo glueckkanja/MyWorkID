@@ -1,5 +1,6 @@
 using Azure.Identity;
 using c4a8.MyAccountVNext.API.Options;
+using c4a8.MyAccountVNext.API.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Graph;
@@ -31,7 +32,8 @@ builder.Services.Configure<FrontendOptions>(
     builder.Configuration.GetSection("Frontend"));
 builder.Services.Configure<MsGraphOptions>(
     builder.Configuration.GetSection("MsGraph"));
-
+builder.Services.Configure<AppFunctionsOptions>(
+    builder.Configuration.GetSection("AppFunctions"));
 
 MsGraphOptions msGraphOptions = new();
 builder.Configuration.GetSection("MsGraph").Bind(msGraphOptions);
@@ -39,8 +41,7 @@ builder.Configuration.GetSection("MsGraph").Bind(msGraphOptions);
 var graphSettings = new ClientSecretCredential(msGraphOptions.TenantId, msGraphOptions.ClientId, msGraphOptions.ClientSecret);
 
 builder.Services.AddSingleton(new GraphServiceClient(graphSettings));
-
-
+builder.Services.AddScoped<IAuthContextService, AppSettingsAuthContextService>();
 
 var app = builder.Build();
 
