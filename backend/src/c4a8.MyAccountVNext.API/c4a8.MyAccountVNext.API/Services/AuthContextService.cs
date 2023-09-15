@@ -1,16 +1,17 @@
 ﻿using c4a8.MyAccountVNext.API.Options;
 using Microsoft.Extensions.Options;
 using System.Globalization;
+using System.Net;
 using System.Security.Claims;
 using System.Text;
 
 namespace c4a8.MyAccountVNext.API.Services
 {
-    public class AppSettingsAuthContextService : IAuthContextService
+    public class AuthContextService : IAuthContextService
     {
         private readonly AppFunctionsOptions _appFunctionsOptions;
 
-        public AppSettingsAuthContextService(IOptions<AppFunctionsOptions> appFunctionsOptions)
+        public AuthContextService(IOptions<AppFunctionsOptions> appFunctionsOptions)
         {
             _appFunctionsOptions = appFunctionsOptions.Value;
         }
@@ -20,9 +21,6 @@ namespace c4a8.MyAccountVNext.API.Services
             var base64str = Convert.ToBase64String(Encoding.UTF8.GetBytes("{\"access_token\":{\"acrs\":{\"essential\":true,\"value\":\"" + authContextId + "\"}}}"));
             httpContext.Response.Headers.Append("WWW-Authenticate", $"Bearer realm=\"\", authorization_uri=\"https://login.microsoftonline.com/common/oauth2/authorize\", error=\"insufficient_claims\", claims=\"" + base64str + "\"");
             httpContext.Response.Headers.Append("Access-Control-Expose-Headers", "WWW-Authenticate");
-            string message = string.Format(CultureInfo.InvariantCulture, "The presented access tokens had insufficient claims. Please request for claims requested in the WWW-Authentication header and try again.");
-            await httpContext.Response.WriteAsync(message);
-            await httpContext.Response.CompleteAsync();
         }
 
         public string CheckForRequiredAuthContext(HttpContext context, AppFunctions appFunction)
@@ -69,6 +67,11 @@ namespace c4a8.MyAccountVNext.API.Services
                     }
                 default: return null;
             }
+        }
+
+        public string GetClaimsChallengeMessage()
+        {
+            return string.Format(CultureInfo.InvariantCulture, "The presented access tokens had insufficient claims. Please request for claims requested in the WWW-Authentication header and try again.");
         }
     }
 }

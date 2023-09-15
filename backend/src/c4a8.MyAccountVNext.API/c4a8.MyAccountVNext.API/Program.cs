@@ -41,7 +41,7 @@ builder.Configuration.GetSection("MsGraph").Bind(msGraphOptions);
 var graphSettings = new ClientSecretCredential(msGraphOptions.TenantId, msGraphOptions.ClientId, msGraphOptions.ClientSecret);
 
 builder.Services.AddSingleton(new GraphServiceClient(graphSettings));
-builder.Services.AddScoped<IAuthContextService, AppSettingsAuthContextService>();
+builder.Services.AddScoped<IAuthContextService, AuthContextService>();
 
 var app = builder.Build();
 
