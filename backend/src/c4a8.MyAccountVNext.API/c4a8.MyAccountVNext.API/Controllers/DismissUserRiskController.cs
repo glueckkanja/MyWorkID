@@ -24,7 +24,7 @@ namespace c4a8.MyAccountVNext.API.Controllers
         }
 
         [HttpPut]
-        public IActionResult Get()
+        public async Task<IActionResult> Get()
         {
             string? claimsChallenge = _authContextService.CheckForRequiredAuthContext(HttpContext, AppFunctions.DismissUserRisk);
             string? missingAuthContextId = _authContextService.GetAuthContextId(AppFunctions.DismissUserRisk);
@@ -35,16 +35,10 @@ namespace c4a8.MyAccountVNext.API.Controllers
                 {
                     return StatusCode(StatusCodes.Status412PreconditionFailed, "UserId not provided");
                 }
-                _graphServiceClient.IdentityProtection.RiskyUsers.Dismiss.PostAsync(new Microsoft.Graph.IdentityProtection.RiskyUsers.Dismiss.DismissPostRequestBody() { UserIds = new List<string> { userId } });
+                await _graphServiceClient.IdentityProtection.RiskyUsers.Dismiss.PostAsync(new Microsoft.Graph.IdentityProtection.RiskyUsers.Dismiss.DismissPostRequestBody() { UserIds = new List<string> { userId } });
                 return Ok();
             }
-            var base64str = Convert.ToBase64String(Encoding.UTF8.GetBytes("{\"access_token\":{\"acrs\":{\"essential\":true,\"value\":\"" + missingAuthContextId + "\"}}}"));
-            var context = HttpContext;
-            context.Response.Headers.Append("WWW-Authenticate", $"Bearer realm=\"\", authorization_uri=\"https://login.microsoftonline.com/common/oauth2/authorize\", error=\"insufficient_claims\", claims=\"" + base64str + "\"");
-            context.Response.Headers.Append("Access-Control-Expose-Headers", "WWW-Authenticate");
-            string message = string.Format(CultureInfo.InvariantCulture, "The presented access tokens had insufficient claims. Please request for claims requested in the WWW-Authentication header and try again.");
-            context.Response.WriteAsync(message);
-            context.Response.CompleteAsync();
+            await _authContextService.AddClaimsChallengeHeader(HttpContext, missingAuthContextId);
             return StatusCode(StatusCodes.Status401Unauthorized);
         }
     }
