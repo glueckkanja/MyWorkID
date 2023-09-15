@@ -2,7 +2,8 @@
 {
     public class FrontendOptions
     {
-        public string? ClientId { get; set; }
+        public string? FrontendClientId { get; set; }
         public string? TenantId { get; set; }
+        public string? BackendClientId { get; set; }
     }
 }
