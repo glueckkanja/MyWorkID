@@ -7,3 +7,9 @@ export enum REQUEST_TYPE {
 export type TWWWAuthenticateHeader = {
   claims: string;
 };
+
+export type TFrontendOptions = {
+  clientId: string,
+  tenantId: string,
+  backendClientId: string,
+}

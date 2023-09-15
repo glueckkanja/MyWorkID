@@ -44,7 +44,7 @@ namespace c4a8.MyAccountVNext.API.Controllers
             context.Response.WriteAsync(message);
             context.Response.CompleteAsync();
             //throw new UnauthorizedAccessException(message);
-            return StatusCode(401);
+            return StatusCode(StatusCodes.Status401Unauthorized);
         }
 
         private string CheckForRequiredAuthContext(string method)

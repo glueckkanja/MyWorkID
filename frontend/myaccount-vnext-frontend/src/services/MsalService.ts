@@ -1,23 +1,27 @@
 import { PublicClientApplication, Configuration } from "@azure/msal-browser";
-import { REQUEST_TYPE } from "../types";
+import { REQUEST_TYPE, TFrontendOptions } from "../types";
 import axios, { AxiosError, AxiosResponse } from "axios";
 import { parseChallenges } from "../utils";
 
 var _msalInstance: PublicClientApplication | undefined;
+var _backendClientId: string | undefined;
 
-export const getMsalInstance = (): Promise<PublicClientApplication> => {
-  return new Promise((resolve) => {
-    if (!_msalInstance) {
-      var msalConfig: Configuration = {
-        auth: {
-          clientId: "ebd71a9c-1e84-4d8d-a628-f7caed6c1102",
-          authority: `https://login.microsoftonline.com/a9ae459a-6068-4a03-915a-7031507edbc1`,
-        },
-      };
-      _msalInstance = new PublicClientApplication(msalConfig);
-    }
-    resolve(_msalInstance);
-  });
+export const getMsalInstance = async (): Promise<PublicClientApplication> => {
+  var frontendOptions = await axios.get<TFrontendOptions>(
+    "https://localhost:7093/FrontendOptions"
+  );
+  if (!_msalInstance) {
+    _backendClientId = frontendOptions.data.backendClientId;
+    var msalConfig: Configuration = {
+      auth: {
+        clientId: frontendOptions.data.clientId,
+        authority: `https://login.microsoftonline.com/${frontendOptions.data.tenantId}`,
+      },
+    };
+    _msalInstance = new PublicClientApplication(msalConfig);
+  }
+
+  return _msalInstance;
 };
 
 const sendAxiosRequest = async <T>(
@@ -45,6 +49,7 @@ const sendAxiosRequest = async <T>(
 export const authenticateRequest = async <T>(
   url: string,
   requestType: REQUEST_TYPE,
+  redirectState?: string,
   body?: any
 ): Promise<T | undefined> => {
   let msalInstance = await getMsalInstance();
@@ -54,8 +59,9 @@ export const authenticateRequest = async <T>(
     response = await sendAxiosRequest<T>(url, requestType, token, body);
   } catch (error: any) {
     response = error.response;
-    if(!response){
-      throw new Error("No Axios error response returned")
+    if (!response) {
+      console.log("No Axios error response returned", response);
+      throw new Error("No Axios error response returned");
     }
     if (response.status === 401) {
       if (!response.headers["www-authenticate"]) {
@@ -66,8 +72,8 @@ export const authenticateRequest = async <T>(
       );
       const tokenResponse = await msalInstance.acquireTokenRedirect({
         claims: window.atob(wwwAuthenticateHeader.claims), // decode the base64 string
-        scopes: [`api://fc97e872-bf3b-4531-82b0-8b85272982e2/Access`],
-        redirectUri: "/redirectors/resetPassword"
+        scopes: [`api://${_backendClientId}/Access`],
+        state: redirectState,
       });
       // if (tokenResponse.accessToken) {
       //   response = await sendAxiosRequest<T>(
@@ -94,7 +100,7 @@ const getBearerToken = async (): Promise<string> => {
   }
 
   const request = {
-    scopes: [`api://fc97e872-bf3b-4531-82b0-8b85272982e2/Access`],
+    scopes: [`api://${_backendClientId}/Access`],
     account: accounts[0],
   };
 
@@ -103,7 +109,7 @@ const getBearerToken = async (): Promise<string> => {
     .catch((error: Error) => {
       console.warn("acquire token silently failed", error);
       msalInstance.acquireTokenRedirect({
-        scopes: [`api://fc97e872-bf3b-4531-82b0-8b85272982e2/Access`],
+        scopes: [`api://${_backendClientId}/Access`],
       });
     });
 
