@@ -38,6 +38,8 @@ jobs:
         run: npm ci
       - name: npm build
         run: CI=false npm run build
+      - name: Display structure
+        run: ls -R
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v3
         with:
