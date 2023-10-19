@@ -64,7 +64,7 @@ jobs:
       - name: Download artifact from build job
         uses: actions/download-artifact@v3
         with:
-          name: .net-app
+          name: ./
       - name: Display structure of downloaded files
         run: ls -R
       - uses: azure/login@v1
