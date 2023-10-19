@@ -44,7 +44,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: react-app
-          path: ./build
+          path: ${{env.WORKING_DIRECTORY}}/build
 
   deploy:
     runs-on: ubuntu-latest
