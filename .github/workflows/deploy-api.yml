@@ -72,7 +72,7 @@ jobs:
         uses: azure/webapps-deploy@v2
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
-          package: .net-app
+          package: ./.net-app
       # logout from Azure
       - name: logout
         run: |
