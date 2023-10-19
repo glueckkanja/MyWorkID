@@ -59,14 +59,10 @@ jobs:
     environment: ${{ inputs.environment }}
 
     steps:
-      - name: Display structure of current files
-        run: ls -R
       - name: Download artifact from build job
         uses: actions/download-artifact@v3
         with:
           name: .net-app
-      - name: Display structure of downloaded files
-        run: ls -R
       - uses: azure/login@v1
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
