@@ -38,7 +38,7 @@ jobs:
         run: npm ci
       - name: npm build
         run: CI=false npm run build
-      - name: Upload artivfact for reployment job
+      - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v3
         with:
           name: react-app
