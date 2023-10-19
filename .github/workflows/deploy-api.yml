@@ -33,7 +33,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles(${{ AZURE_WEBAPP_PACKAGE_PATH }}) }}
+          key: ${{ runner.os }}-nuget-${{ hashFiles(${{ env.AZURE_WEBAPP_PACKAGE_PATH }}) }}
           
       # Setup .NET Core SDK
       - name: Setup .NET Core
