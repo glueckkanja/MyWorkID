@@ -33,7 +33,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
-          cache-dependency-path: ${{ NPM_CACHE_DEPENDENCY_PATH }}
+          cache-dependency-path: ${{ env.NPM_CACHE_DEPENDENCY_PATH }}
       - name: install npm modules
         run: npm ci
       - name: npm build
