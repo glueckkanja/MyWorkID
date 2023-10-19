@@ -2,7 +2,7 @@ name: Deploy API
 
 env:
   AZURE_WEBAPP_NAME : ${{ vars.AZURE_WEBAPP_NAME }}
-  AZURE_WEBAPP_PACKAGE_PATH: './backend/src/c4a8.MyAccountVNext.API'      # set this to the path to your web app project, defaults to the repository root
+  AZURE_WEBAPP_PACKAGE_PATH: './backend/src/c4a8.MyAccountVNext.API/c4a8.MyAccountVNext.API'      # set this to the path to your web app project, defaults to the repository root
   DOTNET_VERSION: '6.0.x'
 
 on:
@@ -22,7 +22,9 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    defaults:
+      run:
+        working-directory: ${{env.AZURE_WEBAPP_PACKAGE_PATH}}
     steps:
       - uses: actions/checkout@v4
 
@@ -31,7 +33,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('CMC-API/AdminPortal/AdminPortal.csproj') }}
+          key: ${{ runner.os }}-nuget-${{ hashFiles(${{ AZURE_WEBAPP_PACKAGE_PATH }}) }}
           
       # Setup .NET Core SDK
       - name: Setup .NET Core
