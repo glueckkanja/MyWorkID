@@ -4,6 +4,10 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "3.76.0"
     }
+    azuread = {
+      source = "hashicorp/azuread"
+      version = "2.44.0"
+    }
   }
 }
 
@@ -12,4 +16,8 @@ provider "azurerm" {
   tenant_id       = local.tenant_id
   subscription_id = local.subscription_id
   features {}
+}
+
+provider "azuread" {
+  # Configuration options
 }
