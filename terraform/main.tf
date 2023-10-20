@@ -19,7 +19,7 @@ resource "azurerm_linux_web_app" "backend" {
   service_plan_id         = azurerm_service_plan.backend.id
   https_only              = true
   client_affinity_enabled = false
-  
+
   identity {
     type = "SystemAssigned"
   }
@@ -30,15 +30,11 @@ resource "azurerm_linux_web_app" "backend" {
   }
 }
 
-# Add necessary permissions to backend Managed Identity
-resource "azuread_application_api_access" "example_msgraph" {
-  application_id = format("%s/%s","applications",azurerm_linux_web_app.backend.identity[0].principal_id)
-  api_client_id  = data.azuread_application_published_app_ids.well_known.result["MicrosoftGraph"]
-
-  role_ids = [
-    data.azuread_service_principal.msgraph.app_role_ids["IdentityRiskyUser.ReadWrite.All"],
-    data.azuread_service_principal.msgraph.app_role_ids["UserAuthenticationMethod.ReadWrite.All"],
-  ]
+resource "azuread_app_role_assignment" "backend_managed_identity" {
+  for_each = toset(local.backend_graph_permissions)
+  app_role_id         = data.azuread_service_principal.msgraph.app_role_ids[each.key]
+  principal_object_id = azurerm_linux_web_app.backend.identity[0].principal_id
+  resource_object_id  = data.azuread_service_principal.msgraph.object_id
 }
 
 resource "azurerm_static_site" "frontend" {
