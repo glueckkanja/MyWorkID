@@ -36,31 +36,29 @@ const FunctionPlane = () => {
   return (
     <>
       <Box sx={{ my: 2 }}>
-        <Container>
-          <Grid container spacing={2}>
-            {FUNCTION_PLANE_COMPONENTS.map((functionComponent) => {
-              return (
-                <Grid
-                  key={functionComponent.functionType}
-                  className="function_plane__function_component_wrapper"
-                  xs={12}
-                  md={4}
-                >
-                  {
-                    <functionComponent.element
-                      result={
-                        actionResult &&
-                        actionResult.dataType === functionComponent.functionType
-                          ? actionResult
-                          : undefined
-                      }
-                    />
-                  }
-                </Grid>
-              );
-            })}
-          </Grid>
-        </Container>
+        <Grid container spacing={2}>
+          {FUNCTION_PLANE_COMPONENTS.map((functionComponent) => {
+            return (
+              <Grid
+                key={functionComponent.functionType}
+                className="function_plane__function_component_wrapper"
+                xs={12}
+                md={4}
+              >
+                {
+                  <functionComponent.element
+                    result={
+                      actionResult &&
+                      actionResult.dataType === functionComponent.functionType
+                        ? actionResult
+                        : undefined
+                    }
+                  />
+                }
+              </Grid>
+            );
+          })}
+        </Grid>
       </Box>
     </>
   );
