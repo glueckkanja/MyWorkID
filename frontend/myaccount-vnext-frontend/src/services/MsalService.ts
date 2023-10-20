@@ -1,34 +1,23 @@
-import { PublicClientApplication, Configuration } from "@azure/msal-browser";
-import { REQUEST_TYPE, TFrontendOptions } from "../types";
-import axios, { AxiosError, AxiosResponse } from "axios";
+import { PublicClientApplication } from "@azure/msal-browser";
+import { REQUEST_TYPE } from "../types";
+import axios, { AxiosResponse } from "axios";
 import { parseChallenges } from "../utils";
-
-var _msalInfo: TMsalInfo | undefined;
+import { Strings } from "../Strings";
+import { dismissUserRisk } from "./ApiService";
 
 export type TMsalInfo = {
   msalInstance: PublicClientApplication;
   backendClientId: string;
 };
 
-export const getMsalInfo = async (): Promise<TMsalInfo> => {
-  if (!_msalInfo) {
-    var frontendOptions = await axios.get<TFrontendOptions>(
-      "https://localhost:7093/FrontendOptions"
-    );
-    var msalConfig: Configuration = {
-      auth: {
-        clientId: frontendOptions.data.frontendClientId,
-        authority: `https://login.microsoftonline.com/${frontendOptions.data.tenantId}`,
-      },
-    };
-
-    _msalInfo = _msalInfo ?? {
-      msalInstance: new PublicClientApplication(msalConfig),
-      backendClientId: frontendOptions.data.backendClientId,
-    }; // null check necessary so the debug process that follows the fucking main process doesnt fuck shit up completly :)
-  }
-
-  return _msalInfo;
+export const MSAL_INFO: TMsalInfo = {
+  msalInstance: new PublicClientApplication({
+    auth: {
+      clientId: window.settings.frontendClientId,
+      authority: `https://login.microsoftonline.com/${window.settings.tenantId}`,
+    },
+  }),
+  backendClientId: window.settings.backendClientId,
 };
 
 const sendAxiosRequest = async <T>(
@@ -59,7 +48,6 @@ export const authenticateRequest = async <T>(
   redirectState?: string,
   body?: any
 ): Promise<T | undefined> => {
-  let msalInfo = await getMsalInfo();
   let response: AxiosResponse<T, any> | undefined;
   let token = await getBearerToken();
   try {
@@ -77,46 +65,34 @@ export const authenticateRequest = async <T>(
       let wwwAuthenticateHeader = parseChallenges(
         response.headers["www-authenticate"]
       );
-      const tokenResponse = await msalInfo.msalInstance.acquireTokenRedirect({
+      await MSAL_INFO.msalInstance.acquireTokenRedirect({
         claims: window.atob(wwwAuthenticateHeader.claims), // decode the base64 string
-        scopes: [`api://${msalInfo.backendClientId}/Access`],
+        scopes: [`api://${MSAL_INFO.backendClientId}/Access`],
         state: redirectState,
       });
-      // if (tokenResponse.accessToken) {
-      //   response = await sendAxiosRequest<T>(
-      //     url,
-      //     requestType,
-      //     tokenResponse.accessToken,
-      //     body
-      //   );
-      // }
     }
   }
-
-  // Handle Auth challenge
-
   return response?.data;
 };
 
 const getBearerToken = async (): Promise<string> => {
-  let msalInfo = await getMsalInfo();
-  const accounts = msalInfo.msalInstance.getAllAccounts();
+  const accounts = MSAL_INFO.msalInstance.getAllAccounts();
 
   if (accounts.length === 0) {
     throw new Error("User not signed in");
   }
 
   const request = {
-    scopes: [`api://${msalInfo.backendClientId}/Access`],
+    scopes: [`api://${MSAL_INFO.backendClientId}/Access`],
     account: accounts[0],
   };
 
-  const authResult = await msalInfo.msalInstance
+  const authResult = await MSAL_INFO.msalInstance
     .acquireTokenSilent(request)
-    .catch((error: Error) => {
+    .catch(async (error: Error) => {
       console.warn("acquire token silently failed", error);
-      msalInfo.msalInstance.acquireTokenRedirect({
-        scopes: [`api://${msalInfo.backendClientId}/Access`],
+      await MSAL_INFO.msalInstance.acquireTokenRedirect({
+        scopes: [`api://${MSAL_INFO.backendClientId}/Access`],
       });
     });
 
@@ -125,4 +101,18 @@ const getBearerToken = async (): Promise<string> => {
   } else {
     throw new Error("Auth not successfull");
   }
+};
+
+export const handleActionAuthRedirect = (): void => {
+  MSAL_INFO.msalInstance.handleRedirectPromise().then((res) => {
+    if (res?.state) {
+      switch (res.state) {
+        case Strings.DISMISS_USER_RISK:
+          dismissUserRisk();
+          break;
+        default:
+          return;
+      }
+    }
+  });
 };

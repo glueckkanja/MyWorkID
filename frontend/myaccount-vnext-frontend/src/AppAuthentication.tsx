@@ -4,37 +4,32 @@ import {
   AuthenticatedTemplate,
   UnauthenticatedTemplate,
 } from "@azure/msal-react";
-import { InteractionType, PublicClientApplication } from "@azure/msal-browser";
+import { InteractionType } from "@azure/msal-browser";
 import { ReactNode, useEffect, useState } from "react";
-import App from "./pages/App";
-import { TMsalInfo, getMsalInfo } from "./services/MsalService";
+import { MSAL_INFO } from "./services/MsalService";
 
 export type AppAutenticationProps = {
   children: ReactNode;
 };
 
 export const AppAutentication = (props: AppAutenticationProps) => {
-  const [msalInfo, setMsalInfo] = useState<
-    TMsalInfo | undefined
-  >(undefined);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    getMsalInfo().then((res) => {
-      setMsalInfo(res);
+    MSAL_INFO.msalInstance.initialize().then(() => {
       setLoading(false);
     });
   }, []);
 
   if (loading) {
     return <div>Loading</div>;
-  } else if (msalInfo?.msalInstance) {
+  } else if (MSAL_INFO?.msalInstance) {
     return (
-      <MsalProvider instance={msalInfo.msalInstance}>
+      <MsalProvider instance={MSAL_INFO.msalInstance}>
         <MsalAuthenticationTemplate
           interactionType={InteractionType.Redirect}
           authenticationRequest={{
-            scopes: [`api://${msalInfo.backendClientId}/Access`],
+            scopes: [`api://${MSAL_INFO.backendClientId}/Access`],
           }}
         >
           <AuthenticatedTemplate>{props.children}</AuthenticatedTemplate>

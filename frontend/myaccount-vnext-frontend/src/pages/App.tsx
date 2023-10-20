@@ -1,28 +1,10 @@
 import { useEffect } from "react";
-import { authenticateRequest, getMsalInfo } from "../services/MsalService";
-import { REQUEST_TYPE } from "../types";
-import { Strings } from "../Strings";
+import { handleActionAuthRedirect } from "../services/MsalService";
+import { dismissUserRisk } from "../services/ApiService";
 
 const App = () => {
-
   useEffect(() => {
-    getMsalInfo().then((msalInfo) => {
-      msalInfo.msalInstance.handleRedirectPromise().then((res) => {
-        if (res?.state) {
-          switch (res.state) {
-            case "dismissUserRisk":
-              authenticateRequest(
-                "https://localhost:7093/DismissUserRisk",
-                REQUEST_TYPE.PUT,
-                Strings.DISMISS_USER_RISK
-              );
-              break;
-            default:
-              return;
-          }
-        }
-      });
-    });
+    handleActionAuthRedirect();
   }, []);
 
   return (
@@ -30,13 +12,7 @@ const App = () => {
       <button>Password Reset</button>
       <button>Create Temporary Access Password</button>
       <button
-        onClick={() => {
-          authenticateRequest(
-            "https://localhost:7093/DismissUserRisk",
-            REQUEST_TYPE.PUT,
-            Strings.DISMISS_USER_RISK
-          );
-        }}
+        onClick={dismissUserRisk}
       >
         Dismiss User Risk
       </button>

@@ -1,14 +1,20 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import "./main.scss";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter } from "react-router-dom";
 import { AppAutentication } from "./AppAuthentication";
-import AppRoutes from "./AppRoutes";
 import App from "./pages/App";
+import { TFrontendOptions } from "./types";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
 );
+
+declare global {
+  interface Window {
+    settings: TFrontendOptions;
+  }
+}
 
 root.render(
   <BrowserRouter>
