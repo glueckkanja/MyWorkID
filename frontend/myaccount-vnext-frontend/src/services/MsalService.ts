@@ -1,9 +1,8 @@
 import { PublicClientApplication } from "@azure/msal-browser";
-import { REQUEST_TYPE } from "../types";
+import { EApiFunctionTypes, REQUEST_TYPE, TFunctionResult } from "../types";
 import axios, { AxiosResponse } from "axios";
 import { parseChallenges } from "../utils";
-import { Strings } from "../Strings";
-import { dismissUserRisk } from "./ApiService";
+import { createTAP, dismissUserRisk } from "./ApiService";
 
 export type TMsalInfo = {
   msalInstance: PublicClientApplication;
@@ -47,7 +46,7 @@ export const authenticateRequest = async <T>(
   requestType: REQUEST_TYPE,
   redirectState?: string,
   body?: any
-): Promise<T | undefined> => {
+): Promise<T> => {
   let response: AxiosResponse<T, any> | undefined;
   let token = await getBearerToken();
   try {
@@ -60,7 +59,7 @@ export const authenticateRequest = async <T>(
     }
     if (response.status === 401) {
       if (!response.headers["www-authenticate"]) {
-        throw new Error("Authentication failed - no chanllenge provided");
+        throw new Error("Authentication failed - no challenge provided");
       }
       let wwwAuthenticateHeader = parseChallenges(
         response.headers["www-authenticate"]
@@ -70,6 +69,8 @@ export const authenticateRequest = async <T>(
         scopes: [`api://${MSAL_INFO.backendClientId}/Access`],
         state: redirectState,
       });
+    } else {
+      throw error;
     }
   }
   return response?.data;
@@ -95,7 +96,6 @@ const getBearerToken = async (): Promise<string> => {
         scopes: [`api://${MSAL_INFO.backendClientId}/Access`],
       });
     });
-
   if (authResult) {
     return authResult.accessToken;
   } else {
@@ -103,16 +103,24 @@ const getBearerToken = async (): Promise<string> => {
   }
 };
 
-export const handleActionAuthRedirect = (): void => {
-  MSAL_INFO.msalInstance.handleRedirectPromise().then((res) => {
-    if (res?.state) {
-      switch (res.state) {
-        case Strings.DISMISS_USER_RISK:
-          dismissUserRisk();
-          break;
-        default:
-          return;
-      }
+export const handleActionAuthRedirect = async (): Promise<
+  TFunctionResult<any>
+> => {
+  let res = await MSAL_INFO.msalInstance.handleRedirectPromise();
+  if (res?.state) {
+    switch (res.state) {
+      case EApiFunctionTypes.DISMISS_USER_RISK:
+        return await dismissUserRisk();
+      case EApiFunctionTypes.CREATE_TAP:
+        return await createTAP();
+      default:
+        throw new Error("invalide state provided");
     }
-  });
+  } else {
+    return {
+      status: "error",
+      errorMessage: "No state provided",
+      dataType: EApiFunctionTypes.UNKNOWN,
+    }
+  }
 };

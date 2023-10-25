@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 import "./main.scss";
 import { BrowserRouter } from "react-router-dom";
 import { AppAutentication } from "./AppAuthentication";
-import App from "./pages/App";
+import App from "./App";
 import { TFrontendOptions } from "./types";
 
 const root = ReactDOM.createRoot(
@@ -16,11 +16,13 @@ declare global {
   }
 }
 
+
 root.render(
   <BrowserRouter>
     <React.StrictMode>
       <AppAutentication>
-        <App />
+
+          <App />
       </AppAutentication>
     </React.StrictMode>
   </BrowserRouter>

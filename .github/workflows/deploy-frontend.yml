@@ -56,6 +56,9 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: react-app
+      - name: Inject settings
+        run: |
+          echo 'var settings = ${{ vars.ENVIRONMENT_SETTINGS }};' > config.js  
       - name: Deploy to static web app
         uses: Azure/static-web-apps-deploy@v1
         with:
