@@ -25,3 +25,13 @@ variable "frontend_name" {
   type = string
   description = "Name of the StaticSite that hosts the frontend. Note this has to be globally unique."
 }
+
+variable "backed_appreg_name" {
+  type = string
+  default = "ar-myAccountVNext-backend"
+}
+
+variable "frontend_appreg_name" {
+  type = string
+  default = "ar-myAccountVNext-frontend"
+}

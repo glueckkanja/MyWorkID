@@ -1,11 +1,13 @@
 # Variable copies
 locals {
-  tenant_id           = var.tenant_id
-  subscription_id     = var.subscription_id
-  resource_group_name = var.resource_group_name
-  resource_location   = var.resource_location
-  api_name            = var.api_name
-  frontend_name       = var.frontend_name
+  tenant_id            = var.tenant_id
+  subscription_id      = var.subscription_id
+  resource_group_name  = var.resource_group_name
+  resource_location    = var.resource_location
+  api_name             = var.api_name
+  frontend_name        = var.frontend_name
+  backed_appreg_name   = var.backed_appreg_name
+  frontend_appreg_name = var.frontend_appreg_name
 }
 
 # Permissions necessary for the banend managed identity
