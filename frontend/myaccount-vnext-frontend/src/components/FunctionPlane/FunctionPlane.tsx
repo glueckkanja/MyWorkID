@@ -36,7 +36,7 @@ const FunctionPlane = () => {
   }, []);
 
   return (
-    <>
+    <Container maxWidth="xl">
       <UserDisplay />
       <Stack className="function_plane__function_component_wrapper" direction={{ xs: "column", md: "row" }} spacing={2}>
         {FUNCTION_PLANE_COMPONENTS.map((functionComponent) => {
@@ -53,7 +53,7 @@ const FunctionPlane = () => {
           );
         })}
       </Stack>
-    </>
+    </Container>
   );
 };
 

@@ -25,11 +25,11 @@ export const CreateTAP = (props: ActionResultProps<any>) => {
   };
 
   return (
-    <>
+    <div>
       <Button variant="contained" onClick={createTAP}>
         Create Temporary Access Password
       </Button>
       <TextField className={tapDisplay.visible ? undefined : "hidden_element"} sx={{width: "100%"}} label="TAP" variant="filled" value={tapDisplay.value} />
-    </>
+    </div>
   );
 };

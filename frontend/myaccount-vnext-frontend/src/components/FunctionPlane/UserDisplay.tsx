@@ -29,8 +29,10 @@ export const UserDisplay = () => {
     <div
       style={{
         display: "flex",
-        backgroundColor: theme.palette.info.main,
         padding: 5,
+        marginTop: 5,
+        marginBottom: 5,
+        borderRadius: 5,
       }}
     >
       <Avatar sx={{ width: 100, height: 100 }} src={userImage}></Avatar>
@@ -44,7 +46,7 @@ export const UserDisplay = () => {
       >
         <div style={{ height: "fit-content" }}>
           <h3 style={{ margin: 0 }}>{user?.displayName}</h3>
-          <div>Risk State: Low</div>
+          <div>Risk State: <span style={{color: theme.palette.success.main}}>Low</span></div>
         </div>
       </div>
     </div>
