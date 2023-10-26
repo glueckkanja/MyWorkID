@@ -23,6 +23,11 @@ builder.Services.AddCors(options =>
                                                   .AllowAnyHeader()
                                                   .AllowAnyMethod();
                           });
+    options.AddPolicy("AllowAnyMethodAndHeader",
+                          policy =>
+                          {
+                              policy.AllowAnyHeader().AllowAnyMethod();
+                          });
 });
 
 
@@ -39,6 +44,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
     app.UseCors("AllowAll");
+} 
+else
+{
+    app.UseCors("AllowAnyMethodAndHeader");
 }
 
 app.UseHttpsRedirection();
