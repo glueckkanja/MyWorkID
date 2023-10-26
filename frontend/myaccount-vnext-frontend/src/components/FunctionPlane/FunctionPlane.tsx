@@ -1,7 +1,6 @@
 import { PasswordReset } from "./FunctionPlaneComponents/PasswordReset";
 import { CreateTAP } from "./FunctionPlaneComponents/CreateTAP";
 import { DismissUserRisk } from "./FunctionPlaneComponents/DismissUserRisk";
-import Grid from "@mui/material/Unstable_Grid2";
 import { useEffect, useState } from "react";
 import { handleActionAuthRedirect } from "../../services/MsalService";
 import {
@@ -10,7 +9,6 @@ import {
   TFunctionResult,
 } from "../../types";
 import Container from "@mui/material/Container";
-import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import { UserDisplay } from "./UserDisplay";
 
@@ -38,7 +36,7 @@ const FunctionPlane = () => {
   return (
     <Container maxWidth="xl">
       <UserDisplay />
-      <Stack className="function_plane__function_component_wrapper" direction={{ xs: "column", md: "row" }} spacing={2}>
+      <Stack className="function_plane__function_component__wrapper" direction={{ xs: "column", md: "row" }} spacing={2}>
         {FUNCTION_PLANE_COMPONENTS.map((functionComponent) => {
           return (
               <functionComponent.element

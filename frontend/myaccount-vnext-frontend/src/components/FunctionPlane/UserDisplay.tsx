@@ -13,40 +13,32 @@ export const UserDisplay = () => {
     getUser().then((usr) => {
       setUser(usr);
     });
-    getUserImage().then((imgBlob) => {
-      var reader = new FileReader();
-      reader.readAsDataURL(imgBlob);
-      reader.onloadend = () => {
-        var base64String = reader.result?.toString();
-        setUserImage(base64String);
-      };
-    }).catch(() => {
-      // Ignore - this is thrown if no image is set
-    });
+    getUserImage()
+      .then((imgBlob) => {
+        var reader = new FileReader();
+        reader.readAsDataURL(imgBlob);
+        reader.onloadend = () => {
+          var base64String = reader.result?.toString();
+          setUserImage(base64String);
+        };
+      })
+      .catch(() => {
+        // Ignore - this is thrown if no image is set
+      });
   }, []);
 
   return (
-    <div
-      style={{
-        display: "flex",
-        padding: 5,
-        marginTop: 5,
-        marginBottom: 5,
-        borderRadius: 5,
-      }}
-    >
+    <div className="user_display">
       <Avatar sx={{ width: 100, height: 100 }} src={userImage}></Avatar>
       <div
-        style={{
-          marginLeft: 10,
-          display: "flex",
-          alignContent: "center",
-          flexWrap: "wrap",
-        }}
+        className="user_display__user_info__container"
       >
-        <div style={{ height: "fit-content" }}>
-          <h3 style={{ margin: 0 }}>{user?.displayName}</h3>
-          <div>Risk State: <span style={{color: theme.palette.success.main}}>Low</span></div>
+        <div>
+          <h3 className="no_margin">{user?.displayName}</h3>
+          <div>
+            Risk State:{" "}
+            <span style={{ color: theme.palette.success.main }}>Low</span>
+          </div>
         </div>
       </div>
     </div>

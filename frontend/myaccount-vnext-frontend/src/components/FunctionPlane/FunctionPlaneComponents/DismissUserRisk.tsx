@@ -5,7 +5,7 @@ import { ActionResultProps } from "../../../types";
 export const DismissUserRisk = (props: ActionResultProps<any>) => {
   return (
     <div>
-      <Button variant="contained" onClick={dismissUserRisk}>
+      <Button className="function_plane__function_component__action" variant="contained" onClick={dismissUserRisk}>
         Dismiss User Risk
       </Button>
     </div>
