@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace c4a8.MyAccountVNext.API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("")]
     [ApiController]
     public class GeneralController : ControllerBase
     {
