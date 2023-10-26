@@ -35,3 +35,16 @@ variable "frontend_appreg_name" {
   type = string
   default = "ar-myAccountVNext-frontend"
 }
+
+variable "dismiss_user_risk_auth_context_id"{
+  type = string
+  description = "AuthContext Id configured that is challenged for the dismissUser action"
+}
+variable "generate_tap_auth_context_id"{
+  type = string
+  description = "AuthContext Id configured that is challenged for the generateTAP action"
+}
+variable "reset_password_auth_context_id"{
+  type = string
+  description = "AuthContext Id configured that is challenged for the resetPassword action"
+}

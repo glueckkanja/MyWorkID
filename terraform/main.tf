@@ -28,6 +28,16 @@ resource "azurerm_linux_web_app" "backend" {
     minimum_tls_version = "1.2"
     always_on           = false
   }
+
+  app_settings = {
+    AppFunctions__DismissUserRisk = local.dismiss_user_risk_auth_context_id
+    AppFunctions__GenerateTap     = local.generate_tap_auth_context_id
+    AppFunctions__ResetPassword   = local.reset_password_auth_context_id
+    AzureAd__ClientId = azuread_application.backend.client_id
+    AzureAd__TenantId = data.azuread_client_config.current_user.tenant_id
+    AzureAd__Instance = "https://login.microsoftonline.com/"
+  }
+
 }
 
 resource "azuread_app_role_assignment" "backend_managed_identity" {
@@ -49,10 +59,9 @@ resource "azuread_application" "backend" {
   owners           = [data.azuread_client_config.current_user.object_id]
   sign_in_audience = "AzureADMyOrg"
 
-  // Necessary as identifier_uris is set by azuread_application_identifier_uri and this would overwrite it
   lifecycle {
     ignore_changes = [
-      identifier_uris,
+      identifier_uris, #Necessary due to azuread_application_identifier_uri.backend
     ]
   }
 
