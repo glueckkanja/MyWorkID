@@ -1,5 +1,5 @@
 import CssBaseline from "@mui/material/CssBaseline";
-import FunctionPlane from "./components/FunctionPlane";
+import FunctionPlane from "./components/FunctionPlane/FunctionPlane";
 import { HeaderBar } from "./components/HeaderBar";
 import { ToggleColorModeProvider } from "./contexts/ToggleColorModeProvider";
 

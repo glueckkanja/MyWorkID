@@ -32,3 +32,7 @@ export enum EApiFunctionTypes {
 export type ActionResultProps<T> = {
   result?: TFunctionResult<T>
 }
+
+export type User = {
+  displayName: string;
+}

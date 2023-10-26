@@ -3,14 +3,16 @@ import { CreateTAP } from "./FunctionPlaneComponents/CreateTAP";
 import { DismissUserRisk } from "./FunctionPlaneComponents/DismissUserRisk";
 import Grid from "@mui/material/Unstable_Grid2";
 import { useEffect, useState } from "react";
-import { handleActionAuthRedirect } from "../services/MsalService";
+import { handleActionAuthRedirect } from "../../services/MsalService";
 import {
   ActionResultProps,
   EApiFunctionTypes,
   TFunctionResult,
-} from "../types";
+} from "../../types";
 import Container from "@mui/material/Container";
 import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
+import { UserDisplay } from "./UserDisplay";
 
 const FUNCTION_PLANE_COMPONENTS: {
   element: (props: ActionResultProps<any>) => JSX.Element;
@@ -35,31 +37,22 @@ const FunctionPlane = () => {
 
   return (
     <>
-      <Box sx={{ my: 2 }}>
-        <Grid container spacing={2}>
-          {FUNCTION_PLANE_COMPONENTS.map((functionComponent) => {
-            return (
-              <Grid
+      <UserDisplay />
+      <Stack className="function_plane__function_component_wrapper" direction={{ xs: "column", md: "row" }} spacing={2}>
+        {FUNCTION_PLANE_COMPONENTS.map((functionComponent) => {
+          return (
+              <functionComponent.element
                 key={functionComponent.functionType}
-                className="function_plane__function_component_wrapper"
-                xs={12}
-                md={4}
-              >
-                {
-                  <functionComponent.element
-                    result={
-                      actionResult &&
-                      actionResult.dataType === functionComponent.functionType
-                        ? actionResult
-                        : undefined
-                    }
-                  />
+                result={
+                  actionResult &&
+                  actionResult.dataType === functionComponent.functionType
+                    ? actionResult
+                    : undefined
                 }
-              </Grid>
-            );
-          })}
-        </Grid>
-      </Box>
+              />
+          );
+        })}
+      </Stack>
     </>
   );
 };

@@ -19,7 +19,7 @@ export const MSAL_INFO: TMsalInfo = {
   backendClientId: window.settings.backendClientId,
 };
 
-const sendAxiosRequest = async <T>(
+export const sendAxiosRequest = async <T>(
   url: string,
   requestType: REQUEST_TYPE,
   bearerToken: string,
@@ -94,6 +94,33 @@ const getBearerToken = async (): Promise<string> => {
       console.warn("acquire token silently failed", error);
       await MSAL_INFO.msalInstance.acquireTokenRedirect({
         scopes: [`api://${MSAL_INFO.backendClientId}/Access`],
+      });
+    });
+  if (authResult) {
+    return authResult.accessToken;
+  } else {
+    throw new Error("Auth not successfull");
+  }
+};
+
+export const getGraphBearerToken = async (): Promise<string> => {
+  const accounts = MSAL_INFO.msalInstance.getAllAccounts();
+
+  if (accounts.length === 0) {
+    throw new Error("User not signed in");
+  }
+
+  const request = {
+    scopes: [`https://graph.microsoft.com/User.Read`],
+    account: accounts[0],
+  };
+
+  const authResult = await MSAL_INFO.msalInstance
+    .acquireTokenSilent(request)
+    .catch(async (error: Error) => {
+      console.warn("acquire token silently failed", error);
+      await MSAL_INFO.msalInstance.acquireTokenRedirect({
+        scopes: [`https://graph.microsoft.com/User.Read`],
       });
     });
   if (authResult) {

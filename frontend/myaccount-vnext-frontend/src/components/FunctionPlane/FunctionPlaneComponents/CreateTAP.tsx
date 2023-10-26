@@ -1,6 +1,6 @@
 import Button from "@mui/material/Button";
 import { useState } from "react";
-import { ActionResultProps } from "../../types";
+import { ActionResultProps } from "../../../types";
 import TextField from "@mui/material/TextField";
 
 type TAPDisplay = {
