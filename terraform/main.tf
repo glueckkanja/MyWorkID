@@ -27,15 +27,18 @@ resource "azurerm_linux_web_app" "backend" {
   site_config {
     minimum_tls_version = "1.2"
     always_on           = false
+    cors {
+      allowed_origins = [ azurerm_static_site.frontend.default_host_name ]
+    }
   }
 
   app_settings = {
     AppFunctions__DismissUserRisk = local.dismiss_user_risk_auth_context_id
     AppFunctions__GenerateTap     = local.generate_tap_auth_context_id
     AppFunctions__ResetPassword   = local.reset_password_auth_context_id
-    AzureAd__ClientId = azuread_application.backend.client_id
-    AzureAd__TenantId = data.azuread_client_config.current_user.tenant_id
-    AzureAd__Instance = "https://login.microsoftonline.com/"
+    AzureAd__ClientId             = azuread_application.backend.client_id
+    AzureAd__TenantId             = data.azuread_client_config.current_user.tenant_id
+    AzureAd__Instance             = "https://login.microsoftonline.com/"
   }
 
 }
