@@ -28,7 +28,7 @@ resource "azurerm_linux_web_app" "backend" {
     minimum_tls_version = "1.2"
     always_on           = false
     cors {
-      allowed_origins = [ azurerm_static_site.frontend.default_host_name ]
+      allowed_origins = ["https://${azurerm_static_site.frontend.default_host_name}", "*"]
     }
   }
 
@@ -110,6 +110,11 @@ resource "azuread_application_identifier_uri" "backend" {
   identifier_uri = "api://${azuread_application.backend.client_id}"
 }
 
+resource "azuread_service_principal" "backend" {
+  client_id = azuread_application.backend.client_id
+  owners    = [data.azuread_client_config.current_user.object_id]
+}
+
 # Create Frontend AppReg
 resource "azuread_application" "frontend" {
   display_name     = local.frontend_appreg_name
@@ -120,7 +125,7 @@ resource "azuread_application" "frontend" {
     requested_access_token_version = 2
   }
 
-  web {
+  single_page_application {
     redirect_uris = ["https://${azurerm_static_site.frontend.default_host_name}/"]
   }
 
@@ -133,4 +138,20 @@ resource "azuread_application" "frontend" {
     }
   }
 
+  required_resource_access {
+    resource_app_id = data.azuread_application_published_app_ids.well_known.result["MicrosoftGraph"]
+
+    resource_access {
+      id   = data.azuread_service_principal.msgraph.oauth2_permission_scope_ids["User.Read"]
+      type = "Scope"
+    }
+  }
+
+}
+
+
+
+resource "azuread_service_principal" "frontend" {
+  client_id = azuread_application.frontend.client_id
+  owners    = [data.azuread_client_config.current_user.object_id]
 }
