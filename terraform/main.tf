@@ -28,7 +28,7 @@ resource "azurerm_linux_web_app" "backend" {
     minimum_tls_version = "1.2"
     always_on           = false
     cors {
-      allowed_origins = ["https://${azurerm_static_site.frontend.default_host_name}", "*"]
+      allowed_origins = ["https://${azurerm_static_site.frontend.default_host_name}"]
     }
   }
 
@@ -148,8 +148,6 @@ resource "azuread_application" "frontend" {
   }
 
 }
-
-
 
 resource "azuread_service_principal" "frontend" {
   client_id = azuread_application.frontend.client_id
