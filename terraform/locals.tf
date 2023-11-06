@@ -17,3 +17,8 @@ locals {
 locals {
   backend_graph_permissions = ["IdentityRiskyUser.ReadWrite.All", "UserAuthenticationMethod.ReadWrite.All"]
 }
+
+# settings that change if in dev
+locals {
+  frontend_dev_redirect_uris = var.is_dev ? ["http://localhost:3000/"] : []
+}
