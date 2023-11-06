@@ -1,8 +1,9 @@
 import Button from "@mui/material/Button";
-import { useState } from "react";
-import { ActionResultProps } from "../../../types";
+import { useEffect, useState } from "react";
+import { ActionResultProps, TGenerateTapResponse } from "../../../types";
 import TextField from "@mui/material/TextField";
 import CircularProgress from "@mui/material/CircularProgress";
+import { generateTAP } from "../../../services/ApiService";
 
 type TAPDisplay = {
   visible: boolean;
@@ -10,7 +11,7 @@ type TAPDisplay = {
   loading: boolean;
 };
 
-export const CreateTAP = (props: ActionResultProps<any>) => {
+export const CreateTAP = (props: ActionResultProps<TGenerateTapResponse>) => {
   const [tapDisplay, setTapDisplay] = useState<TAPDisplay>({
     visible: false,
     value: "",
@@ -23,14 +24,54 @@ export const CreateTAP = (props: ActionResultProps<any>) => {
       value: "",
       loading: true,
     });
-    setTimeout(() => {
-      setTapDisplay({
-        visible: true,
-        value: "jkwshjfjosgs51g8",
-        loading: false,
+
+    generateTAP()
+      .then((result) => {
+        setTapDisplay({
+          visible: true,
+          value: result.data?.temporaryAccessPassword || "ERROR",
+          loading: false,
+        });
+      })
+      .catch((error) => {
+        console.error("Something went wrong during TAP generation.", error);
+        setTapDisplay({
+          visible: true,
+          value: "ERROR",
+          loading: false,
+        });
       });
-    }, 2000);
   };
+
+  useEffect(() => {
+    if (props.result) {
+      switch (props.result.status) {
+        case "success":
+          setTapDisplay({
+            visible: true,
+            value: props.result.data?.temporaryAccessPassword || "ERROR",
+            loading: false,
+          });
+          break;
+        case "pending":
+          setTapDisplay({
+            visible: true,
+            value: "",
+            loading: true,
+          });
+          break;
+        case "error":
+          // Fall through
+        default:
+          console.error("Something went wrong during TAP generation.", props.result)
+          setTapDisplay({
+            visible: true,
+            value: "ERROR",
+            loading: false,
+          });
+      }
+    }
+  }, [props.result]);
 
   return (
     <div>
@@ -50,7 +91,11 @@ export const CreateTAP = (props: ActionResultProps<any>) => {
           value={tapDisplay.value}
         />
         <div
-          className={tapDisplay.loading ? "function_plane__function_component__loading_spinner__container" : "hidden_element"}
+          className={
+            tapDisplay.loading
+              ? "function_plane__function_component__loading_spinner__container"
+              : "hidden_element"
+          }
         >
           <CircularProgress />
         </div>

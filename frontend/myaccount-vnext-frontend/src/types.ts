@@ -16,7 +16,7 @@ export type TFrontendOptions = {
 }
 
 export type TFunctionResult<T> = {
-  status: "success" | "error";
+  status: "success" | "error" | "pending";
   errorMessage?: string;
   data?: T;
   dataType: EApiFunctionTypes;
@@ -35,4 +35,8 @@ export type ActionResultProps<T> = {
 
 export type User = {
   displayName: string;
+}
+
+export type TGenerateTapResponse = {
+  temporaryAccessPassword: string;
 }

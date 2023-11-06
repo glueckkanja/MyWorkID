@@ -2,7 +2,7 @@ import { PasswordReset } from "./FunctionPlaneComponents/PasswordReset";
 import { CreateTAP } from "./FunctionPlaneComponents/CreateTAP";
 import { DismissUserRisk } from "./FunctionPlaneComponents/DismissUserRisk";
 import { useEffect, useState } from "react";
-import { handleActionAuthRedirect } from "../../services/MsalService";
+import { getPendingAction, handleActionAuthRedirect, handleRedirectPromise } from "../../services/MsalService";
 import {
   ActionResultProps,
   EApiFunctionTypes,
@@ -28,8 +28,13 @@ const FunctionPlane = () => {
   var [actionResult, setActionResult] = useState<TFunctionResult<any>>();
 
   useEffect(() => {
-    handleActionAuthRedirect().then((result) => {
-      setActionResult(result);
+    handleRedirectPromise().then((authenticationResult) => {
+      if(authenticationResult){
+        setActionResult(getPendingAction(authenticationResult));
+        handleActionAuthRedirect(authenticationResult).then((result) => {
+          setActionResult(result);
+        });
+      }
     });
   }, []);
 

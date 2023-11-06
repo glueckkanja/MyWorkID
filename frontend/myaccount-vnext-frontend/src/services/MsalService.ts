@@ -1,8 +1,8 @@
-import { PublicClientApplication } from "@azure/msal-browser";
+import { PublicClientApplication, AuthenticationResult } from "@azure/msal-browser";
 import { EApiFunctionTypes, REQUEST_TYPE, TFunctionResult } from "../types";
 import axios, { AxiosResponse } from "axios";
 import { parseChallenges } from "../utils";
-import { createTAP, dismissUserRisk } from "./ApiService";
+import { generateTAP, dismissUserRisk } from "./ApiService";
 
 export type TMsalInfo = {
   msalInstance: PublicClientApplication;
@@ -130,16 +130,44 @@ export const getGraphBearerToken = async (): Promise<string> => {
   }
 };
 
-export const handleActionAuthRedirect = async (): Promise<
+export const handleRedirectPromise = async (): Promise<AuthenticationResult | null> => {
+  return await MSAL_INFO.msalInstance.handleRedirectPromise()
+}
+
+export const getPendingAction = (authenticationResult: AuthenticationResult): TFunctionResult<any> => {
+  if (authenticationResult?.state) {
+    switch (authenticationResult?.state) {
+      case EApiFunctionTypes.DISMISS_USER_RISK:
+        return {
+          status: "pending",
+          dataType: EApiFunctionTypes.DISMISS_USER_RISK,
+        };
+      case EApiFunctionTypes.CREATE_TAP:
+        return {
+          status: "pending",
+          dataType: EApiFunctionTypes.CREATE_TAP,
+        };
+      default:
+        throw new Error("invalide state provided");
+    }
+  } else {
+    return {
+      status: "error",
+      errorMessage: "No state provided",
+      dataType: EApiFunctionTypes.UNKNOWN,
+    }
+  }
+}
+
+export const handleActionAuthRedirect = async (authenticationResult: AuthenticationResult): Promise<
   TFunctionResult<any>
 > => {
-  let res = await MSAL_INFO.msalInstance.handleRedirectPromise();
-  if (res?.state) {
-    switch (res.state) {
+  if (authenticationResult?.state) {
+    switch (authenticationResult?.state) {
       case EApiFunctionTypes.DISMISS_USER_RISK:
         return await dismissUserRisk();
       case EApiFunctionTypes.CREATE_TAP:
-        return await createTAP();
+        return await generateTAP();
       default:
         throw new Error("invalide state provided");
     }
