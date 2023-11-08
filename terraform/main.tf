@@ -126,7 +126,7 @@ resource "azuread_application" "frontend" {
   }
 
   single_page_application {
-    redirect_uris = ["https://${azurerm_static_site.frontend.default_host_name}/"]
+    redirect_uris = concat(["https://${azurerm_static_site.frontend.default_host_name}/"], local.frontend_dev_redirect_uris)
   }
 
   required_resource_access {

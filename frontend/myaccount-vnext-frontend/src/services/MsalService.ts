@@ -1,8 +1,11 @@
-import { PublicClientApplication } from "@azure/msal-browser";
+import {
+  PublicClientApplication,
+  AuthenticationResult,
+} from "@azure/msal-browser";
 import { EApiFunctionTypes, REQUEST_TYPE, TFunctionResult } from "../types";
 import axios, { AxiosResponse } from "axios";
 import { parseChallenges } from "../utils";
-import { createTAP, dismissUserRisk } from "./ApiService";
+import { generateTAP, dismissUserRisk } from "./ApiService";
 
 export type TMsalInfo = {
   msalInstance: PublicClientApplication;
@@ -130,16 +133,26 @@ export const getGraphBearerToken = async (): Promise<string> => {
   }
 };
 
-export const handleActionAuthRedirect = async (): Promise<
-  TFunctionResult<any>
-> => {
-  let res = await MSAL_INFO.msalInstance.handleRedirectPromise();
-  if (res?.state) {
-    switch (res.state) {
+export const handleRedirectPromise =
+  async (): Promise<AuthenticationResult | null> => {
+    return await MSAL_INFO.msalInstance.handleRedirectPromise();
+  };
+
+export const getPendingAction = (
+  authenticationResult: AuthenticationResult
+): TFunctionResult<any> => {
+  if (authenticationResult?.state) {
+    switch (authenticationResult?.state) {
       case EApiFunctionTypes.DISMISS_USER_RISK:
-        return await dismissUserRisk();
+        return {
+          status: "pending",
+          dataType: EApiFunctionTypes.DISMISS_USER_RISK,
+        };
       case EApiFunctionTypes.CREATE_TAP:
-        return await createTAP();
+        return {
+          status: "pending",
+          dataType: EApiFunctionTypes.CREATE_TAP,
+        };
       default:
         throw new Error("invalide state provided");
     }
@@ -148,6 +161,47 @@ export const handleActionAuthRedirect = async (): Promise<
       status: "error",
       errorMessage: "No state provided",
       dataType: EApiFunctionTypes.UNKNOWN,
+    };
+  }
+};
+
+export const handleActionAuthRedirect = async (
+  authenticationResult: AuthenticationResult
+): Promise<TFunctionResult<any>> => {
+  if (authenticationResult?.state) {
+    try {
+      switch (authenticationResult?.state) {
+        case EApiFunctionTypes.DISMISS_USER_RISK:
+          return await dismissUserRisk();
+        case EApiFunctionTypes.CREATE_TAP:
+          return await generateTAP();
+        default:
+          throw new Error("invalide state provided");
+      }
+    } catch (error: any) {
+      switch (authenticationResult?.state) {
+        case EApiFunctionTypes.DISMISS_USER_RISK:
+          return {
+            status: "error",
+            errorMessage: error.message,
+            dataType: EApiFunctionTypes.DISMISS_USER_RISK,
+          };
+        case EApiFunctionTypes.CREATE_TAP:
+          return {
+            status: "error",
+            errorMessage: error.message,
+            dataType: EApiFunctionTypes.CREATE_TAP,
+            data: { temporaryAccessPassword: "ERROR" },
+          };
+        default:
+          throw new Error("invalide state provided");
+      }
     }
+  } else {
+    return {
+      status: "error",
+      errorMessage: "No state provided",
+      dataType: EApiFunctionTypes.UNKNOWN,
+    };
   }
 };

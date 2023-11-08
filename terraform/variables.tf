@@ -48,3 +48,7 @@ variable "reset_password_auth_context_id"{
   type = string
   description = "AuthContext Id configured that is challenged for the resetPassword action"
 }
+variable "is_dev" {
+  type = bool
+  default = false
+}

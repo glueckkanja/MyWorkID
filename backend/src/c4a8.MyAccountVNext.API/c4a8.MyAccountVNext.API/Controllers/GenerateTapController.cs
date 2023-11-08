@@ -1,4 +1,5 @@
-﻿using c4a8.MyAccountVNext.API.Services;
+﻿using c4a8.MyAccountVNext.API.Models.Responses;
+using c4a8.MyAccountVNext.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Graph;
@@ -20,8 +21,8 @@ namespace c4a8.MyAccountVNext.API.Controllers
             _authContextService = authContextService;
         }
 
-        [HttpGet("")]
-        public async Task<IActionResult> GenerateTap()
+        [HttpPut("")]
+        public async Task<ActionResult<GenerateTapResponse>> GenerateTap()
         {
             string? claimsChallenge = _authContextService.CheckForRequiredAuthContext(HttpContext, AppFunctions.GenerateTap);
             string? missingAuthContextId = _authContextService.GetAuthContextId(AppFunctions.GenerateTap);
@@ -33,7 +34,11 @@ namespace c4a8.MyAccountVNext.API.Controllers
                     return StatusCode(StatusCodes.Status412PreconditionFailed, "UserId not provided");
                 }
                 var tapResponse = await _graphServiceClient.Users[userId].Authentication.TemporaryAccessPassMethods.PostAsync(new Microsoft.Graph.Models.TemporaryAccessPassAuthenticationMethod());
-                return Ok(tapResponse.TemporaryAccessPass);
+                if (tapResponse?.TemporaryAccessPass == null)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError, "Unable to generate TAP");
+                }
+                return Ok(new GenerateTapResponse(tapResponse.TemporaryAccessPass));
             }
             await _authContextService.AddClaimsChallengeHeader(HttpContext, missingAuthContextId);
             return Unauthorized(_authContextService.GetClaimsChallengeMessage());

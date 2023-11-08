@@ -7,6 +7,7 @@ import {
   EApiFunctionTypes,
   REQUEST_TYPE,
   TFunctionResult,
+  TGenerateTapResponse,
   User,
 } from "../types";
 import axios from "axios";
@@ -20,13 +21,13 @@ const convertTFunctionResult = async <T>(
     return {
       status: "success",
       data: result,
-      dataType: EApiFunctionTypes.DISMISS_USER_RISK,
+      dataType: dataType,
     };
   } catch (error: any) {
     return {
       status: "error",
       errorMessage: error.message,
-      dataType: EApiFunctionTypes.DISMISS_USER_RISK,
+      dataType: dataType,
     };
   }
 };
@@ -51,7 +52,7 @@ export const getUserImage = async (): Promise<Blob> => {
 
 export const dismissUserRisk = async (): Promise<TFunctionResult<any>> => {
   return convertTFunctionResult(
-    authenticateRequest(
+    await authenticateRequest(
       `${window.settings.backendApiUrl}/DismissUserRisk`,
       REQUEST_TYPE.PUT,
       EApiFunctionTypes.DISMISS_USER_RISK
@@ -59,10 +60,10 @@ export const dismissUserRisk = async (): Promise<TFunctionResult<any>> => {
     EApiFunctionTypes.DISMISS_USER_RISK
   );
 };
-export const createTAP = async (): Promise<TFunctionResult<any>> => {
+export const generateTAP = async (): Promise<TFunctionResult<TGenerateTapResponse>> => {
   return convertTFunctionResult(
-    authenticateRequest(
-      `${window.settings.backendApiUrl}/CreateTAP`,
+    await authenticateRequest<TGenerateTapResponse>(
+      `${window.settings.backendApiUrl}/GenerateTap`,
       REQUEST_TYPE.PUT,
       EApiFunctionTypes.CREATE_TAP
     ),
