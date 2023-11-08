@@ -34,7 +34,7 @@ namespace c4a8.MyAccountVNext.API.Controllers
                     return StatusCode(StatusCodes.Status412PreconditionFailed, "UserId not provided");
                 }
                 var tapResponse = await _graphServiceClient.Users[userId].Authentication.TemporaryAccessPassMethods.PostAsync(new Microsoft.Graph.Models.TemporaryAccessPassAuthenticationMethod());
-                if(tapResponse?.TemporaryAccessPass == null)
+                if (tapResponse?.TemporaryAccessPass == null)
                 {
                     return StatusCode(StatusCodes.Status500InternalServerError, "Unable to generate TAP");
                 }
