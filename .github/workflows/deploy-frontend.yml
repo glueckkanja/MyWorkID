@@ -12,6 +12,7 @@ on:
         options:
           - Demotenant
           - THNAU
+          - FABAD
 
 env:
   WORKING_DIRECTORY: "./frontend/myaccount-vnext-frontend"
