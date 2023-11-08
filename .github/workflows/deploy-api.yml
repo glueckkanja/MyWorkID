@@ -1,4 +1,5 @@
 name: Deploy API
+run-name: Deploy API @ ${{ inputs.environment }}
 
 env:
   AZURE_WEBAPP_NAME : ${{ vars.AZURE_WEBAPP_NAME }}
@@ -15,6 +16,7 @@ on:
         type: choice
         options:
           - Demotenant
+          - THNAU
 
 jobs:
   build:

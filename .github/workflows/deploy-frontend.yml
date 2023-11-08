@@ -11,6 +11,7 @@ on:
         type: choice
         options:
           - Demotenant
+          - THNAU
 
 env:
   WORKING_DIRECTORY: "./frontend/myaccount-vnext-frontend"
