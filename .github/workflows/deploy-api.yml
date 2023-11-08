@@ -17,6 +17,7 @@ on:
         options:
           - Demotenant
           - THNAU
+          - FABAD
 
 jobs:
   build:
