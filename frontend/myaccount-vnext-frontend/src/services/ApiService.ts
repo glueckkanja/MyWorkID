@@ -21,13 +21,13 @@ const convertTFunctionResult = async <T>(
     return {
       status: "success",
       data: result,
-      dataType: EApiFunctionTypes.DISMISS_USER_RISK,
+      dataType: dataType,
     };
   } catch (error: any) {
     return {
       status: "error",
       errorMessage: error.message,
-      dataType: EApiFunctionTypes.DISMISS_USER_RISK,
+      dataType: dataType,
     };
   }
 };

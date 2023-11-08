@@ -55,7 +55,7 @@ export const CreateTAP = (props: ActionResultProps<TGenerateTapResponse>) => {
           break;
         case "pending":
           setTapDisplay({
-            visible: true,
+            visible: false,
             value: "",
             loading: true,
           });
