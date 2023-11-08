@@ -33,8 +33,6 @@ namespace c4a8.MyAccountVNext.API.Controllers
                 {
                     return StatusCode(StatusCodes.Status412PreconditionFailed, "UserId not provided");
                 }
-                return Ok(new GenerateTapResponse("test"));
-
                 var tapResponse = await _graphServiceClient.Users[userId].Authentication.TemporaryAccessPassMethods.PostAsync(new Microsoft.Graph.Models.TemporaryAccessPassAuthenticationMethod());
                 if(tapResponse?.TemporaryAccessPass == null)
                 {
