@@ -40,3 +40,7 @@ export type User = {
 export type TGenerateTapResponse = {
   temporaryAccessPassword: string;
 }
+
+export type TGetRiskStateResponse = {
+  riskState: string;
+}

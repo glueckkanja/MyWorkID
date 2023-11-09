@@ -8,6 +8,7 @@ import {
   REQUEST_TYPE,
   TFunctionResult,
   TGenerateTapResponse,
+  TGetRiskStateResponse,
   User,
 } from "../types";
 import axios from "axios";
@@ -44,10 +45,12 @@ export const getUser = async (): Promise<User> => {
 };
 export const getUserImage = async (): Promise<Blob> => {
   var token = await getGraphBearerToken();
-  return (await axios.get(
-    "https://graph.microsoft.com/v1.0/me/photos/120x120/$value",
-    { headers: { Authorization: `Bearer ${token}` }, responseType: "blob" }
-  )).data;
+  return (
+    await axios.get(
+      "https://graph.microsoft.com/v1.0/me/photos/120x120/$value",
+      { headers: { Authorization: `Bearer ${token}` }, responseType: "blob" }
+    )
+  ).data;
 };
 
 export const dismissUserRisk = async (): Promise<TFunctionResult<any>> => {
@@ -60,7 +63,9 @@ export const dismissUserRisk = async (): Promise<TFunctionResult<any>> => {
     EApiFunctionTypes.DISMISS_USER_RISK
   );
 };
-export const generateTAP = async (): Promise<TFunctionResult<TGenerateTapResponse>> => {
+export const generateTAP = async (): Promise<
+  TFunctionResult<TGenerateTapResponse>
+> => {
   return convertTFunctionResult(
     await authenticateRequest<TGenerateTapResponse>(
       `${window.settings.backendApiUrl}/GenerateTap`,
@@ -68,5 +73,12 @@ export const generateTAP = async (): Promise<TFunctionResult<TGenerateTapRespons
       EApiFunctionTypes.CREATE_TAP
     ),
     EApiFunctionTypes.CREATE_TAP
+  );
+};
+
+export const getUserRiskState = async (): Promise<TGetRiskStateResponse> => {
+  return await authenticateRequest(
+    `${window.settings.backendApiUrl}/api/users/me/riskstate`,
+    REQUEST_TYPE.GET
   );
 };
