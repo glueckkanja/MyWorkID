@@ -26,7 +26,7 @@ resource "azurerm_linux_web_app" "backend" {
 
   site_config {
     application_stack {
-      dotnet_version = "6.0"
+      dotnet_version = "7.0"
     }
     minimum_tls_version = "1.2"
     always_on           = false
