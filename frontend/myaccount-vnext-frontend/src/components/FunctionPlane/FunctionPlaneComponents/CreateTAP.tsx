@@ -79,6 +79,7 @@ export const CreateTAP = (props: ActionResultProps<TGenerateTapResponse>) => {
         className="function_plane__function_component__action"
         variant="contained"
         onClick={createTAP}
+        disabled={tapDisplay.loading}
       >
         Create Temporary Access Password
       </Button>
@@ -89,6 +90,9 @@ export const CreateTAP = (props: ActionResultProps<TGenerateTapResponse>) => {
           label="TAP"
           variant="filled"
           value={tapDisplay.value}
+          inputProps={
+            { readOnly: true, }
+          }
         />
         <div
           className={
