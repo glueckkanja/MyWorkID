@@ -13,6 +13,10 @@ on:
           - Demotenant
           - THNAU
           - FABAD
+  push:
+    branches:
+      - main
+    
 
 env:
   WORKING_DIRECTORY: "./frontend/myaccount-vnext-frontend"
@@ -26,7 +30,7 @@ jobs:
     defaults:
       run:
         working-directory: ${{env.WORKING_DIRECTORY}}
-    environment: ${{ inputs.environment }}
+    environment: ${{ inputs.environment != null && inputs.environment || "Demotenant" }}
     steps:
       # Checkout the repo
       - uses: actions/checkout@v4
