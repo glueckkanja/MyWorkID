@@ -1,5 +1,5 @@
 name: Deploy Frontend
-run-name: Deploy Frontend @ ${{ inputs.environment }}
+run-name: Deploy Frontend @ ${{ inputs.environment&& inputs.environment || 'Demotenant (Auto Deployment)' }}
 
 on:
   workflow_dispatch:
