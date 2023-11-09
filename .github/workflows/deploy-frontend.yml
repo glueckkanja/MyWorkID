@@ -30,7 +30,7 @@ jobs:
     defaults:
       run:
         working-directory: ${{env.WORKING_DIRECTORY}}
-    environment: ${{ inputs.environment && inputs.environment || "Demotenant" }}
+    environment: ${{ inputs.environment && inputs.environment || 'Demotenant' }}
     steps:
       # Checkout the repo
       - uses: actions/checkout@v4
