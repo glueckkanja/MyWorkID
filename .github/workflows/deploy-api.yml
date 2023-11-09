@@ -1,5 +1,5 @@
 name: Deploy API
-run-name: Deploy API @ ${{ inputs.environment }}
+run-name: Deploy API @ ${{ inputs.environment && inputs.environment || 'Demotenant (Auto Deployment)' }}
 
 env:
   AZURE_WEBAPP_NAME : ${{ vars.AZURE_WEBAPP_NAME }}
@@ -59,7 +59,7 @@ jobs:
       id-token: write
     runs-on: ubuntu-latest
     needs: build
-    environment: ${{ inputs.environment }}
+    environment: ${{ inputs.environment && inputs.environment || 'Demotenant' }}
 
     steps:
       - name: Download artifact from build job
