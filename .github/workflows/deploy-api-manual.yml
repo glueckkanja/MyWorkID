@@ -17,9 +17,6 @@ on:
           - Demotenant
           - THNAU
           - FABAD
-  push:
-    branches:
-      - main
 
 env:
   AZURE_WEBAPP_NAME : ${{ vars.AZURE_WEBAPP_NAME }}

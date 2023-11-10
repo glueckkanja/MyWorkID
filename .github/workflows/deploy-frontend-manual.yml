@@ -17,10 +17,6 @@ on:
           - Demotenant
           - THNAU
           - FABAD
-  push:
-    branches:
-      - main
-    
 
 env:
   WORKING_DIRECTORY: "./frontend/myaccount-vnext-frontend"
