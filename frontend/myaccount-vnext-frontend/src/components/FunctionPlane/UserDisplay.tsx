@@ -1,5 +1,4 @@
-import { Avatar, useTheme } from "@mui/material";
-import PlaceholderImage from "../../assets/img/placeholder.png";
+import { Avatar, Skeleton, useTheme } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import {
   getUser,
@@ -8,11 +7,20 @@ import {
 } from "../../services/ApiService";
 import { TGetRiskStateResponse, User } from "../../types";
 
+type RiskUserState = {
+  loading: boolean;
+  data?: TGetRiskStateResponse;
+  displayValue?: string;
+};
+
 export const UserDisplay = () => {
   const theme = useTheme();
   const [user, setUser] = useState<User>();
   const [userImage, setUserImage] = useState<string>();
-  const [riskState, setRiskState] = useState<TGetRiskStateResponse>();
+  const [riskUserState, setRiskUserState] = useState<RiskUserState>({
+    loading: true,
+    data: undefined,
+  });
 
   useEffect(() => {
     getUser().then((usr) => {
@@ -32,19 +40,25 @@ export const UserDisplay = () => {
       });
     getUserRiskState()
       .then((result) => {
-        setRiskState(result);
+        setRiskUserState({
+          loading: false,
+          data: result,
+          displayValue: result?.riskLevel ?? result?.riskState ?? "UNKNOWN",
+        });
       })
       .catch((e) => {
         console.error("Could not get risk state", e);
-        setRiskState({ riskState: "UNKNOWN" });
+        setRiskUserState({
+          loading: false,
+          data: undefined,
+          displayValue: "UNKNOWN",
+        });
       });
   }, []);
 
   const getRiskStateColor = useCallback(
-    (value?: TGetRiskStateResponse) => {
-      let risk = value?.riskLevel ?? value?.riskState;
-
-      switch (risk?.toLocaleLowerCase()) {
+    (value?: string) => {
+      switch (value?.toLocaleLowerCase()) {
         case "none":
         case "low":
           return theme.palette.success.main;
@@ -69,11 +83,20 @@ export const UserDisplay = () => {
       <div className="user_display__user_info__container">
         <div>
           <h3 className="no_margin">{user?.displayName}</h3>
-          <div>
-            Risk State:{" "}
-            <span style={{ color: getRiskStateColor(riskState) }}>
-              {riskState?.riskLevel ?? riskState?.riskState}
-            </span>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <div>Risk State:</div>
+            <div
+              style={{ color: getRiskStateColor(riskUserState.displayValue) }}
+            >
+              {riskUserState.loading && (
+                <Skeleton
+                  variant="text"
+                  width={100}
+                  sx={{ fontSize: "1rem" }}
+                />
+              )}
+              {riskUserState.displayValue}
+            </div>
           </div>
         </div>
       </div>
