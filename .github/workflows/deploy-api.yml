@@ -18,6 +18,9 @@ on:
           - Demotenant
           - THNAU
           - FABAD
+  push:
+    branches:
+      - main
 
 jobs:
   build:
