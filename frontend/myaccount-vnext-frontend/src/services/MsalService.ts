@@ -58,7 +58,7 @@ export const authenticateRequest = async <T>(
     response = error.response;
     if (!response) {
       console.log("No Axios error response returned", response);
-      throw new Error("No Axios error response returned");
+      throw error;
     }
     if (response.status === 401) {
       if (!response.headers["www-authenticate"]) {
