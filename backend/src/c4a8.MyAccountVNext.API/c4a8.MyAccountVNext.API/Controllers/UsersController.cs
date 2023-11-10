@@ -22,8 +22,13 @@ namespace c4a8.MyAccountVNext.API.Controllers
             _graphServiceClient = graphClient;
         }
 
+        /// <summary>
+        /// This Endpoint returns the risk state of the user.
+        /// The RiskLevel is only returned if the RiskState is atRisk
+        /// </summary>
+        /// <returns></returns>
         [HttpGet("me/riskstate")]
-        public async Task<ActionResult<GenerateTapResponse>> GetRiskState()
+        public async Task<ActionResult<GetRiskStateResponse>> GetRiskState()
         {
             var userId = User.GetObjectId();
             RiskyUser? riskyUser;
@@ -33,21 +38,28 @@ namespace c4a8.MyAccountVNext.API.Controllers
             }
             catch (ODataError e)
             {
-                if(e.ResponseStatusCode == StatusCodes.Status404NotFound)
+                if (e.ResponseStatusCode == StatusCodes.Status404NotFound)
                 {
                     return NotFound();
                 }
                 throw;
             }
 
-            var riskState = RiskState.None;
-
-            if (riskyUser?.RiskState != null && riskyUser.RiskState.HasValue)
+            if (riskyUser == null)
             {
-                riskState = riskyUser.RiskState.Value;
+                Response.Headers.Add("x-error-details", "GraphAPI did not return with 404 but not RiskyUser was returned");
+                return NotFound();
             }
 
-            return Ok(new GetRiskStateResponse(riskState));
+            RiskLevel? riskLevel = null;
+            RiskState riskState = RiskState.None;
+
+            if (riskyUser.RiskState == RiskState.AtRisk)
+            {
+                riskLevel = riskyUser.RiskLevel;
+            }
+
+            return Ok(new GetRiskStateResponse(riskState, riskLevel));
         }
     }
 }

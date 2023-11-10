@@ -6,13 +6,13 @@ import {
   getUserImage,
   getUserRiskState,
 } from "../../services/ApiService";
-import { User } from "../../types";
+import { TGetRiskStateResponse, User } from "../../types";
 
 export const UserDisplay = () => {
   const theme = useTheme();
   const [user, setUser] = useState<User>();
   const [userImage, setUserImage] = useState<string>();
-  const [riskState, setRiskState] = useState<string>();
+  const [riskState, setRiskState] = useState<TGetRiskStateResponse>();
 
   useEffect(() => {
     getUser().then((usr) => {
@@ -31,12 +31,14 @@ export const UserDisplay = () => {
         // Ignore - this is thrown if no image is set
       });
     getUserRiskState().then((result) => {
-      setRiskState(result.riskState);
+      setRiskState(result);
     });
   }, []);
 
-  const getRiskStateColor = useCallback((value?: string) => {
-    switch(value?.toLowerCase()){
+  const getRiskStateColor = useCallback((value?: TGetRiskStateResponse) => {
+    switch(value?.riskLevel?.toLocaleLowerCase()){
+      case undefined:
+      case null:
       case "none":
       case "low":
         return theme.palette.success.main;
@@ -57,7 +59,7 @@ export const UserDisplay = () => {
           <h3 className="no_margin">{user?.displayName}</h3>
           <div>
             Risk State:{" "}
-            <span style={{ color: getRiskStateColor(riskState) }}>{riskState}</span>
+            <span style={{ color: getRiskStateColor(riskState) }}>{riskState?.riskLevel ?? riskState?.riskState}</span>
           </div>
         </div>
       </div>

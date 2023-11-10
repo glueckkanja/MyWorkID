@@ -43,4 +43,5 @@ export type TGenerateTapResponse = {
 
 export type TGetRiskStateResponse = {
   riskState: string;
+  riskLevel?: string;
 }
