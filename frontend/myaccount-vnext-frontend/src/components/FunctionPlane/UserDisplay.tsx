@@ -30,26 +30,38 @@ export const UserDisplay = () => {
       .catch(() => {
         // Ignore - this is thrown if no image is set
       });
-    getUserRiskState().then((result) => {
-      setRiskState(result);
-    });
+    getUserRiskState()
+      .then((result) => {
+        setRiskState(result);
+      })
+      .catch((e) => {
+        console.error("Could not get risk state", e);
+        setRiskState({ riskState: "UNKNOWN" });
+      });
   }, []);
 
-  const getRiskStateColor = useCallback((value?: TGetRiskStateResponse) => {
-    switch(value?.riskLevel?.toLocaleLowerCase()){
-      case undefined:
-      case null:
-      case "none":
-      case "low":
-        return theme.palette.success.main;
-      case "medium":
-        return theme.palette.warning.main;
-      case "high":
-        return theme.palette.error.main;
-      default:
-        return theme.palette.info.main;
-    }
-  },[riskState])
+  const getRiskStateColor = useCallback(
+    (value?: TGetRiskStateResponse) => {
+      let risk = value?.riskLevel ?? value?.riskState;
+
+      switch (risk?.toLocaleLowerCase()) {
+        case "none":
+        case "low":
+          return theme.palette.success.main;
+        case "medium":
+          return theme.palette.warning.main;
+        case "high":
+          return theme.palette.error.main;
+        case "unknown":
+          return theme.palette.grey[500];
+        case undefined:
+        case null:
+        default:
+          return theme.palette.info.main;
+      }
+    },
+    [theme]
+  );
 
   return (
     <div className="user_display">
@@ -59,7 +71,9 @@ export const UserDisplay = () => {
           <h3 className="no_margin">{user?.displayName}</h3>
           <div>
             Risk State:{" "}
-            <span style={{ color: getRiskStateColor(riskState) }}>{riskState?.riskLevel ?? riskState?.riskState}</span>
+            <span style={{ color: getRiskStateColor(riskState) }}>
+              {riskState?.riskLevel ?? riskState?.riskState}
+            </span>
           </div>
         </div>
       </div>
