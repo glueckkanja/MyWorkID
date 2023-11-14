@@ -1,15 +1,22 @@
-name: Deploy Frontend
-run-name: Deploy Frontend
+name: Deploy Frontend MANUAL
+run-name: Deploy Frontend @ ${{ inputs.environment && inputs.environment || 'Demotenant (Auto Deployment)' }}
 
 concurrency:
-  group: "Deploy Frontend"
+  group: ${{ inputs.environment && inputs.environment || 'Demotenant' }}
   cancel-in-progress: true
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
+    inputs:
+      environment:
+        description: "GitHub Environment"
+        required: true
+        default: "Demotenant"
+        type: choice
+        options:
+          - Demotenant
+          - THNAU
+          - FABAD
 
 env:
   WORKING_DIRECTORY: "./frontend/myaccount-vnext-frontend"
@@ -23,6 +30,7 @@ jobs:
     defaults:
       run:
         working-directory: ${{env.WORKING_DIRECTORY}}
+    environment: ${{ inputs.environment && inputs.environment || 'Demotenant' }}
     steps:
       # Checkout the repo
       - uses: actions/checkout@v4
@@ -44,33 +52,10 @@ jobs:
           name: react-app
           path: ${{env.WORKING_DIRECTORY}}/build
 
-  fetch_environments:
-    runs-on: ubuntu-latest
-    permissions:
-      actions: read
-    outputs:
-      environments: ${{ steps.get_environments.outputs.ENVIRONMENTS }}
-    env:
-      GH_TOKEN: ${{ github.token }}
-    steps:
-      - id: get_environments
-        name: Get Environments
-        run: |
-          ENVIRONMENTS_RAW="$(gh api \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            /repos/c4a8-devstudio/c4a8-myaccount-vnext/environments | jq -r ".environments[].name" | jq -c -Rn '[inputs]')"
-          echo "ENVIRONMENTS=$ENVIRONMENTS_RAW" >> $GITHUB_OUTPUT
-          
   deploy:
     runs-on: ubuntu-latest
-    needs: 
-      - build
-      - fetch_environments
-    strategy:
-      matrix:
-        environment: ${{ fromJson(needs.fetch_environments.outputs.ENVIRONMENTS) }}
-    environment: ${{ matrix.environment }}
+    needs: build
+    environment: ${{ inputs.environment && inputs.environment || 'Demotenant' }}
 
     steps:
       - name: Download artifact from build job
