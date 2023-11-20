@@ -59,6 +59,7 @@ resource "azurerm_static_site" "frontend" {
   location            = azurerm_resource_group.main.location
 }
 
+
 # Create Backed AppReg
 resource "azuread_application" "backend" {
   display_name     = local.backed_appreg_name
