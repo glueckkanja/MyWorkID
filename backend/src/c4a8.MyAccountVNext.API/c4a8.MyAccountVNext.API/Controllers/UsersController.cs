@@ -54,7 +54,7 @@ namespace c4a8.MyAccountVNext.API.Controllers
             RiskLevel? riskLevel = null;
             RiskState riskState = RiskState.None;
 
-            if (riskyUser.RiskState == RiskState.AtRisk)
+            if (riskyUser.RiskState == RiskState.AtRisk || riskyUser.RiskState == RiskState.ConfirmedCompromised)
             {
                 riskLevel = riskyUser.RiskLevel;
             }
