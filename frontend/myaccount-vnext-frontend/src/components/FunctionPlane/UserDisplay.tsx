@@ -63,7 +63,7 @@ export const UserDisplay = () => {
       });
 
     updateRiskState();
-  }, []);
+  }, [updateRiskState]);
 
   useEffect(() => {
     riskStatePollingIntervalRef.current = setInterval(

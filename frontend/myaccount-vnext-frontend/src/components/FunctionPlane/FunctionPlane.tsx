@@ -77,6 +77,8 @@ const FunctionPlane = () => {
                 }
               />
             );
+          } else {
+            return undefined;
           }
         })}
       </Stack>
