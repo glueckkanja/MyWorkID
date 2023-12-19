@@ -47,7 +47,7 @@ resource "azurerm_linux_web_app" "backend" {
 }
 
 resource "azuread_app_role_assignment" "backend_managed_identity" {
-  for_each            = toset(local.backend_graph_permissions)
+  for_each            = local.skip_actions_requiring_global_admin ? toset([]) : toset(local.backend_graph_permissions)
   app_role_id         = data.azuread_service_principal.msgraph.app_role_ids[each.key]
   principal_object_id = azurerm_linux_web_app.backend.identity[0].principal_id
   resource_object_id  = data.azuread_service_principal.msgraph.object_id
