@@ -51,10 +51,10 @@ export const UserDisplay = () => {
     });
     getUserImage()
       .then((imgBlob) => {
-        var reader = new FileReader();
+        const reader = new FileReader();
         reader.readAsDataURL(imgBlob);
         reader.onloadend = () => {
-          var base64String = reader.result?.toString();
+          const base64String = reader.result?.toString();
           setUserImage(base64String);
         };
       })

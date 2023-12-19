@@ -28,7 +28,7 @@ export const sendAxiosRequest = async <T>(
   bearerToken: string,
   body?: any
 ): Promise<AxiosResponse<T, any>> => {
-  let header = {
+  const header = {
     Authorization: `Bearer ${bearerToken}`,
   };
 
@@ -51,7 +51,7 @@ export const authenticateRequest = async <T>(
   body?: any
 ): Promise<T> => {
   let response: AxiosResponse<T, any> | undefined;
-  let token = await getBearerToken();
+  const token = await getBearerToken();
   try {
     response = await sendAxiosRequest<T>(url, requestType, token, body);
   } catch (error: any) {
@@ -64,7 +64,7 @@ export const authenticateRequest = async <T>(
       if (!response.headers["www-authenticate"]) {
         throw new Error("Authentication failed - no challenge provided");
       }
-      let wwwAuthenticateHeader = parseChallenges(
+      const wwwAuthenticateHeader = parseChallenges(
         response.headers["www-authenticate"]
       );
       await MSAL_INFO.msalInstance.acquireTokenRedirect({

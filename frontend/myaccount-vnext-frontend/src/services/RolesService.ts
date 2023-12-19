@@ -1,9 +1,9 @@
 import { JwtPayload, jwtDecode } from "jwt-decode";
 
 export abstract class Role {
-  static ALLOW_CREATE_TAP: string = "MyAccount.VNext.CreateTAP";
-  static ALLOW_DISMISS_USER_RISK: string = "MyAccount.VNext.DismissUserRisk";
-  static ALLOW_CHANGE_PASSWORD: string = "MyAccount.VNext.PasswordReset";
+  static ALLOW_CREATE_TAP = "MyAccount.VNext.CreateTAP";
+  static ALLOW_DISMISS_USER_RISK = "MyAccount.VNext.DismissUserRisk";
+  static ALLOW_CHANGE_PASSWORD = "MyAccount.VNext.PasswordReset";
 }
 
 interface JWTTokenPayload extends JwtPayload {
@@ -11,6 +11,6 @@ interface JWTTokenPayload extends JwtPayload {
 }
 
 export const parseRoles = (token: string): string[] => {
-  let decodedToken = jwtDecode<JWTTokenPayload>(token);
+  const decodedToken = jwtDecode<JWTTokenPayload>(token);
   return decodedToken.roles || [];
 };

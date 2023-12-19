@@ -1,6 +1,7 @@
 import Button from "@mui/material/Button";
 import { ActionResultProps } from "../../../types";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- This is a placeholder component
 export const PasswordReset = (props: ActionResultProps<any>) => {
   return (
     <div>

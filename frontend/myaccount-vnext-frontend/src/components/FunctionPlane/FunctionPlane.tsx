@@ -41,9 +41,9 @@ const FUNCTION_PLANE_COMPONENTS: {
 ];
 
 const FunctionPlane = () => {
-  var [actionResult, setActionResult] = useState<TFunctionResult<any>>();
+  const [actionResult, setActionResult] = useState<TFunctionResult<any>>();
 
-  var signedInUserInfo = useSignedInUser();
+  const signedInUserInfo = useSignedInUser();
 
   useEffect(() => {
     handleRedirectPromise().then((authenticationResult) => {

@@ -13,7 +13,7 @@ export const DismissUserRisk = (props: ActionResultProps<any>) => {
         case "pending":
           setLoading(true);
           break;
-        // @ts-expect-error
+        // @ts-expect-error - Fall through is intentional here
         case "error":
           console.error("Could not dismiss status", props.result.data);
         // Fall through
