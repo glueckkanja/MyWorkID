@@ -1,5 +1,5 @@
 import { Avatar, Skeleton, useTheme } from "@mui/material";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   getUser,
   getUserImage,
@@ -13,6 +13,8 @@ type RiskUserState = {
   displayValue?: string;
 };
 
+const RISK_STATE_UPDATE_POLLING_INTERVAL_IN_MILLISECONDS = 30000; // 30 seconds
+
 export const UserDisplay = () => {
   const theme = useTheme();
   const [user, setUser] = useState<User>();
@@ -21,6 +23,27 @@ export const UserDisplay = () => {
     loading: true,
     data: undefined,
   });
+
+  const riskStatePollingIntervalRef = useRef<NodeJS.Timeout>();
+
+  const updateRiskState = useCallback(() => {
+    getUserRiskState()
+      .then((result) => {
+        setRiskUserState({
+          loading: false,
+          data: result,
+          displayValue: result?.riskLevel ?? result?.riskState ?? "UNKNOWN",
+        });
+      })
+      .catch((e) => {
+        console.error("Could not get risk state", e);
+        setRiskUserState({
+          loading: false,
+          data: undefined,
+          displayValue: "UNKNOWN",
+        });
+      });
+  }, [setRiskUserState]);
 
   useEffect(() => {
     getUser().then((usr) => {
@@ -38,23 +61,21 @@ export const UserDisplay = () => {
       .catch(() => {
         // Ignore - this is thrown if no image is set
       });
-    getUserRiskState()
-      .then((result) => {
-        setRiskUserState({
-          loading: false,
-          data: result,
-          displayValue: result?.riskLevel ?? result?.riskState ?? "UNKNOWN",
-        });
-      })
-      .catch((e) => {
-        console.error("Could not get risk state", e);
-        setRiskUserState({
-          loading: false,
-          data: undefined,
-          displayValue: "UNKNOWN",
-        });
-      });
+
+    updateRiskState();
   }, []);
+
+  useEffect(() => {
+    riskStatePollingIntervalRef.current = setInterval(
+      updateRiskState,
+      RISK_STATE_UPDATE_POLLING_INTERVAL_IN_MILLISECONDS
+    );
+    return () => {
+      if (riskStatePollingIntervalRef.current) {
+        clearInterval(riskStatePollingIntervalRef.current);
+      }
+    };
+  }, [updateRiskState]);
 
   const getRiskStateColor = useCallback(
     (value?: string) => {
