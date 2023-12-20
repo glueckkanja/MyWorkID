@@ -5,7 +5,6 @@ import {
   getUserImage,
   getUserRiskState,
 } from "../../services/ApiService";
-import { setInterval, clearInterval } from "timers";
 import { TGetRiskStateResponse, User } from "../../types";
 
 type RiskUserState = {
