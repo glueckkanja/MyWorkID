@@ -34,7 +34,7 @@ const convertTFunctionResult = async <T>(
 };
 
 export const getUser = async (): Promise<User> => {
-  var token = await getGraphBearerToken();
+  const token = await getGraphBearerToken();
   return (
     await sendAxiosRequest<User>(
       "https://graph.microsoft.com/v1.0/me",
@@ -44,7 +44,7 @@ export const getUser = async (): Promise<User> => {
   ).data;
 };
 export const getUserImage = async (): Promise<Blob> => {
-  var token = await getGraphBearerToken();
+  const token = await getGraphBearerToken();
   return (
     await axios.get(
       "https://graph.microsoft.com/v1.0/me/photos/120x120/$value",

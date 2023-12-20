@@ -1,10 +1,11 @@
 import { Avatar, Skeleton, useTheme } from "@mui/material";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   getUser,
   getUserImage,
   getUserRiskState,
 } from "../../services/ApiService";
+import { setInterval, clearInterval } from "timers";
 import { TGetRiskStateResponse, User } from "../../types";
 
 type RiskUserState = {
@@ -12,6 +13,8 @@ type RiskUserState = {
   data?: TGetRiskStateResponse;
   displayValue?: string;
 };
+
+const RISK_STATE_UPDATE_POLLING_INTERVAL_IN_MILLISECONDS = 30000; // 30 seconds
 
 export const UserDisplay = () => {
   const theme = useTheme();
@@ -22,22 +25,9 @@ export const UserDisplay = () => {
     data: undefined,
   });
 
-  useEffect(() => {
-    getUser().then((usr) => {
-      setUser(usr);
-    });
-    getUserImage()
-      .then((imgBlob) => {
-        var reader = new FileReader();
-        reader.readAsDataURL(imgBlob);
-        reader.onloadend = () => {
-          var base64String = reader.result?.toString();
-          setUserImage(base64String);
-        };
-      })
-      .catch(() => {
-        // Ignore - this is thrown if no image is set
-      });
+  const riskStatePollingIntervalRef = useRef<NodeJS.Timeout>();
+
+  const updateRiskState = useCallback(() => {
     getUserRiskState()
       .then((result) => {
         setRiskUserState({
@@ -54,7 +44,39 @@ export const UserDisplay = () => {
           displayValue: "UNKNOWN",
         });
       });
-  }, []);
+  }, [setRiskUserState]);
+
+  useEffect(() => {
+    getUser().then((usr) => {
+      setUser(usr);
+    });
+    getUserImage()
+      .then((imgBlob) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(imgBlob);
+        reader.onloadend = () => {
+          const base64String = reader.result?.toString();
+          setUserImage(base64String);
+        };
+      })
+      .catch(() => {
+        // Ignore - this is thrown if no image is set
+      });
+
+    updateRiskState();
+  }, [updateRiskState]);
+
+  useEffect(() => {
+    riskStatePollingIntervalRef.current = setInterval(
+      updateRiskState,
+      RISK_STATE_UPDATE_POLLING_INTERVAL_IN_MILLISECONDS
+    );
+    return () => {
+      if (riskStatePollingIntervalRef.current) {
+        clearInterval(riskStatePollingIntervalRef.current);
+      }
+    };
+  }, [updateRiskState]);
 
   const getRiskStateColor = useCallback(
     (value?: string) => {

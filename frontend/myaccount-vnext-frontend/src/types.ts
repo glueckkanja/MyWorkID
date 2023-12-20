@@ -27,7 +27,7 @@ export enum EApiFunctionTypes {
   CREATE_TAP = "createTap",
   PASSWORD_RESET = "passwordReset",
   UNKNOWN = "unknown"
-};
+}
 
 export type ActionResultProps<T> = {
   result?: TFunctionResult<T>
