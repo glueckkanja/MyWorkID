@@ -19,6 +19,7 @@ resource "azurerm_linux_web_app" "backend" {
   service_plan_id         = azurerm_service_plan.backend.id
   https_only              = true
   client_affinity_enabled = false
+  zip_deploy_file         = ".\\binaries\\backend\\binaries.zip"
 
   identity {
     type = "SystemAssigned"
@@ -42,7 +43,9 @@ resource "azurerm_linux_web_app" "backend" {
     AzureAd__ClientId             = azuread_application.backend.client_id
     AzureAd__TenantId             = data.azuread_client_config.current_user.tenant_id
     AzureAd__Instance             = "https://login.microsoftonline.com/"
+    WEBSITE_RUN_FROM_PACKAGE      = "1"
   }
+
 
 }
 
@@ -150,7 +153,6 @@ resource "azuread_application" "frontend" {
       type = "Scope"
     }
   }
-
 }
 
 resource "azuread_service_principal" "frontend" {
