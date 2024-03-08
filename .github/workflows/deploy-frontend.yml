@@ -8,6 +8,8 @@ concurrency:
 on:
   workflow_dispatch:
   push:
+    paths:
+      - 'frontend/**'
     branches:
       - main
 
