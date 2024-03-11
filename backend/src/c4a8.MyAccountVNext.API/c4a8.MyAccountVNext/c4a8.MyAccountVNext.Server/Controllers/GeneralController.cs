@@ -6,7 +6,7 @@ using Microsoft.Extensions.Options;
 
 namespace c4a8.MyAccountVNext.API.Controllers
 {
-    [Route("")]
+    [Route("api/[controller]")]
     [ApiController]
     public class GeneralController : ControllerBase
     {
@@ -25,7 +25,7 @@ namespace c4a8.MyAccountVNext.API.Controllers
         }
 
         [AllowAnonymous]
-        [HttpGet("frontend/config")]
+        [HttpGet("config/frontend")]
         public ActionResult<FrontendOptions> GetFrontendConfig()
         {
             return Ok(_frontendOptions);

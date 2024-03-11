@@ -6,31 +6,31 @@ import {
 } from "@azure/msal-react";
 import { InteractionType } from "@azure/msal-browser";
 import { ReactNode, useEffect, useState } from "react";
-import { MSAL_INFO } from "./services/MsalService";
 import { SignedInUserProvider } from "./contexts/SignedInUserProvider";
+import { TMsalInfo, getMsalInfo } from "./services/MsalService";
 
 export type AppAutenticationProps = {
   children: ReactNode;
 };
 
 export const AppAutentication = (props: AppAutenticationProps) => {
-  const [loading, setLoading] = useState<boolean>(true);
+  const [msalInfo, setMsalInfo] = useState<TMsalInfo>();
 
   useEffect(() => {
-    MSAL_INFO.msalInstance.initialize().then(() => {
-      setLoading(false);
+    getMsalInfo().then((_msalInfo) => {
+      setMsalInfo(_msalInfo);
     });
   }, []);
 
-  if (loading) {
+  if (!msalInfo) {
     return <div>Loading</div>;
-  } else if (MSAL_INFO?.msalInstance) {
+  } else if(msalInfo.msalInstance) {
     return (
-      <MsalProvider instance={MSAL_INFO.msalInstance}>
+      <MsalProvider instance={msalInfo.msalInstance}>
         <MsalAuthenticationTemplate
           interactionType={InteractionType.Redirect}
           authenticationRequest={{
-            scopes: [`api://${MSAL_INFO.backendClientId}/Access`],
+            scopes: [`api://${msalInfo.backendClientId}/Access`],
           }}
         >
           <AuthenticatedTemplate>
@@ -43,6 +43,6 @@ export const AppAutentication = (props: AppAutenticationProps) => {
       </MsalProvider>
     );
   } else {
-    return <></>;
+    return <div>Something went wrong</div>;
   }
 };

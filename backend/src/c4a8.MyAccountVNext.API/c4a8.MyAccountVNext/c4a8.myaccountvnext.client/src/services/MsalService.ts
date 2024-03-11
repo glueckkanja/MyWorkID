@@ -1,26 +1,82 @@
 import {
   PublicClientApplication,
   AuthenticationResult,
+  LogLevel,
 } from "@azure/msal-browser";
 import { EApiFunctionTypes, REQUEST_TYPE, TFunctionResult } from "../types";
 import axios, { AxiosResponse } from "axios";
 import { parseChallenges } from "../utils";
 import { generateTAP, dismissUserRisk } from "./ApiService";
+import { getFrontendOptions } from "./FrontendOptionsService";
+import { Mutex } from "async-mutex";
 
 export type TMsalInfo = {
   msalInstance: PublicClientApplication;
   backendClientId: string;
 };
 
-export const MSAL_INFO: TMsalInfo = {
-  msalInstance: new PublicClientApplication({
-    auth: {
-      clientId: window.settings.frontendClientId,
-      authority: `https://login.microsoftonline.com/${window.settings.tenantId}`,
-    },
-  }),
-  backendClientId: window.settings.backendClientId,
+const getMsalInfoMutex = new Mutex();
+let msalInfoCache: TMsalInfo | undefined = undefined;
+export const getMsalInfo = async (): Promise<TMsalInfo> => {
+  return await getMsalInfoMutex.runExclusive(async () => {
+    if (msalInfoCache) {
+      return msalInfoCache;
+    }
+
+
+    let frontendOptions = await getFrontendOptions();
+
+    msalInfoCache = {
+      msalInstance: new PublicClientApplication({
+        auth: {
+          clientId: frontendOptions.frontendClientId,
+          authority: `https://login.microsoftonline.com/${frontendOptions.tenantId}`,
+        },
+        system: {
+          loggerOptions: {
+            logLevel: LogLevel.Verbose,
+            loggerCallback: (level, message, containsPii) => {
+              if (containsPii) {
+                return;
+              }
+              switch (level) {
+                case LogLevel.Error:
+                  console.error(message);
+                  return;
+                case LogLevel.Info:
+                  console.info(message);
+                  return;
+                case LogLevel.Verbose:
+                  console.debug(message);
+                  return;
+                case LogLevel.Warning:
+                  console.warn(message);
+                  return;
+              }
+            },
+            piiLoggingEnabled: false,
+          },
+        },
+      }),
+      backendClientId: frontendOptions.backendClientId,
+    };
+    await msalInfoCache.msalInstance.initialize();
+    return msalInfoCache;
+  });
 };
+
+// export const mInf = {
+//   msalInstance: new PublicClientApplication({
+//     auth: {
+//       clientId: "7e19e859-ddf5-402c-8115-8ee20c575b4a",
+//       authority: `https://login.microsoftonline.com/a9ae459a-6068-4a03-915a-7031507edbc1`,
+//     },
+//   }),
+//   backendClientId: "b808da2f-1ae8-4f02-a4e9-320fd6a1dc6b",
+// };
+// export const getMsalInfo = async (): Promise<TMsalInfo> => {
+//   return mInf;
+// };
 
 export const sendAxiosRequest = async <T>(
   url: string,
@@ -67,9 +123,11 @@ export const authenticateRequest = async <T>(
       const wwwAuthenticateHeader = parseChallenges(
         response.headers["www-authenticate"]
       );
-      await MSAL_INFO.msalInstance.acquireTokenRedirect({
+
+      var msalInfo = await getMsalInfo();
+      await msalInfo.msalInstance.acquireTokenRedirect({
         claims: window.atob(wwwAuthenticateHeader.claims), // decode the base64 string
-        scopes: [`api://${MSAL_INFO.backendClientId}/Access`],
+        scopes: [`api://${msalInfo.backendClientId}/Access`],
         state: redirectState,
       });
     } else {
@@ -80,23 +138,24 @@ export const authenticateRequest = async <T>(
 };
 
 const getBearerToken = async (): Promise<string> => {
-  const accounts = MSAL_INFO.msalInstance.getAllAccounts();
+  var msalInfo = await getMsalInfo();
+  const accounts = msalInfo.msalInstance.getAllAccounts();
 
   if (accounts.length === 0) {
     throw new Error("User not signed in");
   }
 
   const request = {
-    scopes: [`api://${MSAL_INFO.backendClientId}/Access`],
+    scopes: [`api://${msalInfo.backendClientId}/Access`],
     account: accounts[0],
   };
 
-  const authResult = await MSAL_INFO.msalInstance
+  const authResult = await msalInfo.msalInstance
     .acquireTokenSilent(request)
     .catch(async (error: Error) => {
       console.warn("acquire token silently failed", error);
-      await MSAL_INFO.msalInstance.acquireTokenRedirect({
-        scopes: [`api://${MSAL_INFO.backendClientId}/Access`],
+      await msalInfo.msalInstance.acquireTokenRedirect({
+        scopes: [`api://${msalInfo.backendClientId}/Access`],
       });
     });
   if (authResult) {
@@ -107,7 +166,8 @@ const getBearerToken = async (): Promise<string> => {
 };
 
 export const getGraphBearerToken = async (): Promise<string> => {
-  const accounts = MSAL_INFO.msalInstance.getAllAccounts();
+  var msalInfo = await getMsalInfo();
+  const accounts = msalInfo.msalInstance.getAllAccounts();
 
   if (accounts.length === 0) {
     throw new Error("User not signed in");
@@ -118,11 +178,11 @@ export const getGraphBearerToken = async (): Promise<string> => {
     account: accounts[0],
   };
 
-  const authResult = await MSAL_INFO.msalInstance
+  const authResult = await msalInfo.msalInstance
     .acquireTokenSilent(request)
     .catch(async (error: Error) => {
       console.warn("acquire token silently failed", error);
-      await MSAL_INFO.msalInstance.acquireTokenRedirect({
+      await msalInfo.msalInstance.acquireTokenRedirect({
         scopes: [`https://graph.microsoft.com/User.Read`],
       });
     });
@@ -135,7 +195,8 @@ export const getGraphBearerToken = async (): Promise<string> => {
 
 export const handleRedirectPromise =
   async (): Promise<AuthenticationResult | null> => {
-    return await MSAL_INFO.msalInstance.handleRedirectPromise();
+    var msalInfo = await getMsalInfo();
+    return await msalInfo.msalInstance.handleRedirectPromise();
   };
 
 export const getPendingAction = (

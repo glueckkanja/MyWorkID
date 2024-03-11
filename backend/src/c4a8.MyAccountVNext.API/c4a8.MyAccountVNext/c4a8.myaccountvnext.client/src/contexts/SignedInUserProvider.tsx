@@ -1,6 +1,6 @@
 import React, { ReactNode, useEffect } from "react";
-import { MSAL_INFO } from "../services/MsalService";
 import { parseRoles } from "../services/RolesService";
+import { getMsalInfo } from "../services/MsalService";
 
 export type TSignedInUser = {
   roles: string[];
@@ -19,21 +19,23 @@ export const SignedInUserProvider = (props: SignedInUserProviderProps) => {
   const [signedInUser, setSignedInUser] = React.useState<TSignedInUser>();
 
   useEffect(() => {
-    const accounts = MSAL_INFO.msalInstance.getAllAccounts();
+    getMsalInfo().then((msalInfo) => {
+      const accounts = msalInfo.msalInstance.getAllAccounts();
 
-    if (accounts.length === 0) {
-      throw new Error(
-        "User not signed in. SignedInUserProvider is only allowed to be used inside of an Authenticated context"
-      );
-    }
+      if (accounts.length === 0) {
+        throw new Error(
+          "User not signed in. SignedInUserProvider is only allowed to be used inside of an Authenticated context"
+        );
+      }
 
-    const request = {
-      scopes: [`api://${MSAL_INFO.backendClientId}/Access`],
-      account: accounts[0],
-    };
+      const request = {
+        scopes: [`api://${msalInfo.backendClientId}/Access`],
+        account: accounts[0],
+      };
 
-    MSAL_INFO?.msalInstance.acquireTokenSilent(request).then((result) => {
-      setSignedInUser({roles: parseRoles(result.accessToken)})
+      msalInfo?.msalInstance.acquireTokenSilent(request).then((result) => {
+        setSignedInUser({ roles: parseRoles(result.accessToken) });
+      });
     });
   }, []);
 

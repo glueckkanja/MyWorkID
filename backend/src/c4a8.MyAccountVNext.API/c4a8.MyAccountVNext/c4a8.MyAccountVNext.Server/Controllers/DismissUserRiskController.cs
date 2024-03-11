@@ -6,7 +6,7 @@ using Microsoft.Identity.Web;
 
 namespace c4a8.MyAccountVNext.API.Controllers
 {
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     [ApiController]
     [Authorize(Roles = "MyAccount.VNext.DismissUserRisk")]
     public class DismissUserRiskController : ControllerBase

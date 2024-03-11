@@ -1,7 +1,5 @@
 ﻿using c4a8.MyAccountVNext.API.Models.Responses;
-using c4a8.MyAccountVNext.API.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
