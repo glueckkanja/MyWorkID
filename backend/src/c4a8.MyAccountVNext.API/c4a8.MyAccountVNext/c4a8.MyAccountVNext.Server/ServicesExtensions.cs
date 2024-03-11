@@ -1,5 +1,6 @@
 ﻿using Azure.Identity;
 using c4a8.MyAccountVNext.API.Options;
+using c4a8.MyAccountVNext.Server.Options;
 using Microsoft.Graph;
 using Microsoft.Graph.Models.ExternalConnectors;
 
@@ -16,6 +17,7 @@ namespace c4a8.MyAccountVNext.API
         public static void AddConfig(this IServiceCollection services, IConfiguration config)
         {
             services.Configure<AppFunctionsOptions>(config.GetSection("AppFunctions"));
+            services.Configure<FrontendOptions>(config.GetSection("Frontend"));
         }
     }
 }
