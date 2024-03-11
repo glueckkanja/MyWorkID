@@ -10,11 +10,11 @@ const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
 );
 
-declare global {
-  interface Window {
-    settings: TFrontendOptions;
-  }
-}
+//declare global {
+//  interface Window {
+//    settings: TFrontendOptions;
+//  }
+//}
 
 
 root.render(

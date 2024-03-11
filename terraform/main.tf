@@ -56,12 +56,11 @@ resource "azuread_app_role_assignment" "backend_managed_identity" {
   resource_object_id  = data.azuread_service_principal.msgraph.object_id
 }
 
-resource "azurerm_static_site" "frontend" {
+resource "azurerm_static_web_app" "frontend" {
   name                = local.frontend_name
   resource_group_name = azurerm_resource_group.main.name
   location            = azurerm_resource_group.main.location
 }
-
 
 # Create Backed AppReg
 resource "azuread_application" "backend" {
