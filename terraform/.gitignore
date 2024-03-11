@@ -36,3 +36,5 @@ terraform.rc
 
 # ignore backend config
 backend.tf
+
+binaries/**.zip
