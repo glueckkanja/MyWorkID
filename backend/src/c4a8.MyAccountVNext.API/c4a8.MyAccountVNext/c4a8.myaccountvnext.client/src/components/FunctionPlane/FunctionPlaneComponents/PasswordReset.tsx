@@ -5,7 +5,7 @@ import { ActionResultProps } from "../../../types";
 export const PasswordReset = (props: ActionResultProps<any>) => {
   return (
     <div>
-      <Button className="function_plane__function_component__action" variant="contained">Password Reset</Button>
+      <Button className="function_plane__function_component__action" variant="contained" onClick={() => {console.log(props)}}>Password Reset</Button>
     </div>
   );
 };
