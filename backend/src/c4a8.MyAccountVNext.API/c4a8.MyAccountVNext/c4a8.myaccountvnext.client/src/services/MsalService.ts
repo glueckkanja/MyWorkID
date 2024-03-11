@@ -34,7 +34,7 @@ export const getMsalInfo = async (): Promise<TMsalInfo> => {
         },
         system: {
           loggerOptions: {
-            logLevel: LogLevel.Verbose,
+            logLevel: LogLevel.Warning,
             loggerCallback: (level, message, containsPii) => {
               if (containsPii) {
                 return;
@@ -64,19 +64,6 @@ export const getMsalInfo = async (): Promise<TMsalInfo> => {
     return msalInfoCache;
   });
 };
-
-// export const mInf = {
-//   msalInstance: new PublicClientApplication({
-//     auth: {
-//       clientId: "7e19e859-ddf5-402c-8115-8ee20c575b4a",
-//       authority: `https://login.microsoftonline.com/a9ae459a-6068-4a03-915a-7031507edbc1`,
-//     },
-//   }),
-//   backendClientId: "b808da2f-1ae8-4f02-a4e9-320fd6a1dc6b",
-// };
-// export const getMsalInfo = async (): Promise<TMsalInfo> => {
-//   return mInf;
-// };
 
 export const sendAxiosRequest = async <T>(
   url: string,

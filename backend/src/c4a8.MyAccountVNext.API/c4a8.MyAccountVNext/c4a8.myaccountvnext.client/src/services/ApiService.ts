@@ -33,6 +33,8 @@ const convertTFunctionResult = async <T>(
   }
 };
 
+const backendApiUrl: string = `${window.location.protocol}//${window.location.host}/api`;
+
 export const getUser = async (): Promise<User> => {
   const token = await getGraphBearerToken();
   return (
@@ -56,7 +58,7 @@ export const getUserImage = async (): Promise<Blob> => {
 export const dismissUserRisk = async (): Promise<TFunctionResult<any>> => {
   return convertTFunctionResult(
     await authenticateRequest(
-      `${window.settings.backendApiUrl}/DismissUserRisk`,
+      `${backendApiUrl}/DismissUserRisk`,
       REQUEST_TYPE.PUT,
       EApiFunctionTypes.DISMISS_USER_RISK
     ),
@@ -68,7 +70,7 @@ export const generateTAP = async (): Promise<
 > => {
   return convertTFunctionResult(
     await authenticateRequest<TGenerateTapResponse>(
-      `${window.settings.backendApiUrl}/GenerateTap`,
+      `${backendApiUrl}/GenerateTap`,
       REQUEST_TYPE.PUT,
       EApiFunctionTypes.CREATE_TAP
     ),
@@ -78,7 +80,7 @@ export const generateTAP = async (): Promise<
 
 export const getUserRiskState = async (): Promise<TGetRiskStateResponse> => {
   return await authenticateRequest(
-    `${window.settings.backendApiUrl}/api/users/me/riskstate`,
+    `${backendApiUrl}/api/users/me/riskstate`,
     REQUEST_TYPE.GET
   );
 };

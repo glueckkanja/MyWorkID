@@ -9,7 +9,6 @@ export type TWWWAuthenticateHeader = {
 };
 
 export type TFrontendOptions = {
-  backendApiUrl: string,
   frontendClientId: string,
   tenantId: string,
   backendClientId: string,

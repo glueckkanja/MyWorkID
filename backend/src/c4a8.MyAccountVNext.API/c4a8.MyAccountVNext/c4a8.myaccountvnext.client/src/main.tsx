@@ -4,17 +4,10 @@ import "./main.scss";
 import { BrowserRouter } from "react-router-dom";
 import { AppAutentication } from "./AppAuthentication";
 import App from "./App";
-import { TFrontendOptions } from "./types";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
 );
-
-declare global {
-  interface Window {
-    settings: TFrontendOptions;
-  }
-}
 
 root.render(
   <BrowserRouter>
