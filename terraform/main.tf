@@ -19,7 +19,7 @@ resource "azurerm_linux_web_app" "backend" {
   service_plan_id         = azurerm_service_plan.backend.id
   https_only              = true
   client_affinity_enabled = false
-  zip_deploy_file         = ".\\binaries\\backend\\binaries.zip"
+  zip_deploy_file         = ".\\binaries\\binaries.zip"
 
   identity {
     type = "SystemAssigned"
@@ -31,9 +31,6 @@ resource "azurerm_linux_web_app" "backend" {
     }
     minimum_tls_version = "1.2"
     always_on           = false
-    cors {
-      allowed_origins = ["https://${azurerm_static_site.frontend.default_host_name}"]
-    }
   }
 
   app_settings = {
@@ -43,6 +40,9 @@ resource "azurerm_linux_web_app" "backend" {
     AzureAd__ClientId             = azuread_application.backend.client_id
     AzureAd__TenantId             = data.azuread_client_config.current_user.tenant_id
     AzureAd__Instance             = "https://login.microsoftonline.com/"
+    Frontend__FrontendClientId    = azuread_application.frontend.client_id
+    Frontend__BackendClientId     = azuread_application.backend.client_id
+    Frontend__TenantId            = data.azuread_client_config.current_user.tenant_id
     WEBSITE_RUN_FROM_PACKAGE      = "1"
   }
 
@@ -54,12 +54,6 @@ resource "azuread_app_role_assignment" "backend_managed_identity" {
   app_role_id         = data.azuread_service_principal.msgraph.app_role_ids[each.key]
   principal_object_id = azurerm_linux_web_app.backend.identity[0].principal_id
   resource_object_id  = data.azuread_service_principal.msgraph.object_id
-}
-
-resource "azurerm_static_web_app" "frontend" {
-  name                = local.frontend_name
-  resource_group_name = azurerm_resource_group.main.name
-  location            = azurerm_resource_group.main.location
 }
 
 # Create Backed AppReg
@@ -132,7 +126,7 @@ resource "azuread_application" "frontend" {
   }
 
   single_page_application {
-    redirect_uris = concat(["https://${azurerm_static_site.frontend.default_host_name}/"], local.frontend_dev_redirect_uris)
+    redirect_uris = concat(["https://${azurerm_linux_web_app.backend.default_hostname}/"], local.frontend_dev_redirect_uris)
   }
 
   required_resource_access {
