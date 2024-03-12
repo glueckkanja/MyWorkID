@@ -11,6 +11,7 @@ locals {
   generate_tap_auth_context_id        = var.generate_tap_auth_context_id
   reset_password_auth_context_id      = var.reset_password_auth_context_id
   skip_actions_requiring_global_admin = var.skip_actions_requiring_global_admin
+  binaries_zip_path                   = var.binaries_zip_path
 }
 
 # Permissions necessary for the banend managed identity

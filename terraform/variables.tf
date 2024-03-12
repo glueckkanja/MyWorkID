@@ -52,3 +52,7 @@ variable "skip_actions_requiring_global_admin" {
   type = bool
   default = false
 }
+variable "binaries_zip_path" {
+  type = string
+  description = "Path where binaries are located"
+}

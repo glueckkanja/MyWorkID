@@ -19,7 +19,7 @@ resource "azurerm_linux_web_app" "backend" {
   service_plan_id         = azurerm_service_plan.backend.id
   https_only              = true
   client_affinity_enabled = false
-  zip_deploy_file         = ".\\binaries\\binaries.zip"
+  zip_deploy_file         = local.binaries_zip_path
 
   identity {
     type = "SystemAssigned"
