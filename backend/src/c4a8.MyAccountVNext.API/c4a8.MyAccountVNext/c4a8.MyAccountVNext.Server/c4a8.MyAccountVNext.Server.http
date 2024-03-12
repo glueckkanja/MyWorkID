@@ -1,0 +1,6 @@
+@c4a8.MyAccountVNext.Server_HostAddress = http://localhost:5249
+
+GET {{c4a8.MyAccountVNext.Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
