@@ -27,7 +27,7 @@ resource "azurerm_linux_web_app" "backend" {
 
   site_config {
     application_stack {
-      dotnet_version = "7.0"
+      dotnet_version = "8.0"
     }
     minimum_tls_version = "1.2"
     always_on           = false
@@ -40,7 +40,7 @@ resource "azurerm_linux_web_app" "backend" {
     AzureAd__ClientId             = azuread_application.backend.client_id
     AzureAd__TenantId             = data.azuread_client_config.current_user.tenant_id
     AzureAd__Instance             = "https://login.microsoftonline.com/"
-    Frontend__FrontendClientId    = azuread_application.frontend.client_id
+    Frontend__FrontendClientId    = azuread_application_registration.frontend.client_id
     Frontend__BackendClientId     = azuread_application.backend.client_id
     Frontend__TenantId            = data.azuread_client_config.current_user.tenant_id
     WEBSITE_RUN_FROM_PACKAGE      = "1"
@@ -115,40 +115,47 @@ resource "azuread_service_principal" "backend" {
   owners    = [data.azuread_client_config.current_user.object_id]
 }
 
-# Create Frontend AppReg
-resource "azuread_application" "frontend" {
-  display_name     = local.frontend_appreg_name
-  owners           = [data.azuread_client_config.current_user.object_id]
-  sign_in_audience = "AzureADMyOrg"
-
-  api {
-    requested_access_token_version = 2
-  }
-
-  single_page_application {
-    redirect_uris = concat(["https://${azurerm_linux_web_app.backend.default_hostname}/"], local.frontend_dev_redirect_uris)
-  }
-
-  required_resource_access {
-    resource_app_id = azuread_application.backend.client_id
-
-    resource_access {
-      id   = azuread_application.backend.oauth2_permission_scope_ids.Access
-      type = "Scope"
-    }
-  }
-
-  required_resource_access {
-    resource_app_id = data.azuread_application_published_app_ids.well_known.result["MicrosoftGraph"]
-
-    resource_access {
-      id   = data.azuread_service_principal.msgraph.oauth2_permission_scope_ids["User.Read"]
-      type = "Scope"
-    }
-  }
+# Frontend AppReg Start
+# azuread_application_registration is used due to azuread_application_redirect_uris beeing incompatible with azuread_application - azuread_application_redirect_uris.frontend_backend necessary as it creates a circle with azurerm_linux_web_app.backend
+resource "azuread_application_registration" "frontend" {
+  display_name                   = local.frontend_appreg_name
+  sign_in_audience               = "AzureADMyOrg"
+  requested_access_token_version = 2
 }
 
+resource "azuread_application_api_access" "frontend_backend" {
+  application_id = azuread_application_registration.frontend.id
+  api_client_id  = azuread_application.backend.client_id
+  scope_ids = [
+    azuread_application.backend.oauth2_permission_scope_ids.Access,
+  ]
+}
+
+resource "azuread_application_api_access" "frontend_graph" {
+  application_id = azuread_application_registration.frontend.id
+  api_client_id  = data.azuread_application_published_app_ids.well_known.result["MicrosoftGraph"]
+  scope_ids = [
+    data.azuread_service_principal.msgraph.oauth2_permission_scope_ids["User.Read"],
+  ]
+}
+
+resource "azuread_application_owner" "frontend_current_user" {
+  application_id  = azuread_application_registration.frontend.id
+  owner_object_id = data.azuread_client_config.current_user.object_id
+}
+
+resource "azuread_application_redirect_uris" "frontend_backend" {
+  application_id = azuread_application_registration.frontend.id
+  type           = "SPA"
+
+  redirect_uris = concat(
+    ["https://${azurerm_linux_web_app.backend.default_hostname}/"],
+    local.frontend_dev_redirect_uris,
+  )
+}
+# Frontend AppReg End
+
 resource "azuread_service_principal" "frontend" {
-  client_id = azuread_application.frontend.client_id
+  client_id = azuread_application_registration.frontend.client_id
   owners    = [data.azuread_client_config.current_user.object_id]
 }

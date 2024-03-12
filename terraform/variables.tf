@@ -21,11 +21,6 @@ variable "api_name" {
   description = "Name of the AppService that hosts the api. Note this has to be globally unique."
 }
 
-variable "frontend_name" {
-  type = string
-  description = "Name of the StaticSite that hosts the frontend. Note this has to be globally unique."
-}
-
 variable "backed_appreg_name" {
   type = string
   default = "ar-myAccountVNext-backend"
