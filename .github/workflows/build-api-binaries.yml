@@ -45,8 +45,12 @@ jobs:
       - name: dotnet publish
         run: dotnet publish --configuration Release --no-build --output ${{env.DOTNET_ROOT}}/publish
 
+      - name: Generate Guid for artifacts
+        id: guid
+        run: echo "GUID=$(uuidgen)" >> $GITHUB_OUTPUT
+
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v3
         with:
-          name: binaries
+          name: binaries_${{steps.guid.outputs.GUID}}
           path: ${{env.DOTNET_ROOT}}/publish
