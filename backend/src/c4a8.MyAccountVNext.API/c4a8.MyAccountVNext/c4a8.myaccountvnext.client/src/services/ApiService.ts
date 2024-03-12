@@ -80,7 +80,7 @@ export const generateTAP = async (): Promise<
 
 export const getUserRiskState = async (): Promise<TGetRiskStateResponse> => {
   return await authenticateRequest(
-    `${backendApiUrl}/api/users/me/riskstate`,
+    `${backendApiUrl}/users/me/riskstate`,
     REQUEST_TYPE.GET
   );
 };
