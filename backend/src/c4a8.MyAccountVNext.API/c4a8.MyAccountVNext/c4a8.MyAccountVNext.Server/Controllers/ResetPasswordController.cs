@@ -26,7 +26,7 @@ namespace c4a8.MyAccountVNext.API.Controllers
         /// This endpoint sets the user's password.
         /// </summary>
         /// <returns></returns>
-        [HttpPut("")]
+        [HttpPut("[action]")]
         public async Task<ActionResult> ResetPassword([FromBody] PasswordResetRequest passwordResetRequest)
         {
             string? claimsChallenge = _authContextService.CheckForRequiredAuthContext(HttpContext, AppFunctions.ResetPassword);
