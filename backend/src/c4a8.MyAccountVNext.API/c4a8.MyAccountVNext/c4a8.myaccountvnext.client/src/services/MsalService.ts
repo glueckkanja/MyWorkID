@@ -6,7 +6,7 @@ import {
 import { EApiFunctionTypes, REQUEST_TYPE, TFunctionResult } from "../types";
 import axios, { AxiosResponse } from "axios";
 import { parseChallenges } from "../utils";
-import { generateTAP, dismissUserRisk } from "./ApiService";
+import { generateTAP, dismissUserRisk, checkResetPasswordClaim } from "./ApiService";
 import { getFrontendOptions } from "./FrontendOptionsService";
 import { Mutex } from "async-mutex";
 
@@ -223,6 +223,8 @@ export const handleActionAuthRedirect = async (
           return await dismissUserRisk();
         case EApiFunctionTypes.CREATE_TAP:
           return await generateTAP();
+        case EApiFunctionTypes.PASSWORD_RESET:
+          return await checkResetPasswordClaim();
         default:
           throw new Error("invalide state provided");
       }
@@ -241,6 +243,12 @@ export const handleActionAuthRedirect = async (
             dataType: EApiFunctionTypes.CREATE_TAP,
             data: { temporaryAccessPassword: "ERROR" },
           };
+          case EApiFunctionTypes.PASSWORD_RESET:
+            return {
+              status: "error",
+              errorMessage: error.message,
+              dataType: EApiFunctionTypes.PASSWORD_RESET,
+            }
         default:
           throw new Error("invalide state provided");
       }

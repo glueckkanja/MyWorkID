@@ -22,11 +22,24 @@ namespace c4a8.MyAccountVNext.API.Controllers
             _authContextService = authContextService;
         }
 
+        [HttpGet("claim")]
+        public async Task<ActionResult> CheckClaim()
+        {
+            string? claimsChallenge = _authContextService.CheckForRequiredAuthContext(HttpContext, AppFunctions.ResetPassword);
+            string? missingAuthContextId = _authContextService.GetAuthContextId(AppFunctions.ResetPassword);
+            if (string.IsNullOrWhiteSpace(claimsChallenge))
+            {
+                return StatusCode(StatusCodes.Status204NoContent);
+            }
+            await _authContextService.AddClaimsChallengeHeader(HttpContext, missingAuthContextId);
+            return Unauthorized(_authContextService.GetClaimsChallengeMessage());
+        }
+
         /// <summary>
         /// This endpoint sets the user's password.
         /// </summary>
         /// <returns></returns>
-        [HttpPut("[action]")]
+        [HttpPut]
         public async Task<ActionResult> ResetPassword([FromBody] PasswordResetRequest passwordResetRequest)
         {
             string? claimsChallenge = _authContextService.CheckForRequiredAuthContext(HttpContext, AppFunctions.ResetPassword);
