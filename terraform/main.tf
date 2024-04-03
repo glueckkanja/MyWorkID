@@ -12,6 +12,22 @@ resource "azurerm_service_plan" "backend" {
   sku_name            = "B1"
 }
 
+resource "azurerm_log_analytics_workspace" "backend_application_insights" {
+  name                = "wsp-${local.api_name}"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  sku                 = "PerGB2018"
+  retention_in_days   = 30
+}
+
+resource "azurerm_application_insights" "backend" {
+  name                = "ai-${local.api_name}"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  workspace_id        = azurerm_log_analytics_workspace.backend_application_insights.id
+  application_type    = "web"
+}
+
 resource "azurerm_linux_web_app" "backend" {
   name                    = local.api_name
   location                = azurerm_resource_group.main.location
@@ -34,16 +50,19 @@ resource "azurerm_linux_web_app" "backend" {
   }
 
   app_settings = {
-    AppFunctions__DismissUserRisk = local.dismiss_user_risk_auth_context_id
-    AppFunctions__GenerateTap     = local.generate_tap_auth_context_id
-    AppFunctions__ResetPassword   = local.reset_password_auth_context_id
-    AzureAd__ClientId             = azuread_application.backend.client_id
-    AzureAd__TenantId             = data.azuread_client_config.current_user.tenant_id
-    AzureAd__Instance             = "https://login.microsoftonline.com/"
-    Frontend__FrontendClientId    = azuread_application_registration.frontend.client_id
-    Frontend__BackendClientId     = azuread_application.backend.client_id
-    Frontend__TenantId            = data.azuread_client_config.current_user.tenant_id
-    WEBSITE_RUN_FROM_PACKAGE      = "1"
+    AppFunctions__DismissUserRisk              = local.dismiss_user_risk_auth_context_id
+    AppFunctions__GenerateTap                  = local.generate_tap_auth_context_id
+    AppFunctions__ResetPassword                = local.reset_password_auth_context_id
+    AzureAd__ClientId                          = azuread_application.backend.client_id
+    AzureAd__TenantId                          = data.azuread_client_config.current_user.tenant_id
+    AzureAd__Instance                          = "https://login.microsoftonline.com/"
+    Frontend__FrontendClientId                 = azuread_application_registration.frontend.client_id
+    Frontend__BackendClientId                  = azuread_application.backend.client_id
+    Frontend__TenantId                         = data.azuread_client_config.current_user.tenant_id
+    WEBSITE_RUN_FROM_PACKAGE                   = "1"
+    APPLICATIONINSIGHTS_CONNECTION_STRING      = azurerm_application_insights.backend.connection_string
+    ApplicationInsightsAgent_EXTENSION_VERSION = "~3"          #https://learn.microsoft.com/en-us/azure/azure-monitor/app/azure-web-apps-net-core?tabs=Windows%2Cwindows#application-settings-definitions
+    XDT_MicrosoftApplicationInsights_Mode      = "recommended" #https://learn.microsoft.com/en-us/azure/azure-monitor/app/azure-web-apps-net-core?tabs=Windows%2Cwindows#application-settings-definitions
   }
 
 
