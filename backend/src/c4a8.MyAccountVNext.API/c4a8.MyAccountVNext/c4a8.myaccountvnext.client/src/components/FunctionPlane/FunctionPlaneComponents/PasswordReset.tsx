@@ -1,7 +1,6 @@
 import Button from "@mui/material/Button";
 import { ActionResultProps } from "../../../types";
 import { useEffect, useState } from "react";
-import TextField from "@mui/material/TextField";
 import CircularProgress from "@mui/material/CircularProgress";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
@@ -84,7 +83,7 @@ export const PasswordReset = (props: ActionResultProps<any>) => {
 
     // Call the API to reset the password
     callResetPassword(passwordToSet)
-      .then((result) => {
+      .then(() => {
         setPasswordDisplay({
           visible: false,
           value: "",
