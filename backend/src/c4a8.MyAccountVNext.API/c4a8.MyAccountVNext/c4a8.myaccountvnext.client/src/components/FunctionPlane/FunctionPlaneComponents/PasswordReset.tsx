@@ -50,19 +50,33 @@ export const PasswordReset = (props: ActionResultProps<any>) => {
   // Note this is the claim challenge check - if successfull comes back the password reset UI should be accasible - if not we have to close the menu again
   useEffect(() => {
     if (props.result) {
-      if(props.result.status === "error"){
-        console.error(
-          "Something went wrong during Password reset generation.",
-          props.result
-        );
-        setPasswordDisplay({
-          visible: false,
-          value: "",
-          showValue: false,
-          valueConfirm: "",
-          showValueConfirm: false,
-          loading: false,
-        });
+      switch (props.result.status) {
+        case "pending":
+        case "success":
+          if (!passwordDisplay.visible) {
+            setPasswordDisplay({
+              visible: true,
+              value: "",
+              showValue: false,
+              valueConfirm: "",
+              showValueConfirm: false,
+              loading: false,
+            });
+          }
+          break;
+        case "error":
+          console.error(
+            "Something went wrong during Password claim check.",
+            props.result
+          );
+          setPasswordDisplay({
+            visible: false,
+            value: "",
+            showValue: false,
+            valueConfirm: "",
+            showValueConfirm: false,
+            loading: false,
+          });
       }
     }
   }, [props.result]);

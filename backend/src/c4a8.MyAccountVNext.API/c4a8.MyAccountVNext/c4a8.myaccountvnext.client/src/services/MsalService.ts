@@ -201,6 +201,11 @@ export const getPendingAction = (
           status: "pending",
           dataType: EApiFunctionTypes.CREATE_TAP,
         };
+      case EApiFunctionTypes.PASSWORD_RESET:
+        return {
+          status: "pending",
+          dataType: EApiFunctionTypes.PASSWORD_RESET,
+        };
       default:
         throw new Error("invalide state provided");
     }
