@@ -15,18 +15,16 @@ namespace c4a8.MyAccountVNext.Server.Controllers
             _verifiedIdService = verifiedIdService;
         }
 
-        [AllowAnonymous]
+        [Authorize]
         [HttpPost("callback")]
         public async Task<ActionResult> CreatePresentationRequest()
         {
-            //Request.Body.Position = 0;
-
             using StreamReader streamReader = new StreamReader(Request.Body);
             var callbackBody = await streamReader.ReadToEndAsync();
             return StatusCode(StatusCodes.Status204NoContent);
         }
 
-        [AllowAnonymous]
+        [Authorize(Roles = "MyAccount.VNext.VerifiedId.Verify")]
         [HttpPost("verify")]
         public async Task<ActionResult> VerifyUser()
         {

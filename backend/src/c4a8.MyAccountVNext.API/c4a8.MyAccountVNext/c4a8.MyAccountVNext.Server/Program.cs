@@ -6,6 +6,7 @@ using c4a8.MyAccountVNext.API;
 using c4a8.MyAccountVNext.API.Services;
 using c4a8.MyAccountVNext.Server.Services;
 using Azure.Identity;
+using Azure.Core;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,7 +42,13 @@ builder.Services.AddCors(options =>
 builder.Services.AddConfig(builder.Configuration);
 builder.Services.AddGraphClient(builder.Configuration.GetSection("MsGraph"));
 
-builder.Services.AddVerifiedIdHttpClient<VerifiedIdService>(new DefaultAzureCredential());
+TokenCredential verifiedIdCredentials = new ManagedIdentityCredential();
+
+if (builder.Environment.IsDevelopment())
+{
+    verifiedIdCredentials = new ClientSecretCredential(builder.Configuration["LocalDevSettings:VerifiedIdTenantId"], builder.Configuration["LocalDevSettings:VerifiedIdClientId"], builder.Configuration["LocalDevSettings:VerifiedIdSecret"]);
+}
+builder.Services.AddVerifiedIdHttpClient<VerifiedIdService>(verifiedIdCredentials);
 
 builder.Services.AddScoped<IAuthContextService, AuthContextService>();
 
