@@ -1,0 +1,25 @@
+﻿using System.Text.Json.Serialization;
+
+namespace c4a8.MyAccountVNext.Server.Models.VerifiedId
+{
+    public class CreatePresentationResponse
+    {
+        [JsonPropertyName("requestId")]
+        public string? RequestId { get; set; }
+        [JsonPropertyName("url")]
+        public string? Url { get; set; }
+        [JsonPropertyName("expiry")]
+        public DateTime? ExpiryDate { get; set; }
+        [JsonPropertyName("qrCode")]
+        public string? QrCodeBase64 { get; set; }
+
+        [JsonConstructor]
+        public CreatePresentationResponse(string? requestId, string? url, DateTime? expiryDate, string? qrCodeBase64)
+        {
+            RequestId = requestId;
+            Url = url;
+            ExpiryDate = expiryDate;
+            QrCodeBase64 = qrCodeBase64;
+        }
+    }
+}

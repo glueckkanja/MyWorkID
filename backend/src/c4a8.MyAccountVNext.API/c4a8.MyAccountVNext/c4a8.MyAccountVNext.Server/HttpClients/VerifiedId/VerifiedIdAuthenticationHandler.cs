@@ -1,0 +1,26 @@
+﻿
+using System.Net;
+
+namespace c4a8.MyAccountVNext.Server.HttpClients.VerifiedId
+{
+    public class VerifiedIdAuthenticationHandler : DelegatingHandler
+    {
+        private readonly VerifiedIdAccessTokenService _verifiedIdAccessTokenService;
+        public VerifiedIdAuthenticationHandler(VerifiedIdAccessTokenService verifiedIdAccessTokenService)
+        {
+            _verifiedIdAccessTokenService = verifiedIdAccessTokenService;
+        }
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            var token = await _verifiedIdAccessTokenService.GetAccessTokenAsync();
+
+            if (!request.Headers.Contains(HttpRequestHeader.Authorization.ToString()))
+            {
+                request.Headers.Add(HttpRequestHeader.Authorization.ToString(), $"Bearer {token}");
+            }
+
+            return await base.SendAsync(request, cancellationToken);
+        }
+    }
+}

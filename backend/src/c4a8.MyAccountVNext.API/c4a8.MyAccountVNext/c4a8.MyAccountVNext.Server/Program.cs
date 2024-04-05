@@ -4,6 +4,8 @@ using System.Text.Json;
 using Microsoft.Identity.Web;
 using c4a8.MyAccountVNext.API;
 using c4a8.MyAccountVNext.API.Services;
+using c4a8.MyAccountVNext.Server.Services;
+using Azure.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,8 +40,10 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddConfig(builder.Configuration);
 builder.Services.AddGraphClient(builder.Configuration.GetSection("MsGraph"));
+builder.Services.AddVerifiedIdHttpClient<VerifiedIdService>(new DefaultAzureCredential());
 
 builder.Services.AddScoped<IAuthContextService, AuthContextService>();
+builder.Services.AddTransient<VerifiedIdService>();
 
 var app = builder.Build();
 
