@@ -17,7 +17,7 @@ namespace c4a8.MyAccountVNext.Server.HttpClients.VerifiedId
 
             if (!request.Headers.Contains(HttpRequestHeader.Authorization.ToString()))
             {
-                request.Headers.Add(HttpRequestHeader.Authorization.ToString(), $"Bearer {token}");
+                request.Headers.Add(HttpRequestHeader.Authorization.ToString(), $"Bearer {token.Token}");
             }
 
             return await base.SendAsync(request, cancellationToken);

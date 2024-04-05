@@ -40,10 +40,10 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddConfig(builder.Configuration);
 builder.Services.AddGraphClient(builder.Configuration.GetSection("MsGraph"));
+
 builder.Services.AddVerifiedIdHttpClient<VerifiedIdService>(new DefaultAzureCredential());
 
 builder.Services.AddScoped<IAuthContextService, AuthContextService>();
-builder.Services.AddTransient<VerifiedIdService>();
 
 var app = builder.Build();
 

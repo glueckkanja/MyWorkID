@@ -9,12 +9,12 @@ namespace c4a8.MyAccountVNext.Server.Models.VerifiedId
         [JsonPropertyName("url")]
         public string? Url { get; set; }
         [JsonPropertyName("expiry")]
-        public DateTime? ExpiryDate { get; set; }
+        public long? ExpiryDate { get; set; }
         [JsonPropertyName("qrCode")]
         public string? QrCodeBase64 { get; set; }
 
         [JsonConstructor]
-        public CreatePresentationResponse(string? requestId, string? url, DateTime? expiryDate, string? qrCodeBase64)
+        public CreatePresentationResponse(string? requestId, string? url, long? expiryDate, string? qrCodeBase64)
         {
             RequestId = requestId;
             Url = url;
