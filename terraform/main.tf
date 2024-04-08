@@ -75,6 +75,15 @@ resource "azuread_app_role_assignment" "backend_managed_identity" {
   resource_object_id  = data.azuread_service_principal.msgraph.object_id
 }
 
+resource "azuread_directory_role" "user_administrator" {
+  display_name = "User Administrator"
+}
+
+resource "azuread_directory_role_assignment" "backend_managed_identity_user_admin" {
+  role_id = azuread_directory_role.user_administrator.template_id
+  principal_object_id       = azurerm_linux_web_app.backend.identity[0].principal_id
+}
+
 # Create Backed AppReg
 resource "azuread_application" "backend" {
   display_name     = local.backed_appreg_name
