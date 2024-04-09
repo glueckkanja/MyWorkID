@@ -39,7 +39,7 @@ namespace c4a8.MyAccountVNext.Server.Models.VerifiedId
         [JsonPropertyName("subject")]
         public string? Subject { get; set; }
         [JsonPropertyName("verifiedCredentialsData")]
-        public string? VerifiedCredentialsData { get; set; }
+        public IEnumerable<VerifiedCredentialsData>? VerifiedCredentialsData { get; set; }
         [JsonPropertyName("error")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public CreatePresentationRequestError? Error { get; set; }

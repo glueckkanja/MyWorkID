@@ -16,7 +16,7 @@ locals {
 
 # Permissions necessary for the banend managed identity
 locals {
-  backend_graph_permissions = ["IdentityRiskyUser.ReadWrite.All", "UserAuthenticationMethod.ReadWrite.All", "User.ReadWrite.All"]
+  backend_graph_permissions = ["IdentityRiskyUser.ReadWrite.All", "UserAuthenticationMethod.ReadWrite.All", "User.ReadWrite.All", "CustomSecAttributeAssignment.ReadWrite.All"]
 }
 
 # settings that change if in dev

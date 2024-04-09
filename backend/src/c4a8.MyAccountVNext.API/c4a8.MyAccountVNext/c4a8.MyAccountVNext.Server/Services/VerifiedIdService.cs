@@ -2,6 +2,7 @@
 using c4a8.MyAccountVNext.Server.Models.VerifiedId;
 using c4a8.MyAccountVNext.Server.Options;
 using Microsoft.Extensions.Options;
+using Microsoft.Graph;
 using Microsoft.Graph.Models;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -14,11 +15,13 @@ namespace c4a8.MyAccountVNext.Server.Services
     {
         private readonly HttpClient _verifiedIdClient;
         private readonly VerifiedIdOptions _verifiedIdOptions;
+        private readonly GraphServiceClient _graphClient;
 
-        public VerifiedIdService(HttpClient verifiedIdClient, IOptions<VerifiedIdOptions> verifiedIdOptions)
+        public VerifiedIdService(HttpClient verifiedIdClient, IOptions<VerifiedIdOptions> verifiedIdOptions, GraphServiceClient graphClient)
         {
             _verifiedIdClient = verifiedIdClient;
             _verifiedIdOptions = verifiedIdOptions.Value;
+            _graphClient = graphClient;
         }
 
         private string GenerateToken(string userId)
@@ -55,6 +58,58 @@ namespace c4a8.MyAccountVNext.Server.Services
             response.EnsureSuccessStatusCode();
 
             return await response.Content.ReadFromJsonAsync<CreatePresentationResponse>() ?? throw new Exception("Unexpected response");
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <param name="callbackBody"></param>
+        /// <returns>Indicates success</returns>
+        public async Task HandlePresentationCallback(string userId, CreatePresentationRequestCallback callbackBody)
+        {
+            if (callbackBody.RequestStatus == "request_retrieved")
+            {
+                return;
+            }
+
+            if (callbackBody.RequestStatus == "presentation_error" || callbackBody.Error != null)
+            {
+                return;
+            }
+
+            if (callbackBody.RequestStatus == "presentation_verified")
+            {
+                if (!string.Equals(callbackBody.State, userId, StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new Exception("invalid state");
+                }
+
+                if (string.IsNullOrWhiteSpace(_verifiedIdOptions.TargetSecurityPropertySet) || string.IsNullOrWhiteSpace(_verifiedIdOptions.TargetSecurityProperty))
+                {
+                    return;
+                }
+
+                var userUpdate = new User
+                {
+                    CustomSecurityAttributes = new CustomSecurityAttributeValue
+                    {
+                        AdditionalData = new Dictionary<string, object>
+                        {
+                            {
+                                _verifiedIdOptions.TargetSecurityPropertySet, new Dictionary<string, object> {
+                                    { "@odata.type", "#Microsoft.DirectoryServices.CustomSecurityAttributeValue" },
+                                    { _verifiedIdOptions.TargetSecurityProperty, DateTime.UtcNow.ToString() }
+                                }
+                            }
+                        }
+                    }
+                };
+
+                await _graphClient.Users[userId].PatchAsync(userUpdate);
+
+            }
+
         }
     }
 }
