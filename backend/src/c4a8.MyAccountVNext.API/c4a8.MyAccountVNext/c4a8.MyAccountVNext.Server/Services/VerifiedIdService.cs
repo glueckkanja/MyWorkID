@@ -2,6 +2,11 @@
 using c4a8.MyAccountVNext.Server.Models.VerifiedId;
 using c4a8.MyAccountVNext.Server.Options;
 using Microsoft.Extensions.Options;
+using Microsoft.Graph.Models;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace c4a8.MyAccountVNext.Server.Services
 {
@@ -16,10 +21,25 @@ namespace c4a8.MyAccountVNext.Server.Services
             _verifiedIdOptions = verifiedIdOptions.Value;
         }
 
-        public async Task<CreatePresentationResponse> CreatePresentationRequest()
+        private string GenerateToken(string userId)
+        {
+            // generate token that is valid for 30 minutes
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(_verifiedIdOptions.JwtSigningKey ?? "GodDamnitYouForgottToSpecifyASigningKey");
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[] { new Claim("userId", userId) }),
+                Expires = DateTime.UtcNow.AddMinutes(30),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
+        }
+
+        public async Task<CreatePresentationResponse> CreatePresentationRequest(string userId)
         {
             RequestRegistration requestRegistration = new(clientName: "My Account VNext", purpose: "Verify your identity");
-            Callback callback = new(url: $"{_verifiedIdOptions.BackendUrl}/api/verifiedid/callback", state: "08158312-7f5f-4229-97e9-45b1102ad9ed", headers: new Dictionary<string, string>() { { "api-key", "THISISOPTIONAL" } });
+            Callback callback = new(url: $"{_verifiedIdOptions.BackendUrl}/api/verifiedid/callback", state: userId, headers: new Dictionary<string, string>() { { "Authorization", $"Bearer {GenerateToken(userId)}" } });
 
             FaceCheck faceCheck = new(sourcePhotoClaimName: "photo", matchConfidenceThreshold: 50);
 

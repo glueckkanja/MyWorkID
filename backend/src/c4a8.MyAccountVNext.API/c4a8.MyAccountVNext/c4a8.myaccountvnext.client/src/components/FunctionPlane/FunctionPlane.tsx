@@ -17,6 +17,7 @@ import Stack from "@mui/material/Stack";
 import { UserDisplay } from "./UserDisplay";
 import { useSignedInUser } from "../../contexts/SignedInUserProvider";
 import { Role } from "../../services/RolesService";
+import { ValidateIdentity } from "./FunctionPlaneComponents/ValidateIdentity";
 
 const FUNCTION_PLANE_COMPONENTS: {
   element: (props: ActionResultProps<any>) => JSX.Element;
@@ -37,6 +38,11 @@ const FUNCTION_PLANE_COMPONENTS: {
     element: DismissUserRisk,
     functionType: EApiFunctionTypes.DISMISS_USER_RISK,
     permissionRoleRequired: Role.ALLOW_DISMISS_USER_RISK,
+  },
+  {
+    element: ValidateIdentity,
+    functionType: EApiFunctionTypes.VALIDATE_IDENTITY,
+    permissionRoleRequired: Role.ALLOW_DISMISS_USER_RISK, // TODO Change to own role
   },
 ];
 
@@ -65,7 +71,13 @@ const FunctionPlane = () => {
         spacing={2}
       >
         {FUNCTION_PLANE_COMPONENTS.map((functionComponent) => {
-          if (!functionComponent.permissionRoleRequired || (signedInUserInfo && signedInUserInfo.roles.includes(functionComponent.permissionRoleRequired))) {
+          if (
+            !functionComponent.permissionRoleRequired ||
+            (signedInUserInfo &&
+              signedInUserInfo.roles.includes(
+                functionComponent.permissionRoleRequired
+              ))
+          ) {
             return (
               <functionComponent.element
                 key={functionComponent.functionType}

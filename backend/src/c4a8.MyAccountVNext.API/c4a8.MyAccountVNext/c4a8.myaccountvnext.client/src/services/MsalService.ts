@@ -124,7 +124,7 @@ export const authenticateRequest = async <T>(
   return response?.data;
 };
 
-const getBearerToken = async (): Promise<string> => {
+export const getBearerToken = async (): Promise<string> => {
   var msalInfo = await getMsalInfo();
   const accounts = msalInfo.msalInstance.getAllAccounts();
 

@@ -25,6 +25,7 @@ export enum EApiFunctionTypes {
   DISMISS_USER_RISK = "dismissUserRisk",
   CREATE_TAP = "createTap",
   PASSWORD_RESET = "passwordReset",
+  VALIDATE_IDENTITY = "validateIdentity",
   UNKNOWN = "unknown"
 }
 
@@ -38,6 +39,13 @@ export type User = {
 
 export type TGenerateTapResponse = {
   temporaryAccessPassword: string;
+}
+
+export type TVerifyIdentityReponse = {
+  requestId: string;
+  url: string;
+  expiry: number;
+  qrCode: string;
 }
 
 export type TGetRiskStateResponse = {
