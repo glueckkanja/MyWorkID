@@ -64,6 +64,10 @@ resource "azurerm_linux_web_app" "backend" {
     ApplicationInsightsAgent_EXTENSION_VERSION = "~3"          #https://learn.microsoft.com/en-us/azure/azure-monitor/app/azure-web-apps-net-core?tabs=Windows%2Cwindows#application-settings-definitions
     XDT_MicrosoftApplicationInsights_Mode      = "recommended" #https://learn.microsoft.com/en-us/azure/azure-monitor/app/azure-web-apps-net-core?tabs=Windows%2Cwindows#application-settings-definitions
     VerifiedId__JwtSigningKey                  = "@Microsoft.KeyVault(VaultName=${azurerm_key_vault.backend_secrets.name};SecretName=${local.verified_id_jwt_signing_key_secret_name})"
+    VerifiedId__DecentralizedIdentifier        = "@Microsoft.KeyVault(VaultName=${azurerm_key_vault.backend_secrets.name};SecretName=${local.verified_id_decentralized_identifier_secret_name})"
+    VerifiedId__TargetSecurityPropertySet      = local.verified_id_verify_security_property_set
+    VerifiedId__TargetSecurityProperty         = local.verified_id_verify_security_property
+    VerifiedId__BackendUrl                     = "https://${local.api_name}.azurewebsites.net"
   }
 
 

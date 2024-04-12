@@ -66,3 +66,18 @@ variable "verified_id_jwt_signing_key_secret_name" {
   description = "KeyVault secret name for the signing key of the jwt used int the verifiedId callbacks"
   default = "VerifiedId-JwtSigningKey"
 }
+variable "verified_id_decentralized_identifier_secret_name" {
+  type = string
+  description = "KeyVault secret name for the Decentralized identifier of the tenant (https://learn.microsoft.com/en-us/entra/verified-id/verifiable-credentials-configure-verifier#gather-tenant-details-to-set-up-your-sample-application)"
+  default = "VerifiedId-DecentralizedIdentifier"
+}
+variable "verified_id_verify_security_property_set" {
+  type = string
+  description = "The name of the custom security property set where the last verified date should be stored."
+  default = "myAccountVNext"
+}
+variable "verified_id_verify_security_property" {
+  type = string
+  description = "The name of the custom security property where the last verified date should be stored."
+  default = "lastVerifiedFaceCheck"
+}
