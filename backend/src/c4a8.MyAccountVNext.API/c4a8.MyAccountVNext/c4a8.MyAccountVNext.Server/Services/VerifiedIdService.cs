@@ -116,7 +116,7 @@ namespace c4a8.MyAccountVNext.Server.Services
                         }
                     }
                 };
-
+                return;
                 await _graphClient.Users[userId].PatchAsync(userUpdate);
 
             }
