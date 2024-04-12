@@ -21,5 +21,5 @@ locals {
 
 # settings that change if in dev
 locals {
-  frontend_dev_redirect_uris = var.is_dev ? ["https://localhost:5173/"] : []
+  frontend_dev_redirect_uris = var.is_dev ? var.dev_redirect_url : []
 }

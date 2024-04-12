@@ -111,6 +111,14 @@ resource "azuread_application" "backend" {
     id                   = "13c4693c-84f1-43b4-85a2-5e51d41753ed"
     value                = "MyAccount.VNext.PasswordReset"
   }
+  app_role {
+    allowed_member_types = ["User"]
+    description          = "Allows user to Validate its Identity by VerifiedId"
+    display_name         = "MyAccount.VNext.ValidateIdentity"
+    enabled              = true
+    id                   = "eeacf7de-5c05-4e21-a2be-a4d8e3435237"
+    value                = "MyAccount.VNext.ValidateIdentity"
+  }
 
   api {
     oauth2_permission_scope {
@@ -167,7 +175,7 @@ resource "azuread_application_redirect_uris" "frontend_backend" {
   application_id = azuread_application_registration.frontend.id
   type           = "SPA"
 
-  redirect_uris = concat(
+  redirect_uris = setunion(
     ["https://${azurerm_linux_web_app.backend.default_hostname}/"],
     local.frontend_dev_redirect_uris,
   )

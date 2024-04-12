@@ -42,7 +42,7 @@ const FUNCTION_PLANE_COMPONENTS: {
   {
     element: ValidateIdentity,
     functionType: EApiFunctionTypes.VALIDATE_IDENTITY,
-    permissionRoleRequired: Role.ALLOW_DISMISS_USER_RISK, // TODO Change to own role
+    permissionRoleRequired: Role.ALLOW_VALIDATE_IDENTITY, // TODO Change to own role
   },
 ];
 

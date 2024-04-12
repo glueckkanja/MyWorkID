@@ -47,6 +47,11 @@ variable "is_dev" {
   type = bool
   default = false
 }
+
+variable "dev_redirect_url" {
+  type = set(string)
+  default = [ ]
+}
 variable "skip_actions_requiring_global_admin" {
   description = "Skip actions that require global admin permissions. If set to true you will have to set some settings, like the permission grants, manually. NOTE: If this ever was set to false a change to true will result in the previously set permissions being removed"
   type = bool

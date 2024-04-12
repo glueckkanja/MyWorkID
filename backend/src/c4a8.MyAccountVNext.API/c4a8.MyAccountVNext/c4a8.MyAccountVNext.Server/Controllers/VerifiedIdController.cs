@@ -62,7 +62,7 @@ namespace c4a8.MyAccountVNext.Server.Controllers
             return StatusCode(StatusCodes.Status204NoContent);
         }
 
-        //[Authorize(Roles = "MyAccount.VNext.VerifiedId.Verify")]
+        [Authorize(Roles = "MyAccount.VNext.ValidateIdentity")]
         [HttpPost("verify")]
         public async Task<ActionResult> VerifyUser()
         {
