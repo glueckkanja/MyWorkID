@@ -63,6 +63,7 @@ resource "azurerm_linux_web_app" "backend" {
     APPLICATIONINSIGHTS_CONNECTION_STRING      = azurerm_application_insights.backend.connection_string
     ApplicationInsightsAgent_EXTENSION_VERSION = "~3"          #https://learn.microsoft.com/en-us/azure/azure-monitor/app/azure-web-apps-net-core?tabs=Windows%2Cwindows#application-settings-definitions
     XDT_MicrosoftApplicationInsights_Mode      = "recommended" #https://learn.microsoft.com/en-us/azure/azure-monitor/app/azure-web-apps-net-core?tabs=Windows%2Cwindows#application-settings-definitions
+    VerifiedId__JwtSigningKey                  = "@Microsoft.KeyVault(VaultName=${azurerm_key_vault.backend_secrets.name};SecretName=${local.verified_id_jwt_signing_key_secret_name})"
   }
 
 
@@ -191,4 +192,24 @@ resource "azuread_application_redirect_uris" "frontend_backend" {
 resource "azuread_service_principal" "frontend" {
   client_id = azuread_application_registration.frontend.client_id
   owners    = [data.azuread_client_config.current_user.object_id]
+}
+
+# Key vault
+resource "azurerm_key_vault" "backend_secrets" {
+  name                        = substr("kv-${local.api_name}", 0, 24)
+  location                    = azurerm_resource_group.main.location
+  resource_group_name         = azurerm_resource_group.main.name
+  enabled_for_disk_encryption = true
+  tenant_id                   = local.tenant_id
+  soft_delete_retention_days  = 7
+  purge_protection_enabled    = false
+  enable_rbac_authorization   = true
+  sku_name                    = "standard"
+}
+
+resource "azurerm_role_assignment" "backend_key_vault_access" {
+  depends_on           = [azurerm_linux_web_app.backend]
+  scope                = azurerm_key_vault.backend_secrets.id
+  role_definition_name = "Key Vault Secrets User"
+  principal_id         = azurerm_linux_web_app.backend.identity[0].principal_id
 }

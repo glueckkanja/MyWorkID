@@ -61,3 +61,8 @@ variable "binaries_zip_path" {
   type = string
   description = "Path where binaries are located"
 }
+variable "verified_id_jwt_signing_key_secret_name" {
+  type = string
+  description = "KeyVault secret name for the signing key of the jwt used int the verifiedId callbacks"
+  default = "VerifiedId-JwtSigningKey"
+}
