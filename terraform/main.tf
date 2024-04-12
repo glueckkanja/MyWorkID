@@ -78,7 +78,7 @@ resource "azuread_app_role_assignment" "backend_managed_identity" {
 resource "azuread_app_role_assignment" "verifiable_credentials" {
   app_role_id         = "949ebb93-18f8-41b4-b677-c2bfea940027" // VerifiableCredential.Create.All
   principal_object_id = azurerm_linux_web_app.backend.identity[0].principal_id
-  resource_object_id  = "3db474b9-6a0c-4840-96ac-1fceb342124f" // Verifiable Credentials Service Request
+  resource_object_id  = "4ae85312-9eb7-4f8f-a224-5a662878a656" // Verifiable Credentials Service Request
 }
 
 # Create Backed AppReg
