@@ -16,12 +16,14 @@ namespace c4a8.MyAccountVNext.Server.Services
         private readonly HttpClient _verifiedIdClient;
         private readonly VerifiedIdOptions _verifiedIdOptions;
         private readonly GraphServiceClient _graphClient;
+        private readonly ILogger _logger;
 
-        public VerifiedIdService(HttpClient verifiedIdClient, IOptions<VerifiedIdOptions> verifiedIdOptions, GraphServiceClient graphClient)
+        public VerifiedIdService(HttpClient verifiedIdClient, IOptions<VerifiedIdOptions> verifiedIdOptions, GraphServiceClient graphClient, ILogger<VerifiedIdService> logger)
         {
             _verifiedIdClient = verifiedIdClient;
             _verifiedIdOptions = verifiedIdOptions.Value;
             _graphClient = graphClient;
+            _logger = logger;
         }
 
         private string GenerateToken(string userId)
@@ -55,7 +57,16 @@ namespace c4a8.MyAccountVNext.Server.Services
             var request = new CreatePresentationRequest(authority: _verifiedIdOptions.DecentralizedIdentifier!, registration: requestRegistration, callback: callback, requestedCredentials: credentialList, includeQRCode: true, includeReceipt: false);
 
             var response = await _verifiedIdClient.PostAsJsonAsync("https://verifiedid.did.msidentity.com/v1.0/verifiableCredentials/createPresentationRequest", request);
-            response.EnsureSuccessStatusCode();
+            try
+            {
+                response.EnsureSuccessStatusCode();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Failed to create presentation request");
+                _logger.LogError($"Reponse was: {await response.Content.ReadAsStringAsync()}");
+                throw;
+            }
 
             return await response.Content.ReadFromJsonAsync<CreatePresentationResponse>() ?? throw new Exception("Unexpected response");
         }
