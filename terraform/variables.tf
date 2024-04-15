@@ -71,13 +71,13 @@ variable "verified_id_decentralized_identifier_secret_name" {
   description = "KeyVault secret name for the Decentralized identifier of the tenant (https://learn.microsoft.com/en-us/entra/verified-id/verifiable-credentials-configure-verifier#gather-tenant-details-to-set-up-your-sample-application)"
   default = "VerifiedId-DecentralizedIdentifier"
 }
-variable "verified_id_verify_security_property_set" {
+variable "verified_id_verify_security_attribute_set" {
   type = string
-  description = "The name of the custom security property set where the last verified date should be stored."
+  description = "The name of the custom security attribute set where the last verified date should be stored."
   default = "myAccountVNext"
 }
-variable "verified_id_verify_security_property" {
+variable "verified_id_verify_security_attribute" {
   type = string
-  description = "The name of the custom security property where the last verified date should be stored."
+  description = "The name of the custom security attribute where the last verified date should be stored."
   default = "lastVerifiedFaceCheck"
 }

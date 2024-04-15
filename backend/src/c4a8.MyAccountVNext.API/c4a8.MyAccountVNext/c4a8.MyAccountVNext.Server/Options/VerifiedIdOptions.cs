@@ -6,7 +6,7 @@
         public string? BackendUrl { get; set; }
         public string? JwtSigningKey { get; set; }
         public bool DisableQrCodeHide { get; set; } = false;
-        public string? TargetSecurityPropertySet { get; set; }
-        public string? TargetSecurityProperty { get; set; }
+        public string? TargetSecurityAttributeSet { get; set; }
+        public string? TargetSecurityAttribute { get; set; }
     }
 }

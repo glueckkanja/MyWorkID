@@ -96,7 +96,7 @@ namespace c4a8.MyAccountVNext.Server.Services
                     throw new Exception("invalid state");
                 }
 
-                if (string.IsNullOrWhiteSpace(_verifiedIdOptions.TargetSecurityPropertySet) || string.IsNullOrWhiteSpace(_verifiedIdOptions.TargetSecurityProperty))
+                if (string.IsNullOrWhiteSpace(_verifiedIdOptions.TargetSecurityAttributeSet) || string.IsNullOrWhiteSpace(_verifiedIdOptions.TargetSecurityAttribute))
                 {
                     return;
                 }

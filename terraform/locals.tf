@@ -14,8 +14,8 @@ locals {
   binaries_zip_path                                = var.binaries_zip_path
   verified_id_jwt_signing_key_secret_name          = var.verified_id_jwt_signing_key_secret_name
   verified_id_decentralized_identifier_secret_name = var.verified_id_decentralized_identifier_secret_name
-  verified_id_verify_security_property_set         = var.verified_id_verify_security_property_set
-  verified_id_verify_security_property             = var.verified_id_verify_security_property
+  verified_id_verify_security_attribute_set        = var.verified_id_verify_security_attribute_set
+  verified_id_verify_security_attribute            = var.verified_id_verify_security_attribute
 }
 
 # Permissions necessary for the banend managed identity
