@@ -9,6 +9,7 @@ import {
   TFunctionResult,
   TGenerateTapResponse,
   TGetRiskStateResponse,
+  TVerifyIdentityReponse,
   User,
 } from "../types";
 import axios from "axios";
@@ -75,6 +76,20 @@ export const generateTAP = async (): Promise<
       EApiFunctionTypes.CREATE_TAP
     ),
     EApiFunctionTypes.CREATE_TAP
+  );
+};
+
+
+export const verifyIdentity = async (): Promise<
+  TFunctionResult<TVerifyIdentityReponse>
+> => {
+  return convertTFunctionResult(
+    await authenticateRequest<TVerifyIdentityReponse>(
+      `${backendApiUrl}/verifiedid/verify`,
+      REQUEST_TYPE.POST,
+      EApiFunctionTypes.VALIDATE_IDENTITY
+    ),
+    EApiFunctionTypes.VALIDATE_IDENTITY
   );
 };
 

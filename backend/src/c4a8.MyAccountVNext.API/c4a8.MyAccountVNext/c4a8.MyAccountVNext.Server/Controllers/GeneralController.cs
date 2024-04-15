@@ -1,6 +1,5 @@
 ﻿using c4a8.MyAccountVNext.Server.Options;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
