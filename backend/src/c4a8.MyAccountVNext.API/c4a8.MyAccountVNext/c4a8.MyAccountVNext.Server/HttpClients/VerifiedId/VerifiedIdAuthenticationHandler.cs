@@ -13,10 +13,9 @@ namespace c4a8.MyAccountVNext.Server.HttpClients.VerifiedId
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var token = await _verifiedIdAccessTokenService.GetAccessTokenAsync();
-
             if (!request.Headers.Contains(HttpRequestHeader.Authorization.ToString()))
             {
+                var token = await _verifiedIdAccessTokenService.GetAccessTokenAsync();
                 request.Headers.Add(HttpRequestHeader.Authorization.ToString(), $"Bearer {token.Token}");
             }
 
