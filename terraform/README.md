@@ -22,14 +22,20 @@ terraform {
 ```
 
 ### demotenant_config.auto.tfvars
-```
-tenant_id                         = "a9ae459a-6068-4a03-915a-7031507edbc1"
-subscription_id                   = "689d3b77-2c70-4441-aef7-0fc40855c83b"
-resource_group_name               = "rg-myAccountVNext"
-resource_location                 = "germanywestcentral"
-api_name                          = "my-account-vnext-demo"
-dismiss_user_risk_auth_context_id = "c1"
-generate_tap_auth_context_id      = "c1"
-reset_password_auth_context_id    = "c1"
-is_dev                            = true
+```tf
+tenant_id                                        = "a9ae459a-6068-4a03-915a-7031507edbc1"
+subscription_id                                  = "689d3b77-2c70-4441-aef7-0fc40855c83b"
+resource_group_name                              = "rg-my-account-vnext"
+resource_location                                = "germanywestcentral"
+api_name                                         = "my-account-vnext-demo"
+dismiss_user_risk_auth_context_id                = "c1"
+generate_tap_auth_context_id                     = "c1"
+reset_password_auth_context_id                   = "c1"
+is_dev                                           = true
+binaries_zip_path                                = "C:\\temp\\binaries_9f8622048e3a05459e9e259150fc337ea62a5055-2.zip"
+dev_redirect_url                                 = ["https://touching-deeply-mantis.ngrok-free.app/"]
+verified_id_jwt_signing_key_secret_name          = "VerifiedId-JwtSigningKey"
+verified_id_decentralized_identifier_secret_name = "VerifiedId-DecentralizedIdentifier"
+verified_id_verify_security_attribute_set        = "myAccountVNext"
+verified_id_verify_security_attribute            = "lastVerifiedIdFaceCheck"
 ```

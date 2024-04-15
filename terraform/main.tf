@@ -63,6 +63,11 @@ resource "azurerm_linux_web_app" "backend" {
     APPLICATIONINSIGHTS_CONNECTION_STRING      = azurerm_application_insights.backend.connection_string
     ApplicationInsightsAgent_EXTENSION_VERSION = "~3"          #https://learn.microsoft.com/en-us/azure/azure-monitor/app/azure-web-apps-net-core?tabs=Windows%2Cwindows#application-settings-definitions
     XDT_MicrosoftApplicationInsights_Mode      = "recommended" #https://learn.microsoft.com/en-us/azure/azure-monitor/app/azure-web-apps-net-core?tabs=Windows%2Cwindows#application-settings-definitions
+    VerifiedId__JwtSigningKey                  = "@Microsoft.KeyVault(VaultName=${azurerm_key_vault.backend_secrets.name};SecretName=${local.verified_id_jwt_signing_key_secret_name})"
+    VerifiedId__DecentralizedIdentifier        = "@Microsoft.KeyVault(VaultName=${azurerm_key_vault.backend_secrets.name};SecretName=${local.verified_id_decentralized_identifier_secret_name})"
+    VerifiedId__TargetSecurityAttributeSet     = local.verified_id_verify_security_attribute_set
+    VerifiedId__TargetSecurityAttribute        = local.verified_id_verify_security_attribute
+    VerifiedId__BackendUrl                     = "https://${local.api_name}.azurewebsites.net"
   }
 
 
@@ -73,6 +78,12 @@ resource "azuread_app_role_assignment" "backend_managed_identity" {
   app_role_id         = data.azuread_service_principal.msgraph.app_role_ids[each.key]
   principal_object_id = azurerm_linux_web_app.backend.identity[0].principal_id
   resource_object_id  = data.azuread_service_principal.msgraph.object_id
+}
+
+resource "azuread_app_role_assignment" "verifiable_credentials" {
+  app_role_id         = "949ebb93-18f8-41b4-b677-c2bfea940027" // VerifiableCredential.Create.All
+  principal_object_id = azurerm_linux_web_app.backend.identity[0].principal_id
+  resource_object_id  = "4ae85312-9eb7-4f8f-a224-5a662878a656" // Verifiable Credentials Service Request
 }
 
 # Create Backed AppReg
@@ -110,6 +121,14 @@ resource "azuread_application" "backend" {
     enabled              = true
     id                   = "13c4693c-84f1-43b4-85a2-5e51d41753ed"
     value                = "MyAccount.VNext.PasswordReset"
+  }
+  app_role {
+    allowed_member_types = ["User"]
+    description          = "Allows user to Validate its Identity by VerifiedId"
+    display_name         = "MyAccount.VNext.ValidateIdentity"
+    enabled              = true
+    id                   = "eeacf7de-5c05-4e21-a2be-a4d8e3435237"
+    value                = "MyAccount.VNext.ValidateIdentity"
   }
 
   api {
@@ -167,7 +186,7 @@ resource "azuread_application_redirect_uris" "frontend_backend" {
   application_id = azuread_application_registration.frontend.id
   type           = "SPA"
 
-  redirect_uris = concat(
+  redirect_uris = setunion(
     ["https://${azurerm_linux_web_app.backend.default_hostname}/"],
     local.frontend_dev_redirect_uris,
   )
@@ -177,4 +196,24 @@ resource "azuread_application_redirect_uris" "frontend_backend" {
 resource "azuread_service_principal" "frontend" {
   client_id = azuread_application_registration.frontend.client_id
   owners    = [data.azuread_client_config.current_user.object_id]
+}
+
+# Key vault
+resource "azurerm_key_vault" "backend_secrets" {
+  name                        = substr("kv-${local.api_name}", 0, 24)
+  location                    = azurerm_resource_group.main.location
+  resource_group_name         = azurerm_resource_group.main.name
+  enabled_for_disk_encryption = true
+  tenant_id                   = local.tenant_id
+  soft_delete_retention_days  = 7
+  purge_protection_enabled    = false
+  enable_rbac_authorization   = true
+  sku_name                    = "standard"
+}
+
+resource "azurerm_role_assignment" "backend_key_vault_access" {
+  depends_on           = [azurerm_linux_web_app.backend]
+  scope                = azurerm_key_vault.backend_secrets.id
+  role_definition_name = "Key Vault Secrets User"
+  principal_id         = azurerm_linux_web_app.backend.identity[0].principal_id
 }
