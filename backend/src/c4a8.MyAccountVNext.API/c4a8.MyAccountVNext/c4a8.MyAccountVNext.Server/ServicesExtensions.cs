@@ -13,7 +13,7 @@ namespace c4a8.MyAccountVNext.API
         public static void AddGraphClient(this IServiceCollection services, IConfigurationSection graphConfigurationSection)
         {
             ArgumentNullException.ThrowIfNull(graphConfigurationSection);
-            services.AddSingleton(new GraphServiceClient(new DefaultAzureCredential()));
+            services.AddSingleton(new GraphServiceClient(new ChainedTokenCredential(new ManagedIdentityCredential(), new DefaultAzureCredential())));
         }
 
         public static void AddConfig(this IServiceCollection services, IConfiguration config)
