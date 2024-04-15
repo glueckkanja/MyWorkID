@@ -101,24 +101,27 @@ namespace c4a8.MyAccountVNext.Server.Services
                     return;
                 }
 
-                var userUpdate = new User
+                var requestBody = new User
                 {
                     CustomSecurityAttributes = new CustomSecurityAttributeValue
                     {
                         AdditionalData = new Dictionary<string, object>
                         {
                             {
-                                _verifiedIdOptions.TargetSecurityPropertySet, new Dictionary<string, object> {
-                                    { "@odata.type", "#Microsoft.DirectoryServices.CustomSecurityAttributeValue" },
-                                    { _verifiedIdOptions.TargetSecurityProperty, DateTime.UtcNow.ToString() }
+                                "myAccountVNext" , new CustomSecurityAttributeValue()
+                                {
+                                    OdataType = "#Microsoft.DirectoryServices.CustomSecurityAttributeValue",
+                                    AdditionalData = new Dictionary<string, object>
+                                    {
+                                        { "lastVerifiedFaceCheck", DateTime.UtcNow.ToString("O") }
+                                    }
                                 }
-                            }
-                        }
-                    }
+                            },
+                        },
+                    },
                 };
-                return;
-                await _graphClient.Users[userId].PatchAsync(userUpdate);
 
+                await _graphClient.Users[userId].PatchAsync(requestBody);
             }
 
         }
