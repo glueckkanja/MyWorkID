@@ -156,34 +156,3 @@ namespace c4a8.MyAccountVNext.Server.Models.VerifiedId
         }
     }
 }
-
-//{
-//    "includeQRCode": true,
-//  "includeReceipt": true,
-//  "authority": "did:web:verifiedid.contoso.com",
-//  "registration": {
-//        "clientName": "Veritable Credential Expert Verifier"
-//  },
-//  "callback": {
-//        "url": "https://contoso.com/api/verifier/presentationCallback",
-//    "state": "92d076dd-450a-4247-aa5b-d2e75a1a5d58",
-//    "headers": {
-//            "api-key": "OPTIONAL API-KEY for CALLBACK EVENTS"
-//    }
-//    },
-//  "requestedCredentials": [
-//    {
-//        "type": "VerifiedCredentialExpert",
-//      "purpose": "So we can see that you a veritable credentials expert",
-//      "acceptedIssuers": [
-//        "did:web:verifiedid.contoso.com"
-//      ],
-//      "configuration": {
-//            "validation": {
-//                "allowRevoked": false,
-//          "validateLinkedDomain": false
-//            }
-//        }
-//    }
-//  ]
-//}
