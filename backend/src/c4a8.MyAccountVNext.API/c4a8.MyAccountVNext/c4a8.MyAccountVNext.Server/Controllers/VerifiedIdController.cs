@@ -50,7 +50,24 @@ namespace c4a8.MyAccountVNext.Server.Controllers
 
             using StreamReader streamReader = new StreamReader(Request.Body);
             var callbackBody = await streamReader.ReadToEndAsync();
-            var parsedBody = JsonSerializer.Deserialize<CreatePresentationRequestCallback>(callbackBody);
+
+            CreatePresentationRequestCallback? parsedBody = null;
+
+            try
+            {
+                parsedBody = JsonSerializer.Deserialize<CreatePresentationRequestCallback>(callbackBody);
+            }
+            catch (Exception e)
+            {
+                if (e is JsonException || e is ArgumentNullException)
+                {
+                    return StatusCode(StatusCodes.Status400BadRequest, "Invalid body");
+                }
+                else
+                {
+                    throw;
+                }
+            }
 
             if (parsedBody == null)
             {
