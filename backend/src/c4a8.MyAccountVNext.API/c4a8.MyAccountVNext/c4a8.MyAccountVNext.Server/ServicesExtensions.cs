@@ -2,6 +2,7 @@
 using Azure.Identity;
 using c4a8.MyAccountVNext.API.Options;
 using c4a8.MyAccountVNext.Server.HttpClients;
+using c4a8.MyAccountVNext.Server.HttpClients.MsGraph;
 using c4a8.MyAccountVNext.Server.HttpClients.VerifiedId;
 using c4a8.MyAccountVNext.Server.Options;
 using Microsoft.Graph;
@@ -13,7 +14,12 @@ namespace c4a8.MyAccountVNext.API
         public static void AddGraphClient(this IServiceCollection services, IConfigurationSection graphConfigurationSection)
         {
             ArgumentNullException.ThrowIfNull(graphConfigurationSection);
-            services.AddSingleton(new GraphServiceClient(new ChainedTokenCredential(new ManagedIdentityCredential(), new DefaultAzureCredential())));
+            var loggerFactory = LoggerFactory.Create(x => x.AddAzureWebAppDiagnostics());
+            var logger = loggerFactory.CreateLogger<LogGraphRequestHandler>();
+            var handlers = GraphClientFactory.CreateDefaultHandlers();
+            handlers.Add(new LogGraphRequestHandler(logger));
+            var httpClient = GraphClientFactory.Create(handlers);
+            services.AddSingleton(new GraphServiceClient(httpClient, new ChainedTokenCredential(new ManagedIdentityCredential(), new DefaultAzureCredential())));
         }
 
         public static void AddConfig(this IServiceCollection services, IConfiguration config)
