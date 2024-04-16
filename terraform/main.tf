@@ -1,6 +1,11 @@
 resource "azurerm_resource_group" "main" {
   name     = local.resource_group_name
   location = local.resource_location
+  lifecycle {
+    ignore_changes = [
+      tags
+    ]
+  }
 }
 
 # Create app service plan for backend API
@@ -10,6 +15,11 @@ resource "azurerm_service_plan" "backend" {
   resource_group_name = azurerm_resource_group.main.name
   os_type             = "Linux"
   sku_name            = "B1"
+  lifecycle {
+    ignore_changes = [
+      tags
+    ]
+  }
 }
 
 resource "azurerm_log_analytics_workspace" "backend_application_insights" {
@@ -18,6 +28,11 @@ resource "azurerm_log_analytics_workspace" "backend_application_insights" {
   resource_group_name = azurerm_resource_group.main.name
   sku                 = "PerGB2018"
   retention_in_days   = 30
+  lifecycle {
+    ignore_changes = [
+      tags
+    ]
+  }
 }
 
 resource "azurerm_application_insights" "backend" {
@@ -26,6 +41,11 @@ resource "azurerm_application_insights" "backend" {
   resource_group_name = azurerm_resource_group.main.name
   workspace_id        = azurerm_log_analytics_workspace.backend_application_insights.id
   application_type    = "web"
+  lifecycle {
+    ignore_changes = [
+      tags
+    ]
+  }
 }
 
 resource "azurerm_linux_web_app" "backend" {
@@ -70,7 +90,11 @@ resource "azurerm_linux_web_app" "backend" {
     VerifiedId__BackendUrl                     = "https://${local.api_name}.azurewebsites.net"
   }
 
-
+  lifecycle {
+    ignore_changes = [
+      tags
+    ]
+  }
 }
 
 resource "azuread_app_role_assignment" "backend_managed_identity" {
@@ -90,9 +114,10 @@ resource "azuread_directory_role_assignment" "backend_managed_identity_user_admi
 }
 
 resource "azuread_app_role_assignment" "verifiable_credentials" {
+  for_each            = local.skip_actions_requiring_global_admin ? toset([]) : toset(["VerifiableCredential.Create.All"])
   app_role_id         = "949ebb93-18f8-41b4-b677-c2bfea940027" // VerifiableCredential.Create.All
   principal_object_id = azurerm_linux_web_app.backend.identity[0].principal_id
-  resource_object_id  = "4ae85312-9eb7-4f8f-a224-5a662878a656" // Verifiable Credentials Service Request
+  resource_object_id  = data.azuread_service_principal.verifiable_credentials_service_request.object_id
 }
 
 # Create Backed AppReg
@@ -104,6 +129,7 @@ resource "azuread_application" "backend" {
   lifecycle {
     ignore_changes = [
       identifier_uris, #Necessary due to azuread_application_identifier_uri.backend
+      tags
     ]
   }
 
@@ -218,6 +244,11 @@ resource "azurerm_key_vault" "backend_secrets" {
   purge_protection_enabled    = false
   enable_rbac_authorization   = true
   sku_name                    = "standard"
+  lifecycle {
+    ignore_changes = [
+      tags
+    ]
+  }
 }
 
 resource "azurerm_role_assignment" "backend_key_vault_access" {
