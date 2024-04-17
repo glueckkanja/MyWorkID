@@ -104,7 +104,7 @@ export const PasswordReset = (props: ActionResultProps<any>) => {
           showValue: false,
           valueConfirm: "",
           showValueConfirm: false,
-          loading: true,
+          loading: false,
         });
       })
       .catch((error) => {
