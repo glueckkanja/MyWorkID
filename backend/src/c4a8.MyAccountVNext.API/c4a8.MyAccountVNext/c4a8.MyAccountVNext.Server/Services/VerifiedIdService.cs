@@ -108,12 +108,12 @@ namespace c4a8.MyAccountVNext.Server.Services
                         AdditionalData = new Dictionary<string, object>
                         {
                             {
-                                "myAccountVNext" , new CustomSecurityAttributeValue()
+                                _verifiedIdOptions.TargetSecurityAttributeSet , new CustomSecurityAttributeValue()
                                 {
                                     OdataType = "#Microsoft.DirectoryServices.CustomSecurityAttributeValue",
                                     AdditionalData = new Dictionary<string, object>
                                     {
-                                        { "lastVerifiedFaceCheck", DateTime.UtcNow.ToString("O") }
+                                        { _verifiedIdOptions.TargetSecurityAttribute, DateTime.UtcNow.ToString("O") }
                                     }
                                 }
                             },
