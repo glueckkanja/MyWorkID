@@ -307,7 +307,6 @@ export const PasswordReset = (props: ActionResultProps<any>) => {
               sx={{ mt: 1 }}
               variant="contained"
               onClick={resetPassword}
-              // Double !! is used to convert the value to a boolean otherwise we get a type error due to disabled beeing string | boolean (idk why lol)
               disabled={
                 passwordDisplay.loading ||
                 passwordDisplay.errorValue ||
