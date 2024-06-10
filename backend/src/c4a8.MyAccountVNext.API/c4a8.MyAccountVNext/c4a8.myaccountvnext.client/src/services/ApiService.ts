@@ -93,6 +93,34 @@ export const verifyIdentity = async (): Promise<
   );
 };
 
+export const callResetPassword = async (newPassword: string): Promise<
+  TFunctionResult<TGenerateTapResponse>
+> => {
+  return convertTFunctionResult(
+    await authenticateRequest(
+      `${backendApiUrl}/ResetPassword`,
+      REQUEST_TYPE.PUT,
+      EApiFunctionTypes.PASSWORD_RESET, {
+        newPassword
+      }
+    ),
+    EApiFunctionTypes.PASSWORD_RESET
+  );
+};
+
+export const checkResetPasswordClaim = async (): Promise<
+  TFunctionResult<TGenerateTapResponse>
+> => {
+  return convertTFunctionResult(
+    await authenticateRequest(
+      `${backendApiUrl}/ResetPassword/claim`,
+      REQUEST_TYPE.GET,
+      EApiFunctionTypes.PASSWORD_RESET
+    ),
+    EApiFunctionTypes.PASSWORD_RESET
+  );
+};
+
 export const getUserRiskState = async (): Promise<TGetRiskStateResponse> => {
   return await authenticateRequest(
     `${backendApiUrl}/users/me/riskstate`,
