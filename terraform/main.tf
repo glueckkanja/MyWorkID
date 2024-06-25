@@ -105,15 +105,15 @@ resource "azuread_app_role_assignment" "backend_managed_identity" {
 }
 
 # Necessary for the backend to be able to create taps and change the password of users - The password cannot be changed for users with some privilaged permissions - if it is desired to change the password of users with these permissions, the backend must have higher roles - for more info see https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/privileged-roles-permissions?tabs=admin-center#who-can-reset-passwords and https://learn.microsoft.com/en-us/entra/identity/authentication/howto-authentication-temporary-access-pass#create-a-temporary-access-pass
-resource "azuread_directory_role" "helpdesk_administrator" {
+resource "azuread_directory_role" "authentication_administrator" {
   count = local.skip_actions_requiring_global_admin ? 0 : 1
   display_name = "Authentication Administrator"
   # display_name = "Privilaged Authentication Administrator" #Necessary if privilaged users should also be able to use all functions (createTAP & changePassword) via myAccountVNext
 }
 
-resource "azuread_directory_role_assignment" "backend_managed_identity_password_admin" {
+resource "azuread_directory_role_assignment" "backend_managed_identity_authentication_administrator" {
   count = local.skip_actions_requiring_global_admin ? 0 : 1
-  role_id = azuread_directory_role.password_administrator[0].template_id
+  role_id = azuread_directory_role.authentication_administrator[0].template_id
   principal_object_id       = azurerm_linux_web_app.backend.identity[0].principal_id
 }
 
