@@ -108,7 +108,7 @@ resource "azuread_app_role_assignment" "backend_managed_identity" {
 resource "azuread_directory_role" "authentication_administrator" {
   count = local.skip_actions_requiring_global_admin ? 0 : 1
   display_name = "Authentication Administrator"
-  # display_name = "Privilaged Authentication Administrator" #Necessary if privilaged users should also be able to use all functions (createTAP & changePassword) via myAccountVNext
+  # display_name = "Privileged Authentication Administrator" #Necessary if privilaged users should also be able to use all functions (createTAP & changePassword) via myAccountVNext
 }
 
 resource "azuread_directory_role_assignment" "backend_managed_identity_authentication_administrator" {
