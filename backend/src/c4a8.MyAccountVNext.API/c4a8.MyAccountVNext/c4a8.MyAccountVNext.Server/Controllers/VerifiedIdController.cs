@@ -1,8 +1,6 @@
-﻿using c4a8.MyAccountVNext.Server.Hubs;
-using c4a8.MyAccountVNext.Server.Models.VerifiedId;
-using c4a8.MyAccountVNext.Server.Options;
-using c4a8.MyAccountVNext.Server.Repositories;
-using c4a8.MyAccountVNext.Server.Services;
+﻿using c4a8.MyAccountVNext.Server.Features.VerifiedId;
+using c4a8.MyAccountVNext.Server.Features.VerifiedId.Entities;
+using c4a8.MyAccountVNext.Server.Features.VerifiedId.SignalR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

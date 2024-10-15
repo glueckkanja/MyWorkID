@@ -8,7 +8,7 @@ export const getFrontendOptions = async () => {
     return frontendOptionsCache;
   }
 
-  let apiUrl: string = `${window.location.protocol}//${window.location.host}/api/general/config/frontend`;
+  let apiUrl: string = `${window.location.protocol}//${window.location.host}/api/config/frontend`;
   var frontendOptionsResponse = await axios.get<TFrontendOptions>(apiUrl);
   frontendOptionsCache = frontendOptionsResponse.data;
   if(!frontendOptionsCache){

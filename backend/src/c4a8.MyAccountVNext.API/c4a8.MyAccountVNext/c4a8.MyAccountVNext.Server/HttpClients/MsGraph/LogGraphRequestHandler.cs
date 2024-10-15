@@ -19,7 +19,7 @@
         {
             IEnumerable<string> headerValues = httpRequest.Headers.GetValues("Authorization");
             var authHeader = headerValues.FirstOrDefault();
-            _logger.LogInformation("Sending Graph request with auth header {0}", authHeader);// log the request before it goes out.
+            _logger.LogInformation("Sending Graph request with auth header {0}{1}URL:{3}", authHeader, System.Environment.NewLine, httpRequest.RequestUri.ToString());// log the request before it goes out.
             HttpResponseMessage response = await base.SendAsync(httpRequest, cancellationToken);
             return response;
         }

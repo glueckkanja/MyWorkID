@@ -59,7 +59,7 @@ export const getUserImage = async (): Promise<Blob> => {
 export const dismissUserRisk = async (): Promise<TFunctionResult<any>> => {
   return convertTFunctionResult(
     await authenticateRequest(
-      `${backendApiUrl}/DismissUserRisk`,
+      `${backendApiUrl}/me/riskstate/dismiss`,
       REQUEST_TYPE.PUT,
       EApiFunctionTypes.DISMISS_USER_RISK
     ),
@@ -71,7 +71,7 @@ export const generateTAP = async (): Promise<
 > => {
   return convertTFunctionResult(
     await authenticateRequest<TGenerateTapResponse>(
-      `${backendApiUrl}/GenerateTap`,
+      `${backendApiUrl}/me/generatetap`,
       REQUEST_TYPE.PUT,
       EApiFunctionTypes.CREATE_TAP
     ),
@@ -98,7 +98,7 @@ export const callResetPassword = async (newPassword: string): Promise<
 > => {
   return convertTFunctionResult(
     await authenticateRequest(
-      `${backendApiUrl}/ResetPassword`,
+      `${backendApiUrl}/me/resetpassword`,
       REQUEST_TYPE.PUT,
       EApiFunctionTypes.PASSWORD_RESET, {
         newPassword
@@ -113,7 +113,7 @@ export const checkResetPasswordClaim = async (): Promise<
 > => {
   return convertTFunctionResult(
     await authenticateRequest(
-      `${backendApiUrl}/ResetPassword/claim`,
+        `${backendApiUrl}/me/ResetPassword/checkClaim`,
       REQUEST_TYPE.GET,
       EApiFunctionTypes.PASSWORD_RESET
     ),
@@ -123,7 +123,7 @@ export const checkResetPasswordClaim = async (): Promise<
 
 export const getUserRiskState = async (): Promise<TGetRiskStateResponse> => {
   return await authenticateRequest(
-    `${backendApiUrl}/users/me/riskstate`,
+    `${backendApiUrl}/me/riskstate`,
     REQUEST_TYPE.GET
   );
 };

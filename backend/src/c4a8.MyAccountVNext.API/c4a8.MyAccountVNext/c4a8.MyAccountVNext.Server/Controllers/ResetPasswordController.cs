@@ -1,5 +1,5 @@
-﻿using c4a8.MyAccountVNext.API.Services;
-using c4a8.MyAccountVNext.Server.Models.Requests;
+﻿using c4a8.MyAccountVNext.Server.Common;
+using c4a8.MyAccountVNext.Server.Features.ResetPassword.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Graph;
