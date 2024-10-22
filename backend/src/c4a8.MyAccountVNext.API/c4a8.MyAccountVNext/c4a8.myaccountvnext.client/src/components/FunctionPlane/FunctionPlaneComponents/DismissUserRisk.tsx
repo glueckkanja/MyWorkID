@@ -1,29 +1,17 @@
 import { dismissUserRisk } from "../../../services/ApiService";
 import Button from "@mui/material/Button";
-import { ActionResultProps } from "../../../types";
 import CircularProgress from "@mui/material/CircularProgress";
 import { useEffect, useState } from "react";
+import { TFunctionProps } from "../../../types";
 
-export const DismissUserRisk = (props: ActionResultProps<any>) => {
+export const DismissUserRisk = (props: TFunctionProps) => {
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
-    if (props.result) {
-      switch (props.result.status) {
-        case "pending":
-          setLoading(true);
-          break;
-        // @ts-expect-error - Fall through is intentional here
-        case "error":
-          console.error("Could not dismiss status", props.result.data);
-        // Fall through
-        case "success":
-        // Fall through
-        default:
-          setLoading(false);
-      }
+    if (props.comingFromRedirect) {
+      dismissUserRisk();
     }
-  }, [props.result]);
+  }, []);
 
   const triggerDismissUserRisk = () => {
     setLoading(true);

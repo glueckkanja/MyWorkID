@@ -188,81 +188,20 @@ export const handleRedirectPromise =
 
 export const getPendingAction = (
   authenticationResult: AuthenticationResult
-): TFunctionResult<any> => {
+): EApiFunctionTypes => {
   if (authenticationResult?.state) {
     switch (authenticationResult?.state) {
       case EApiFunctionTypes.DISMISS_USER_RISK:
-        return {
-          status: "pending",
-          dataType: EApiFunctionTypes.DISMISS_USER_RISK,
-        };
+        return EApiFunctionTypes.DISMISS_USER_RISK;
       case EApiFunctionTypes.CREATE_TAP:
-        return {
-          status: "pending",
-          dataType: EApiFunctionTypes.CREATE_TAP,
-        };
+        return EApiFunctionTypes.CREATE_TAP;
       case EApiFunctionTypes.PASSWORD_RESET:
-        return {
-          status: "pending",
-          dataType: EApiFunctionTypes.PASSWORD_RESET,
-        };
+        return EApiFunctionTypes.PASSWORD_RESET;
       default:
         throw new Error("invalide state provided");
     }
   } else {
-    return {
-      status: "error",
-      errorMessage: "No state provided",
-      dataType: EApiFunctionTypes.UNKNOWN,
-    };
+    throw new Error("No state provided");
   }
 };
 
-export const handleActionAuthRedirect = async (
-  authenticationResult: AuthenticationResult
-): Promise<TFunctionResult<any>> => {
-  if (authenticationResult?.state) {
-    try {
-      switch (authenticationResult?.state) {
-        case EApiFunctionTypes.DISMISS_USER_RISK:
-          return await dismissUserRisk();
-        case EApiFunctionTypes.CREATE_TAP:
-          return await generateTAP();
-        case EApiFunctionTypes.PASSWORD_RESET:
-          return await checkResetPasswordClaim();
-        default:
-          throw new Error("invalide state provided");
-      }
-    } catch (error: any) {
-      switch (authenticationResult?.state) {
-        case EApiFunctionTypes.DISMISS_USER_RISK:
-          return {
-            status: "error",
-            errorMessage: error.message,
-            dataType: EApiFunctionTypes.DISMISS_USER_RISK,
-          };
-        case EApiFunctionTypes.CREATE_TAP:
-          return {
-            status: "error",
-            errorMessage: error.message,
-            dataType: EApiFunctionTypes.CREATE_TAP,
-            data: { temporaryAccessPassword: "ERROR" },
-          };
-          case EApiFunctionTypes.PASSWORD_RESET:
-            return {
-              status: "error",
-              errorMessage: error.message,
-              dataType: EApiFunctionTypes.PASSWORD_RESET,
-            }
-        default:
-          throw new Error("invalide state provided");
-      }
-    }
-  } else {
-    return {
-      status: "error",
-      errorMessage: "No state provided",
-      dataType: EApiFunctionTypes.UNKNOWN,
-    };
-  }
-};

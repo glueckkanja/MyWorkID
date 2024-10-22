@@ -20,7 +20,7 @@ import { Role } from "../../services/RolesService";
 import { ValidateIdentity } from "./FunctionPlaneComponents/ValidateIdentity";
 
 const FUNCTION_PLANE_COMPONENTS: {
-  element: (props: ActionResultProps<any>) => JSX.Element;
+  element: (props: TFunctionProps) => JSX.Element;
   functionType: EApiFunctionTypes;
   permissionRoleRequired?: string;
 }[] = [
@@ -47,7 +47,7 @@ const FUNCTION_PLANE_COMPONENTS: {
 ];
 
 const FunctionPlane = () => {
-  const [actionResult, setActionResult] = useState<TFunctionResult<any>>();
+  const [actionResult, setActionResult] = useState<EApiFunctionTypes>();
 
   const signedInUserInfo = useSignedInUser();
 
@@ -55,9 +55,6 @@ const FunctionPlane = () => {
     handleRedirectPromise().then((authenticationResult) => {
       if (authenticationResult) {
         setActionResult(getPendingAction(authenticationResult));
-        handleActionAuthRedirect(authenticationResult).then((result) => {
-          setActionResult(result);
-        });
       }
     });
   }, []);
@@ -81,12 +78,7 @@ const FunctionPlane = () => {
             return (
               <functionComponent.element
                 key={functionComponent.functionType}
-                result={
-                  actionResult &&
-                  actionResult.dataType === functionComponent.functionType
-                    ? actionResult
-                    : undefined
-                }
+                comingFromRedirect = {actionResult == functionComponent.functionType}
               />
             );
           } else {

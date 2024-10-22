@@ -1,6 +1,6 @@
 import Button from "@mui/material/Button";
 import { useEffect, useState } from "react";
-import { ActionResultProps, TGenerateTapResponse } from "../../../types";
+import { TFunctionProps } from "../../../types";
 import TextField from "@mui/material/TextField";
 import CircularProgress from "@mui/material/CircularProgress";
 import { generateTAP } from "../../../services/ApiService";
@@ -11,7 +11,7 @@ type TAPDisplay = {
   loading: boolean;
 };
 
-export const CreateTAP = (props: ActionResultProps<TGenerateTapResponse>) => {
+export const CreateTAP = (props: TFunctionProps) => {
   const [tapDisplay, setTapDisplay] = useState<TAPDisplay>({
     visible: false,
     value: "",
@@ -44,34 +44,10 @@ export const CreateTAP = (props: ActionResultProps<TGenerateTapResponse>) => {
   };
 
   useEffect(() => {
-    if (props.result) {
-      switch (props.result.status) {
-        case "success":
-          setTapDisplay({
-            visible: true,
-            value: props.result.data?.temporaryAccessPassword || "ERROR",
-            loading: false,
-          });
-          break;
-        case "pending":
-          setTapDisplay({
-            visible: false,
-            value: "",
-            loading: true,
-          });
-          break;
-        case "error":
-          // Fall through
-        default:
-          console.error("Something went wrong during TAP generation.", props.result)
-          setTapDisplay({
-            visible: true,
-            value: "ERROR",
-            loading: false,
-          });
-      }
+    if (props.comingFromRedirect) {
+      createTAP();
     }
-  }, [props.result]);
+  }, []);
 
   return (
     <div>

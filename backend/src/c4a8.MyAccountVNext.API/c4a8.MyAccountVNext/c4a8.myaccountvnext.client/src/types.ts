@@ -29,6 +29,10 @@ export enum EApiFunctionTypes {
   UNKNOWN = "unknown"
 }
 
+export type TFunctionProps = {
+  comingFromRedirect: boolean;
+}
+
 export type ActionResultProps<T> = {
   result?: TFunctionResult<T>
 }
