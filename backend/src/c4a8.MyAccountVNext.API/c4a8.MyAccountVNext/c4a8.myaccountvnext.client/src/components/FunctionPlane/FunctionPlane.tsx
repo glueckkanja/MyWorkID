@@ -4,16 +4,13 @@ import { DismissUserRisk } from "./FunctionPlaneComponents/DismissUserRisk";
 import { useEffect, useState } from "react";
 import {
   getPendingAction,
-  handleActionAuthRedirect,
   handleRedirectPromise,
 } from "../../services/MsalService";
 import {
-  ActionResultProps,
   EApiFunctionTypes,
-  TFunctionResult,
+  TFunctionProps,
 } from "../../types";
 import Container from "@mui/material/Container";
-import Stack from "@mui/material/Stack";
 import { UserDisplay } from "./UserDisplay";
 import { useSignedInUser } from "../../contexts/SignedInUserProvider";
 import { Role } from "../../services/RolesService";
@@ -60,13 +57,14 @@ const FunctionPlane = () => {
   }, []);
 
   return (
-    <Container maxWidth="xl">
+    <Container maxWidth="xl" style={{backgroundColor : "#F5F5F5"}}>
       <UserDisplay />
-      <Stack
+      {/* <Stack
         className="function_plane__function_component__wrapper"
         direction={{ xs: "column", md: "row" }}
         spacing={2}
-      >
+      > */}
+      <div style={{display:"flex",}}>
         {FUNCTION_PLANE_COMPONENTS.map((functionComponent) => {
           if (
             !functionComponent.permissionRoleRequired ||
@@ -85,7 +83,8 @@ const FunctionPlane = () => {
             return undefined;
           }
         })}
-      </Stack>
+      {/* </Stack> */}
+      </div>
     </Container>
   );
 };

@@ -11,8 +11,8 @@ export const getVerifiedIdConnection = async (): Promise<HubConnection> => {
       return verifiedIdConnectionCache;
     }
 
-    let msalInfo = await getMsalInfo();
-    let signedInUser = msalInfo.msalInstance.getAllAccounts()[0].localAccountId;
+    const msalInfo = await getMsalInfo();
+    const signedInUser = msalInfo.msalInstance.getAllAccounts()[0].localAccountId;
 
     verifiedIdConnectionCache = new HubConnectionBuilder()
       .withUrl("/hubs/verifiedId", { accessTokenFactory: () => signedInUser })

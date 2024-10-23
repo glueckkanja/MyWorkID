@@ -1,4 +1,6 @@
-import { Avatar, Skeleton, useTheme } from "@mui/material";
+import { useTheme } from "@mui/material";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   getUser,
@@ -99,24 +101,52 @@ export const UserDisplay = () => {
   );
 
   return (
-    <div className="user_display">
-      <Avatar sx={{ width: 100, height: 100 }} src={userImage}></Avatar>
-      <div className="user_display__user_info__container">
+    <div style={{display:"flex", justifyContent:"center"}}>
+      <div style={{ display: "flex", flexDirection:"column", paddingTop: "41px", alignItems:"center" }}>
+        <Avatar style={{ width: 100, height: 100, borderRadius: "32px" }}>
+          <AvatarImage src={userImage} />
+          <AvatarFallback>CN</AvatarFallback>
+        </Avatar>
         <div>
-          <h3 className="no_margin">{user?.displayName}</h3>
-          <div style={{ display: "flex", gap: "0.5rem" }}>
-            <div>Risk State:</div>
-            <div
-              style={{ color: getRiskStateColor(riskUserState.displayValue) }}
+          <div style={{textAlign: "center",}}>
+            <span
+              style={{
+                fontFamily: "Lato",
+                fontSize: "24px",
+                fontStyle: "normal",
+                fontWeight: "700",
+                color: "#000520",
+              }}
             >
-              {riskUserState.loading && (
-                <Skeleton
-                  variant="text"
-                  width={100}
-                  sx={{ fontSize: "1rem" }}
-                />
-              )}
-              {riskUserState.displayValue}
+              {user?.displayName}
+            </span>
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <div
+                style={{
+                  textAlign: "right",
+                  fontFamily: "Lato",
+                  fontSize: "16px",
+                  fontStyle: "normal",
+                  fontWeight: "400",
+                  color: "#7A7D8A",
+                }}
+              >
+                Risk State:
+              </div>
+              <div
+                style={{ color: getRiskStateColor(riskUserState.displayValue) }}
+              >
+                {riskUserState.loading && (
+                  <>
+                    <Skeleton className="h-[125px] w-[250px] rounded-xl" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-[250px]" />
+                      <Skeleton className="h-4 w-[200px]" />
+                    </div>
+                  </>
+                )}
+                {riskUserState.displayValue}
+              </div>
             </div>
           </div>
         </div>

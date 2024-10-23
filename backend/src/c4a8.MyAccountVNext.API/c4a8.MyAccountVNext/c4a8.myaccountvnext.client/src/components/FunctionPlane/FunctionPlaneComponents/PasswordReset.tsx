@@ -1,5 +1,5 @@
 import Button from "@mui/material/Button";
-import { ActionResultProps } from "../../../types";
+import { TFunctionProps } from "../../../types";
 import { useEffect, useState } from "react";
 import CircularProgress from "@mui/material/CircularProgress";
 import FormControl from "@mui/material/FormControl";
@@ -37,7 +37,7 @@ const PASSWORD_MUST_BE_SAME_ERROR_TEXT =
   "Password must be the same in both fields.";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- This is a placeholder component
-export const PasswordReset = (props: ActionResultProps<any>) => {
+export const PasswordReset = (props: TFunctionProps) => {
   const [passwordDisplay, setPasswordDisplay] = useState<PasswordDisplay>({
     visible: false,
     value: "",
@@ -49,40 +49,13 @@ export const PasswordReset = (props: ActionResultProps<any>) => {
 
   // Note this is the claim challenge check - if successfull comes back the password reset UI should be accasible - if not we have to close the menu again
   useEffect(() => {
-    if (props.result) {
-      switch (props.result.status) {
-        case "pending":
-        case "success":
-          if (!passwordDisplay.visible) {
-            setPasswordDisplay({
-              visible: true,
-              value: "",
-              showValue: false,
-              valueConfirm: "",
-              showValueConfirm: false,
-              loading: false,
-            });
-          }
-          break;
-        case "error":
-          console.error(
-            "Something went wrong during Password claim check.",
-            props.result
-          );
-          setPasswordDisplay({
-            visible: false,
-            value: "",
-            showValue: false,
-            valueConfirm: "",
-            showValueConfirm: false,
-            loading: false,
-          });
-      }
+    if(props.comingFromRedirect){
+      resetPassword();
     }
-  }, [props.result]);
+  }, []);
 
   const resetPassword = () => {
-    let passwordToSet = passwordDisplay.value;
+    const passwordToSet = passwordDisplay.value;
     if (!getIsPasswordValid(passwordToSet)) {
       return;
     }
@@ -158,7 +131,7 @@ export const PasswordReset = (props: ActionResultProps<any>) => {
       return false;
     }
 
-    let passwordRequirements: RegExp[] = [
+    const passwordRequirements: RegExp[] = [
       new RegExp("[A-Z]"),
       new RegExp("[a-z]"),
       new RegExp("[0-9]"),
@@ -168,7 +141,7 @@ export const PasswordReset = (props: ActionResultProps<any>) => {
     ];
 
     let satisfiedRequirements = 0;
-    for (let requirement of passwordRequirements) {
+    for (const requirement of passwordRequirements) {
       if (requirement.test(password)) {
         satisfiedRequirements++;
       }
@@ -185,7 +158,7 @@ export const PasswordReset = (props: ActionResultProps<any>) => {
         propertyToSet = "valueConfirm";
       }
 
-      var newValues = {
+      const newValues = {
         ...oldValues,
         [propertyToSet]: value,
       };

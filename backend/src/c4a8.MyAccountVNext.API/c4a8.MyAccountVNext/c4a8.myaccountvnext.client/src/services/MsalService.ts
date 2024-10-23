@@ -3,10 +3,9 @@ import {
   AuthenticationResult,
   LogLevel,
 } from "@azure/msal-browser";
-import { EApiFunctionTypes, REQUEST_TYPE, TFunctionResult } from "../types";
+import { EApiFunctionTypes, REQUEST_TYPE } from "../types";
 import axios, { AxiosResponse } from "axios";
 import { parseChallenges } from "../utils";
-import { generateTAP, dismissUserRisk, checkResetPasswordClaim } from "./ApiService";
 import { getFrontendOptions } from "./FrontendOptionsService";
 import { Mutex } from "async-mutex";
 
@@ -24,7 +23,7 @@ export const getMsalInfo = async (): Promise<TMsalInfo> => {
     }
 
 
-    let frontendOptions = await getFrontendOptions();
+    const frontendOptions = await getFrontendOptions();
 
     msalInfoCache = {
       msalInstance: new PublicClientApplication({
@@ -111,7 +110,7 @@ export const authenticateRequest = async <T>(
         response.headers["www-authenticate"]
       );
 
-      var msalInfo = await getMsalInfo();
+      const msalInfo = await getMsalInfo();
       await msalInfo.msalInstance.acquireTokenRedirect({
         claims: window.atob(wwwAuthenticateHeader.claims), // decode the base64 string
         scopes: [`api://${msalInfo.backendClientId}/Access`],
@@ -125,7 +124,7 @@ export const authenticateRequest = async <T>(
 };
 
 const getBearerToken = async (): Promise<string> => {
-  var msalInfo = await getMsalInfo();
+  const msalInfo = await getMsalInfo();
   const accounts = msalInfo.msalInstance.getAllAccounts();
 
   if (accounts.length === 0) {
@@ -153,7 +152,7 @@ const getBearerToken = async (): Promise<string> => {
 };
 
 export const getGraphBearerToken = async (): Promise<string> => {
-  var msalInfo = await getMsalInfo();
+  const msalInfo = await getMsalInfo();
   const accounts = msalInfo.msalInstance.getAllAccounts();
 
   if (accounts.length === 0) {
@@ -182,7 +181,7 @@ export const getGraphBearerToken = async (): Promise<string> => {
 
 export const handleRedirectPromise =
   async (): Promise<AuthenticationResult | null> => {
-    var msalInfo = await getMsalInfo();
+    const msalInfo = await getMsalInfo();
     return await msalInfo.msalInstance.handleRedirectPromise();
   };
 
