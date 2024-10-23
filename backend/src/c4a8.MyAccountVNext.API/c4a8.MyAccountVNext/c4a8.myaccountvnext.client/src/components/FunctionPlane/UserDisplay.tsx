@@ -101,14 +101,27 @@ export const UserDisplay = () => {
   );
 
   return (
-    <div style={{display:"flex", justifyContent:"center"}}>
-      <div style={{ display: "flex", flexDirection:"column", paddingTop: "41px", alignItems:"center" }}>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        marginBottom: "28px",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          paddingTop: "41px",
+          alignItems: "center",
+        }}
+      >
         <Avatar style={{ width: 100, height: 100, borderRadius: "32px" }}>
           <AvatarImage src={userImage} />
           <AvatarFallback>CN</AvatarFallback>
         </Avatar>
         <div>
-          <div style={{textAlign: "center",}}>
+          <div style={{ textAlign: "center" }}>
             <span
               style={{
                 fontFamily: "Lato",

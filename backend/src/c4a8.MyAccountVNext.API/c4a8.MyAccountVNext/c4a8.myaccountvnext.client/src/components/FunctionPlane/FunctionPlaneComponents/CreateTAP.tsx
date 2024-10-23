@@ -139,12 +139,7 @@ export const CreateTAP = (props: TFunctionProps) => {
       </div> */}
       {!tapDisplay.visible ? (
         <Card
-          style={{
-            backgroundColor: "#0072C6",
-            color: "white",
-            width: "164px",
-            borderRadius: "24px"
-          }}
+          className="action-card"
           onClick={() => {
             createTAP;
           }}
@@ -152,8 +147,8 @@ export const CreateTAP = (props: TFunctionProps) => {
           <CardHeader>
             <CardTitle>{svgIcon}</CardTitle>
           </CardHeader>
-          <CardFooter>
-            <p>Create Temporary Access Password</p>
+          <CardFooter className="action-card__footer">
+            Create Temporary Access Password
           </CardFooter>
         </Card>
       ) : (
@@ -162,7 +157,7 @@ export const CreateTAP = (props: TFunctionProps) => {
             backgroundColor: "white",
             color: "black",
             width: "164px",
-            borderRadius: "24px"
+            borderRadius: "24px",
           }}
         >
           <CardContent>{tapDisplay.value}</CardContent>

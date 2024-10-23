@@ -61,64 +61,13 @@ const darkModeIcon = (
 
 export const Header = () => {
   return (
-    <div
-      style={{
-        width: "100%",
-        height: "96px",
-        boxShadow: "0px 0px 12px 0px rgba(0, 0, 0, 0.10)",
-        top: "0",
-      }}
-    >
-      <div>
-        <div
-          style={{
-            display: "flex",
-            paddingTop: "26px",
-            paddingBottom: "26px",
-            paddingLeft: "30px",
-          }}
-        >
-          {headerLogo}
-          <div
-            style={{
-              fontFamily: "Miriam Libre",
-              fontFeatureSettings: "'liga' off, 'clig' off",
-              fontSize: "25.287px",
-              fontStyle: "normal",
-              fontWeight: "700",
-              lineHeight: "14.161px" /* 56% */,
-              letterSpacing: "0.531px",
-              marginTop: "18px",
-              marginLeft: "-8px",
-            }}
-          >
-            <span
-              style={{
-                color: "#5CBBFF",
-              }}
-            >
-              myWork
-            </span>
-            <span
-              style={{
-                color: "#0072C6",
-              }}
-            >
-              ID
-            </span>
-          </div>
-          <div
-            style={{
-              marginLeft: "auto",
-              marginRight: "30px",
-              height: "36px",
-              width: "36px",
-            }}
-          >
-            {darkModeIcon}
-          </div>
-        </div>
+    <div className="header__container">
+      {headerLogo}
+      <div className="header__title">
+        <span className="header__title__myWork">myWork</span>
+        <span className="header__title__text-light">ID</span>
       </div>
+      <div className="header__dark-mode-toggle">{darkModeIcon}</div>
     </div>
   );
 };

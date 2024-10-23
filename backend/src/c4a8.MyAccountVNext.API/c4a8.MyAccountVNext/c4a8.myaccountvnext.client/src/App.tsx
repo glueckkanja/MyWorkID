@@ -1,14 +1,14 @@
-import CssBaseline from "@mui/material/CssBaseline";
 import FunctionPlane from "./components/FunctionPlane/FunctionPlane";
 import { ToggleColorModeProvider } from "./contexts/ToggleColorModeProvider";
 import { Header } from "./components/Header";
+import { Footer } from "./components/Footer";
 
 export const App = () => {
   return (
     <ToggleColorModeProvider>
-      <CssBaseline />
       <Header />
       <FunctionPlane />
+      <Footer />
     </ToggleColorModeProvider>
   );
 };

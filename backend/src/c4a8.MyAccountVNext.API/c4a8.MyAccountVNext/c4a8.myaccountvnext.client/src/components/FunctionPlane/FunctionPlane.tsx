@@ -6,11 +6,7 @@ import {
   getPendingAction,
   handleRedirectPromise,
 } from "../../services/MsalService";
-import {
-  EApiFunctionTypes,
-  TFunctionProps,
-} from "../../types";
-import Container from "@mui/material/Container";
+import { EApiFunctionTypes, TFunctionProps } from "../../types";
 import { UserDisplay } from "./UserDisplay";
 import { useSignedInUser } from "../../contexts/SignedInUserProvider";
 import { Role } from "../../services/RolesService";
@@ -57,14 +53,18 @@ const FunctionPlane = () => {
   }, []);
 
   return (
-    <Container maxWidth="xl" style={{backgroundColor : "#F5F5F5"}}>
+    <div>
       <UserDisplay />
-      {/* <Stack
-        className="function_plane__function_component__wrapper"
-        direction={{ xs: "column", md: "row" }}
-        spacing={2}
-      > */}
-      <div style={{display:"flex",}}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(2, 1fr)" /* 2 items per row */,
+          gridAutoRows: "minmax(auto, max-content)",
+          gap: "10px" /* Space between items */,
+          marginRight: "29px",
+          marginLeft: "29px",
+        }}
+      >
         {FUNCTION_PLANE_COMPONENTS.map((functionComponent) => {
           if (
             !functionComponent.permissionRoleRequired ||
@@ -76,16 +76,17 @@ const FunctionPlane = () => {
             return (
               <functionComponent.element
                 key={functionComponent.functionType}
-                comingFromRedirect = {actionResult == functionComponent.functionType}
+                comingFromRedirect={
+                  actionResult == functionComponent.functionType
+                }
               />
             );
           } else {
             return undefined;
           }
         })}
-      {/* </Stack> */}
       </div>
-    </Container>
+    </div>
   );
 };
 
