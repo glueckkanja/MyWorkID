@@ -110,7 +110,7 @@ export const ValidateIdentity = (/*props: ActionResultProps<any>*/) => {
         <Card
           className="action-card"
           onClick={() => {
-            validateIdentity;
+            validateIdentity();
           }}
         >
           <CardHeader>
@@ -126,7 +126,7 @@ export const ValidateIdentity = (/*props: ActionResultProps<any>*/) => {
             <Card
               className="action-card__qr-code"
               onClick={() => {
-                validateIdentity;
+                validateIdentity();
               }}
             >
               <CardContent>
