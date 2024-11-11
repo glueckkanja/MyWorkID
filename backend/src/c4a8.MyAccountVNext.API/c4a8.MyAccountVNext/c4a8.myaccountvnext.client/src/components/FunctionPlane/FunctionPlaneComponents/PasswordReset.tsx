@@ -4,12 +4,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { callResetPassword } from "../../../services/ApiService";
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -220,9 +215,7 @@ export const PasswordReset = (props: TFunctionProps) => {
     });
   };
   function onSubmit(values: z.infer<typeof formSchema>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-   handleInput( PasswordInputType.CONFIRM, values.password);
+    handleInput(PasswordInputType.CONFIRM, values.password);
   }
   // const handleMouseDownPassword = (
   //   event: React.MouseEvent<HTMLButtonElement>
@@ -232,13 +225,6 @@ export const PasswordReset = (props: TFunctionProps) => {
 
   return (
     <div>
-      {/* <Button
-        className="function_plane__function_component__action"
-        variant="contained"
-        onClick={togglePasswordResetUI}
-      >
-        Reset Password
-      </Button> */}
       {!passwordDisplay.visible && (
         <Card
           className="action-card"
