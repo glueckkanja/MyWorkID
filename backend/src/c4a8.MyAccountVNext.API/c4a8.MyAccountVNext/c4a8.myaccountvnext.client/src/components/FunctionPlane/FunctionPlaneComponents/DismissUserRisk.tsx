@@ -79,50 +79,25 @@ export const DismissUserRisk = (props: TFunctionProps) => {
     }
   }, []);
 
-  // const triggerDismissUserRisk = () => {
-  //   setLoading(true);
-  //   dismissUserRisk()
-  //     .then(() => {
-  //       setLoading(false);
-  //       setSuccess(true);
-  //     })
-  //     .catch(() => {
-  //       setLoading(false);
-  //       setSuccess(false);
-  //     });
-  // };
-  const test = () => {
-    setLoading(false);
-    setSuccess(true);
+  const triggerDismissUserRisk = () => {
+    setLoading(true);
+    dismissUserRisk()
+      .then(() => {
+        setLoading(false);
+        setSuccess(true);
+      })
+      .catch(() => {
+        setLoading(false);
+        setSuccess(false);
+      });
   };
   return (
-    // <div>
-    //   <Button
-    //     className="function_plane__function_component__action"
-    //     variant="contained"
-    //     onClick={triggerDismissUserRisk}
-    //     disabled={loading}
-    //   >
-    //     Dismiss User Risk
-    //   </Button>
-    //   <div>
-    //     <div
-    //       className={
-    //         loading
-    //           ? "function_plane__function_component__loading_spinner__container"
-    //           : "hidden_element"
-    //       }
-    //     >
-    //       <CircularProgress />
-    //     </div>
-    //   </div>
-    // </div>
     <div>
       {!loading && success === undefined && (
         <Card
           className="action-card"
           onClick={() => {
-            test();
+            triggerDismissUserRisk();
           }}
         >
           <CardHeader>

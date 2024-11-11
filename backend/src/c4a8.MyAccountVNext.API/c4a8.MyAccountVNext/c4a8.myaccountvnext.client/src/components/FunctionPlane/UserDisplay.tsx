@@ -123,13 +123,7 @@ export const UserDisplay = () => {
         <div>
           <div style={{ textAlign: "center" }}>
             <span
-              style={{
-                fontFamily: "Lato",
-                fontSize: "24px",
-                fontStyle: "normal",
-                fontWeight: "700",
-                color: "#000520",
-              }}
+              className="userdisplay__username"
             >
               {user?.displayName}
             </span>

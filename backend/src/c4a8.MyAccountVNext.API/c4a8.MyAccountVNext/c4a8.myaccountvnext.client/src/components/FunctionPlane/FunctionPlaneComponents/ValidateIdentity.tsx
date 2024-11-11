@@ -3,6 +3,7 @@ import { verifyIdentity } from "../../../services/ApiService";
 import { HubConnectionState } from "@microsoft/signalr";
 import { getVerifiedIdConnection } from "../../../services/SignalRService";
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CircularProgress } from "@mui/material";
 type VerifiedIdDisplay = {
   visible: boolean;
   qrCodeBase64?: string;
@@ -104,27 +105,6 @@ export const ValidateIdentity = (/*props: ActionResultProps<any>*/) => {
   };
 
   return (
-    // <div>
-    //   <Button
-    //     className="function_plane__function_component__action"
-    //     variant="contained"
-    //     onClick={validateIdentity}
-    //   >
-    //     Validate Identity
-    //   </Button>
-    //   <div>
-    //     {verifiedIdDisplay.visible && (
-    //       <Box sx={{ textAlign: "center", paddingTop: 2 }}>
-    //         <img src={verifiedIdDisplay.qrCodeBase64}></img>
-    //       </Box>
-    //     )}
-    //     {verifiedIdDisplay.loading && (
-    //       <div className="function_plane__function_component__loading_spinner__container">
-    //         <CircularProgress />
-    //       </div>
-    //     )}
-    //   </div>
-    // </div>
     <div>
       {!verifiedIdDisplay.visible ? (
         <Card
@@ -142,11 +122,23 @@ export const ValidateIdentity = (/*props: ActionResultProps<any>*/) => {
         </Card>
       ) : (
         <>
-          {verifiedIdDisplay.loading ? (
-              <div >
-              </div>
+          {!verifiedIdDisplay.loading ? (
+            <Card
+              className="action-card__qr-code"
+              onClick={() => {
+                validateIdentity;
+              }}
+            >
+              <CardContent>
+                <div>
+                  <img src={verifiedIdDisplay.qrCodeBase64}></img>
+                </div>
+              </CardContent>
+            </Card>
           ) : (
-            <></>
+            <div>
+              <CircularProgress />
+            </div>
           )}
         </>
       )}

@@ -1,19 +1,17 @@
-import Button from "@mui/material/Button";
 import { TFunctionProps } from "../../../types";
 import { useEffect, useState } from "react";
-import CircularProgress from "@mui/material/CircularProgress";
-import FormControl from "@mui/material/FormControl";
-import InputLabel from "@mui/material/InputLabel";
-import InputAdornment from "@mui/material/InputAdornment";
-import OutlinedInput from "@mui/material/OutlinedInput";
-import IconButton from "@mui/material/IconButton";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
-import Box from "@mui/material/Box";
-import FormHelperText from "@mui/material/FormHelperText";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
 import {
-  callResetPassword,
-  checkResetPasswordClaim,
-} from "../../../services/ApiService";
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { callResetPassword } from "../../../services/ApiService";
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 type PasswordDisplay = {
   visible: boolean;
@@ -31,10 +29,10 @@ enum PasswordInputType {
   CONFIRM,
 }
 
-const PASSWORD_MUST_CONTAIN_ERROR_TEXT =
-  "Please use characters from at least 3 of these groups: lowercase, uppercase, digits, special symbols.";
-const PASSWORD_MUST_BE_SAME_ERROR_TEXT =
-  "Password must be the same in both fields.";
+// const PASSWORD_MUST_CONTAIN_ERROR_TEXT =
+//   "Please use characters from at least 3 of these groups: lowercase, uppercase, digits, special symbols.";
+// const PASSWORD_MUST_BE_SAME_ERROR_TEXT =
+//   "Password must be the same in both fields.";
 const svgIcon = (
   <svg
     width="40"
@@ -61,6 +59,11 @@ const svgIcon = (
     </g>
   </svg>
 );
+
+const formSchema = z.object({
+  password: z.string().min(2).max(50),
+  confirmPassword: z.string().min(2).max(50),
+});
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- This is a placeholder component
 export const PasswordReset = (props: TFunctionProps) => {
   const [passwordDisplay, setPasswordDisplay] = useState<PasswordDisplay>({
@@ -71,7 +74,13 @@ export const PasswordReset = (props: TFunctionProps) => {
     showValueConfirm: false,
     loading: false,
   });
-
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      password: "",
+      confirmPassword: "",
+    },
+  });
   // Note this is the claim challenge check - if successfull comes back the password reset UI should be accasible - if not we have to close the menu again
   useEffect(() => {
     if (props.comingFromRedirect) {
@@ -124,11 +133,19 @@ export const PasswordReset = (props: TFunctionProps) => {
   };
 
   const togglePasswordResetUI = () => {
-    if (!passwordDisplay.visible) {
-      checkResetPasswordClaim();
-    }
+    // if (!passwordDisplay.visible) {
+    //   checkResetPasswordClaim();
+    // }
+    // setPasswordDisplay({
+    //   visible: !passwordDisplay.visible,
+    //   value: "",
+    //   showValue: false,
+    //   valueConfirm: "",
+    //   showValueConfirm: false,
+    //   loading: false,
+    // });
     setPasswordDisplay({
-      visible: !passwordDisplay.visible,
+      visible: true,
       value: "",
       showValue: false,
       valueConfirm: "",
@@ -137,19 +154,19 @@ export const PasswordReset = (props: TFunctionProps) => {
     });
   };
 
-  const handleClickShowPassword = (inputType: PasswordInputType) => {
-    setPasswordDisplay((oldValues) => {
-      let propertyToSet = "showValue";
-      let valueToSet = !oldValues.showValue;
+  // const handleClickShowPassword = (inputType: PasswordInputType) => {
+  //   setPasswordDisplay((oldValues) => {
+  //     let propertyToSet = "showValue";
+  //     let valueToSet = !oldValues.showValue;
 
-      if (inputType == PasswordInputType.CONFIRM) {
-        propertyToSet = "showValueConfirm";
-        valueToSet = !oldValues.showValueConfirm;
-      }
+  //     if (inputType == PasswordInputType.CONFIRM) {
+  //       propertyToSet = "showValueConfirm";
+  //       valueToSet = !oldValues.showValueConfirm;
+  //     }
 
-      return { ...oldValues, [propertyToSet]: valueToSet };
-    });
-  };
+  //     return { ...oldValues, [propertyToSet]: valueToSet };
+  //   });
+  // };
 
   const getIsPasswordValid = (password: string) => {
     if (password.length < 8 || password.length > 255) {
@@ -202,12 +219,16 @@ export const PasswordReset = (props: TFunctionProps) => {
       return { ...newValues, errorValueConfirm, errorValue };
     });
   };
-
-  const handleMouseDownPassword = (
-    event: React.MouseEvent<HTMLButtonElement>
-  ) => {
-    event.preventDefault();
-  };
+  function onSubmit(values: z.infer<typeof formSchema>) {
+    // Do something with the form values.
+    // ✅ This will be type-safe and validated.
+   handleInput( PasswordInputType.CONFIRM, values.password);
+  }
+  // const handleMouseDownPassword = (
+  //   event: React.MouseEvent<HTMLButtonElement>
+  // ) => {
+  //   event.preventDefault();
+  // };
 
   return (
     <div>
@@ -218,17 +239,67 @@ export const PasswordReset = (props: TFunctionProps) => {
       >
         Reset Password
       </Button> */}
-      <Card
-        className="action-card"
-        onClick={() => {
-          togglePasswordResetUI;
-        }}
-      >
-        <CardHeader>
-          <CardTitle>{svgIcon}</CardTitle>
-        </CardHeader>
-        <CardFooter className="action-card__footer">Reset Password</CardFooter>
-      </Card>
+      {!passwordDisplay.visible && (
+        <Card
+          className="action-card"
+          onClick={() => {
+            togglePasswordResetUI();
+          }}
+        >
+          <CardHeader>
+            <CardTitle>{svgIcon}</CardTitle>
+          </CardHeader>
+          <CardFooter className="action-card__footer">
+            Reset Password
+          </CardFooter>
+        </Card>
+      )}
+      {passwordDisplay.visible && (
+        <>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        className="action-card__pasword-reset__input"
+                        placeholder="Enter Password"
+                        {...field}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        className="action-card__pasword-reset__input"
+                        type="password"
+                        placeholder="Confirm Password"
+                        {...field}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <Button
+                className="action-card__pasword-reset__submit-button"
+                type="submit"
+              >
+                Submit
+              </Button>
+            </form>
+          </Form>
+        </>
+      )}
       {/* {passwordDisplay.visible && (
         <div>
           <FormControl
@@ -331,6 +402,16 @@ export const PasswordReset = (props: TFunctionProps) => {
           </Box>
         </div>
       )}
+      <div
+        className={
+          passwordDisplay.loading
+            ? "function_plane__function_component__loading_spinner__container"
+            : "hidden_element"
+        }
+      >
+        <CircularProgress />
+      </div> */}
+      {/* {passwordDisplay.visible && ()}
       <div
         className={
           passwordDisplay.loading

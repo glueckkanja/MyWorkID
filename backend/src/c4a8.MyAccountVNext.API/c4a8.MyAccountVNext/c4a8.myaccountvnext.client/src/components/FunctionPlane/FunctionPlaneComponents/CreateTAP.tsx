@@ -74,14 +74,12 @@ export const CreateTAP = (props: TFunctionProps) => {
     value: "",
     loading: false,
   });
-
-  const createTAP = () => {
+  const createTAP = async () => {
     setTapDisplay({
-      visible: false,
-      value: "",
-      loading: true,
+      visible: true,
+      value: "123123",
+      loading: false,
     });
-
     generateTAP()
       .then((result) => {
         setTapDisplay({
@@ -108,40 +106,11 @@ export const CreateTAP = (props: TFunctionProps) => {
 
   return (
     <div>
-      {/* <Button
-        className="function_plane__function_component__action"
-        variant="contained"
-        onClick={createTAP}
-        disabled={tapDisplay.loading}
-      >
-        Create Temporary Access Password
-      </Button>
-      <div>
-        <TextField
-          className={tapDisplay.visible ? undefined : "hidden_element"}
-          sx={{ width: "100%" }}
-          label="TAP"
-          variant="filled"
-          value={tapDisplay.value}
-          inputProps={
-            { readOnly: true, }
-          }
-        />
-        <div
-          className={
-            tapDisplay.loading
-              ? "function_plane__function_component__loading_spinner__container"
-              : "hidden_element"
-          }
-        >
-          <CircularProgress />
-        </div>
-      </div> */}
       {!tapDisplay.visible ? (
         <Card
           className="action-card"
           onClick={() => {
-            createTAP;
+            createTAP();
           }}
         >
           <CardHeader>
@@ -152,15 +121,10 @@ export const CreateTAP = (props: TFunctionProps) => {
           </CardFooter>
         </Card>
       ) : (
-        <Card
-          style={{
-            backgroundColor: "white",
-            color: "black",
-            width: "164px",
-            borderRadius: "24px",
-          }}
-        >
-          <CardContent>{tapDisplay.value}</CardContent>
+        <Card className="action-card__tap">
+          <CardContent className="action-card__tap_content">
+            {tapDisplay.value}
+          </CardContent>
         </Card>
       )}
     </div>

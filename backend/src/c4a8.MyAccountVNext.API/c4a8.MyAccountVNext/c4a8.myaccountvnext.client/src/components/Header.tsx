@@ -1,3 +1,5 @@
+import { useTheme } from "./theme-provider";
+
 const headerLogo = (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -58,16 +60,32 @@ const darkModeIcon = (
     </defs>
   </svg>
 );
-
+enum ColorTheme {
+  Light = "light",
+  Dark = "dark",
+}
+const STORAGEKEY = "vite-ui-theme";
+type Theme = ColorTheme.Dark | ColorTheme.Light;
 export const Header = () => {
+  const { setTheme } = useTheme();
+  const setColorTheme = () => {
+    if ((localStorage.getItem(STORAGEKEY) as Theme) === "dark") {
+      setTheme(ColorTheme.Light);
+    } else {
+      setTheme(ColorTheme.Dark);
+    }
+  };
+
   return (
     <div className="header__container">
       {headerLogo}
       <div className="header__title">
-        <span className="header__title__myWork">myWork</span>
-        <span className="header__title__text-light">ID</span>
+        <span className="header__title__text-myWork">myWork</span>
+        <span className="header__title__text-ID">ID</span>
       </div>
-      <div className="header__dark-mode-toggle">{darkModeIcon}</div>
+      <div className="header__dark-mode-toggle" onMouseDown={() => setColorTheme()}>
+        {darkModeIcon}
+      </div>
     </div>
   );
 };

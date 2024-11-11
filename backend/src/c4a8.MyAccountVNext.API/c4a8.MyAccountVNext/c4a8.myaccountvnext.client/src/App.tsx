@@ -1,16 +1,15 @@
 import FunctionPlane from "./components/FunctionPlane/FunctionPlane";
-import { ToggleColorModeProvider } from "./contexts/ToggleColorModeProvider";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
+import { ThemeProvider } from "./components/theme-provider";
 
 export const App = () => {
   return (
-    <ToggleColorModeProvider>
+    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       <Header />
       <FunctionPlane />
       <Footer />
-    </ToggleColorModeProvider>
+    </ThemeProvider>
   );
 };
-
 export default App;

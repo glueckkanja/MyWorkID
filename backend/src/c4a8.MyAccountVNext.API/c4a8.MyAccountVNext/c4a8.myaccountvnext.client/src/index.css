@@ -28,6 +28,19 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+    --tile-color: #0072c6;
+    --background-color: #f5f5f5;
+    --background-header-footer: #fff;
+    --user-displayname: #000520;
+    --footer-text-color: #000520;
+    --footer-svg-color: #000520;
+    --action-card-activated-background: #fff;
+    --brand-svg-color-top: #5cbbff;
+    --brand-svg-color-bottom: #0072c6;
+    --brand-svg-top-path: "M47.011 3.56628H39.8901V7.10088H47.011V3.56628Z";
+    --brand-svg-bottom-path: "M47.011 7.08752H39.8901V10.6312H47.011V7.08752Z";
+    --password-reset-button: #5cbbff;
+    --header-title-text-ID: #0072c6;
   }
   .dark {
     --background: 0 0% 3.9%;
@@ -54,6 +67,19 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+    --tile-color: #003c73;
+    --background-color: #000520;
+    --background-header-footer: #0072c633;
+    --user-displayname: #ffffff;
+    --footer-text-color: #ffffff;
+    --footer-svg-color: #ffffff;
+    --action-card-activated-background: rgba(0, 114, 198, 0.2);
+    --brand-svg-color-top: #ffffff;
+    --brand-svg-color-bottom: #ffffff;
+    --brand-svg-top-path: "";
+    --brand-svg-bottom-path: "M39.8954 10.6294H47.0075V3.56567H39.8954V10.6294ZM46.5503 7.09753H40.3552V4.02081H46.5503V7.09753Z";
+    --password-reset-button: #0072c6;
+    --header-title-text-ID: #ffffff;
   }
 }
 @layer base {
@@ -65,14 +91,15 @@
   }
 }
 body {
-  background-color: #f5f5f5;
+  background-color: var(--background-color);
 }
 
 .action-card {
-  background-color: #0072c6;
+  background-color: var(--tile-color);
   color: white;
   border-radius: 24px;
   height: 100%;
+  cursor: pointer;
 }
 .action-card__footer {
   font-family: Lato;
@@ -87,12 +114,12 @@ body {
   box-shadow: 0px 0px 12px 0px rgba(0, 0, 0, 0.1);
   bottom: 0;
   position: fixed;
-  background-color: white;
+  background-color: var(--background-header-footer);
   display: flex;
   justify-content: center;
 }
 .footer__text {
-  color: #000520;
+  color: var(--footer-text-color);
   font-family: Lato;
   font-size: 12px;
   font-style: normal;
@@ -110,7 +137,7 @@ body {
   height: 96px;
   box-shadow: 0px 0px 12px 0px rgba(0, 0, 0, 0.1);
   top: 0;
-  background-color: white;
+  background-color: var(--background-header-footer);
   display: flex;
   padding-top: 26px;
   padding-bottom: 26px;
@@ -128,7 +155,7 @@ body {
   margin-left: -8px;
 }
 .header__title__text-ID {
-  color: #0072c6;
+  color: var(--header-title-text-ID); ;
 }
 .header__title__text-myWork {
   color: #5cbbff;
@@ -139,9 +166,10 @@ body {
   height: 36px;
   width: 36px;
   align-self: center;
+  cursor: pointer;
 }
 .action-card__validate-id-success {
-  background-color: white;
+  background-color: var(--action-card-activated-background);
   color: #acd653;
   border-radius: 24px;
   height: 100%;
@@ -152,5 +180,89 @@ body {
   font-size: 14px;
   font-style: normal;
   font-weight: 700;
+  line-height: normal;
+}
+
+.userdisplay__username {
+  font-family: "Lato";
+  font-size: "24px";
+  font-size: "normal";
+  font-weight: "700";
+  color: var(--user-displayname);
+}
+.brand__svg {
+  fill: var(--footer-svg-color);
+}
+.action-card__tap {
+  background-color: var(--action-card-activated-background);
+  border-radius: 24px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.action-card__qr-code {
+  background-color: var(--action-card-activated-background);
+  width: "164px";
+  border-radius: "24px";
+}
+.brand__svg__logo__top {
+  fill: var(--brand-svg-color-top);
+  d: path(var(--brand-svg-top-path));
+}
+.brand__svg__logo__bottom {
+  fill: var(--brand-svg-color-bottom);
+  d: path(var(--brand-svg-bottom-path));
+}
+.action-card__tap_content {
+  color: var(--user-displayname);
+  text-align: center;
+  font-feature-settings: "liga" off, "clig" off;
+  font-family: Lato;
+  font-size: 32px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+  align-self: center;
+  word-wrap: break-word;
+  width: 70px;
+  padding: 0;
+}
+.action-card__pasword-reset__submit-button {
+  display: flex;
+  width: 164px;
+  height: 50px;
+  padding: 24px;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 24px;
+  background: var(--password-reset-button);
+  color: #fff;
+  font-feature-settings: "liga" off, "clig" off;
+  font-family: Lato;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+}
+.action-card__pasword-reset__input {
+  display: flex;
+  width: 164px;
+  height: 50px;
+  padding: 24px;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+  border-radius: 24px;
+  background: #ffffff;
+  overflow: hidden;
+  color: #7f7f7f;
+  font-feature-settings: "liga" off, "clig" off;
+  text-overflow: ellipsis;
+  font-family: Lato;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
   line-height: normal;
 }
