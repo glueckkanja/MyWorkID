@@ -2,10 +2,12 @@ import { dismissUserRisk } from "../../../services/ApiService";
 import { useEffect, useState } from "react";
 import { TFunctionProps } from "../../../types";
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import CircularProgress from "@mui/material/CircularProgress/CircularProgress";
+import { CardContent } from "@mui/material";
 
 export const DismissUserRisk = (props: TFunctionProps) => {
   const [loading, setLoading] = useState<boolean>(false);
-  const [success, setSuccess] = useState<boolean>();
+  const [success /*, setSuccess*/] = useState<boolean>();
   const svgIcon = (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -81,15 +83,15 @@ export const DismissUserRisk = (props: TFunctionProps) => {
 
   const triggerDismissUserRisk = () => {
     setLoading(true);
-    dismissUserRisk()
-      .then(() => {
-        setLoading(false);
-        setSuccess(true);
-      })
-      .catch(() => {
-        setLoading(false);
-        setSuccess(false);
-      });
+    // dismissUserRisk()
+    //   .then(() => {
+    //     setLoading(false);
+    //     setSuccess(true);
+    //   })
+    //   .catch(() => {
+    //     setLoading(false);
+    //     setSuccess(false);
+    //   });
   };
   return (
     <div>
@@ -108,7 +110,13 @@ export const DismissUserRisk = (props: TFunctionProps) => {
           </CardFooter>
         </Card>
       )}
-      {loading && success === undefined && <></>}
+      {loading && success === undefined && (
+        <Card className="action-card__validate-id-success">
+          <CardContent>
+            <CircularProgress />
+          </CardContent>
+        </Card>
+      )}
       {!loading && success === true && (
         <Card className="action-card__validate-id-success">
           <CardHeader>

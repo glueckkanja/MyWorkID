@@ -29,10 +29,10 @@ enum PasswordInputType {
   CONFIRM,
 }
 
-// const PASSWORD_MUST_CONTAIN_ERROR_TEXT =
-//   "Please use characters from at least 3 of these groups: lowercase, uppercase, digits, special symbols.";
-// const PASSWORD_MUST_BE_SAME_ERROR_TEXT =
-//   "Password must be the same in both fields.";
+const PASSWORD_MUST_CONTAIN_ERROR_TEXT =
+  "Please use characters from at least 3 of these groups: lowercase, uppercase, digits, special symbols.";
+const PASSWORD_MUST_BE_SAME_ERROR_TEXT =
+  "Password must be the same in both fields.";
 const svgIcon = (
   <svg
     width="40"

@@ -75,11 +75,6 @@ export const CreateTAP = (props: TFunctionProps) => {
     loading: false,
   });
   const createTAP = async () => {
-    setTapDisplay({
-      visible: true,
-      value: "123123",
-      loading: false,
-    });
     generateTAP()
       .then((result) => {
         setTapDisplay({

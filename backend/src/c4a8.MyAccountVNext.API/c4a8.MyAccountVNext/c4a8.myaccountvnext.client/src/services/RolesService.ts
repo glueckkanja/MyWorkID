@@ -8,7 +8,7 @@ export abstract class Role {
 }
 
 interface JWTTokenPayload extends JwtPayload {
-  roles?: any;
+  roles?: string[];
 }
 
 export const parseRoles = (token: string): string[] => {
