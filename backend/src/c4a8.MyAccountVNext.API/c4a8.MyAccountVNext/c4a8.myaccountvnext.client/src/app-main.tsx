@@ -1,6 +1,6 @@
-import FunctionPlane from "./components/FunctionPlane/FunctionPlane";
-import { Header } from "./components/Header";
-import { Footer } from "./components/Footer";
+import FunctionPlane from "./components/FunctionPlane/function-plane";
+import { Header } from "./components/main-header";
+import { Footer } from "./components/main-footer";
 import { ThemeProvider } from "./components/theme-provider";
 
 export const App = () => {

@@ -1,4 +1,4 @@
-import { useTheme } from "@mui/material";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -6,8 +6,10 @@ import {
   getUser,
   getUserImage,
   getUserRiskState,
-} from "../../services/ApiService";
+} from "../../services/api-service";
 import { TGetRiskStateResponse, User } from "../../types";
+import { useTheme } from "@mui/material";
+// import { useTheme } from "../use-theme";
 
 type RiskUserState = {
   loading: boolean;

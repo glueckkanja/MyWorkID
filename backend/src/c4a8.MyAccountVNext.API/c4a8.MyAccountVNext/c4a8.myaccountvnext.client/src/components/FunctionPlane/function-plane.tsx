@@ -1,16 +1,16 @@
-import { PasswordReset } from "./FunctionPlaneComponents/PasswordReset";
-import { CreateTAP } from "./FunctionPlaneComponents/CreateTAP";
-import { DismissUserRisk } from "./FunctionPlaneComponents/DismissUserRisk";
+import { PasswordReset } from "./function-plane-components/password-reset";
+import { CreateTAP } from "./function-plane-components/create-tap";
+import { DismissUserRisk } from "./function-plane-components/dismiss-userisk";
 import { useEffect, useState } from "react";
 import {
   getPendingAction,
   handleRedirectPromise,
-} from "../../services/MsalService";
+} from "../../services/msal-service";
 import { EApiFunctionTypes, TFunctionProps } from "../../types";
-import { UserDisplay } from "./UserDisplay";
+import { UserDisplay } from "./user-display";
 import { useSignedInUser } from "../../contexts/SignedInUserProvider";
-import { Role } from "../../services/RolesService";
-import { ValidateIdentity } from "./FunctionPlaneComponents/ValidateIdentity";
+import { Role } from "../../services/roles-service";
+import { ValidateIdentity } from "./function-plane-components/validate-identity";
 
 const FUNCTION_PLANE_COMPONENTS: {
   element: (props: TFunctionProps) => JSX.Element;
@@ -35,7 +35,7 @@ const FUNCTION_PLANE_COMPONENTS: {
   {
     element: ValidateIdentity,
     functionType: EApiFunctionTypes.VALIDATE_IDENTITY,
-    permissionRoleRequired: Role.ALLOW_VALIDATE_IDENTITY, // TODO Change to own role
+    permissionRoleRequired: Role.ALLOW_VALIDATE_IDENTITY,
   },
 ];
 

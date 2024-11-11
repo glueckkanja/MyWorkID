@@ -1,4 +1,4 @@
-import { useTheme } from "./theme-provider";
+import { useTheme } from "./use-theme";
 
 const headerLogo = (
   <svg

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { TFunctionProps } from "../../../types";
-import { generateTAP } from "../../../services/ApiService";
+import { generateTAP } from "../../../services/api-service";
 import {
   Card,
   CardContent,

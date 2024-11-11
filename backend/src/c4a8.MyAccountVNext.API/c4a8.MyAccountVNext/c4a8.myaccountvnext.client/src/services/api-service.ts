@@ -2,7 +2,7 @@ import {
   authenticateRequest,
   getGraphBearerToken,
   sendAxiosRequest,
-} from "./MsalService";
+} from "./msal-service";
 import {
   EApiFunctionTypes,
   REQUEST_TYPE,
@@ -25,7 +25,10 @@ const convertTFunctionResult = async <T>(
       data: result,
       dataType: dataType,
     };
-  } catch (error: any) {
+  } catch (error) {
+    if (!axios.isAxiosError(error)) {
+      throw error;
+    }
     return {
       status: "error",
       errorMessage: error.message,
@@ -56,7 +59,7 @@ export const getUserImage = async (): Promise<Blob> => {
   ).data;
 };
 
-export const dismissUserRisk = async (): Promise<TFunctionResult<any>> => {
+export const dismissUserRisk = async (): Promise<TFunctionResult<unknown>> => {
   return convertTFunctionResult(
     await authenticateRequest(
       `${backendApiUrl}/api/dismissuserrikscontroller/get`,
@@ -79,7 +82,6 @@ export const generateTAP = async (): Promise<
   );
 };
 
-
 export const verifyIdentity = async (): Promise<
   TFunctionResult<TVerifyIdentityReponse>
 > => {
@@ -93,15 +95,16 @@ export const verifyIdentity = async (): Promise<
   );
 };
 
-export const callResetPassword = async (newPassword: string): Promise<
-  TFunctionResult<TGenerateTapResponse>
-> => {
+export const callResetPassword = async (
+  newPassword: string
+): Promise<TFunctionResult<TGenerateTapResponse>> => {
   return convertTFunctionResult(
     await authenticateRequest(
       `${backendApiUrl}/api/resetpasswordcontroller/resetpassword`,
       REQUEST_TYPE.PUT,
-      EApiFunctionTypes.PASSWORD_RESET, {
-        newPassword
+      EApiFunctionTypes.PASSWORD_RESET,
+      {
+        newPassword,
       }
     ),
     EApiFunctionTypes.PASSWORD_RESET
@@ -113,7 +116,7 @@ export const checkResetPasswordClaim = async (): Promise<
 > => {
   return convertTFunctionResult(
     await authenticateRequest(
-        `${backendApiUrl}/api/resetpasswordcontroller/checkClaim`,
+      `${backendApiUrl}/api/resetpasswordcontroller/checkClaim`,
       REQUEST_TYPE.GET,
       EApiFunctionTypes.PASSWORD_RESET
     ),

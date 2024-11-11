@@ -7,7 +7,7 @@ import {
 import { InteractionType } from "@azure/msal-browser";
 import { ReactNode, useEffect, useState } from "react";
 import { SignedInUserProvider } from "./contexts/SignedInUserProvider";
-import { TMsalInfo, getMsalInfo } from "./services/MsalService";
+import { TMsalInfo, getMsalInfo } from "./services/msal-service";
 
 export type AppAutenticationProps = {
   children: ReactNode;

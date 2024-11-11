@@ -1,6 +1,6 @@
 import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
 import { Mutex } from "async-mutex";
-import { getMsalInfo } from "./MsalService";
+import { getMsalInfo } from "./msal-service";
 
 const getVerifiedIdConnectionMutex = new Mutex();
 let verifiedIdConnectionCache: HubConnection | undefined = undefined;

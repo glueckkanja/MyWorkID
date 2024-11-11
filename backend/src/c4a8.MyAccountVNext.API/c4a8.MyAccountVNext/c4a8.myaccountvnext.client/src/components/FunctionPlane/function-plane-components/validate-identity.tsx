@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { verifyIdentity } from "../../../services/ApiService";
+import { verifyIdentity } from "../../../services/api-service";
 import { HubConnectionState } from "@microsoft/signalr";
 import { getVerifiedIdConnection } from "../../../services/SignalRService";
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";

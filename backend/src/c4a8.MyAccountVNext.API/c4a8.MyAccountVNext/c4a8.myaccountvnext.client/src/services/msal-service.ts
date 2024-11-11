@@ -22,7 +22,6 @@ export const getMsalInfo = async (): Promise<TMsalInfo> => {
       return msalInfoCache;
     }
 
-
     const frontendOptions = await getFrontendOptions();
 
     msalInfoCache = {
@@ -64,12 +63,12 @@ export const getMsalInfo = async (): Promise<TMsalInfo> => {
   });
 };
 
-export const sendAxiosRequest = async <T>(
+export const sendAxiosRequest = async <T, D = unknown>(
   url: string,
   requestType: REQUEST_TYPE,
   bearerToken: string,
-  body?: any
-): Promise<AxiosResponse<T, any>> => {
+  body?: D
+): Promise<AxiosResponse<T, D>> => {
   const header = {
     Authorization: `Bearer ${bearerToken}`,
   };
@@ -86,17 +85,20 @@ export const sendAxiosRequest = async <T>(
   }
 };
 
-export const authenticateRequest = async <T>(
+export const authenticateRequest = async <T, D = undefined>(
   url: string,
   requestType: REQUEST_TYPE,
   redirectState?: string,
-  body?: any
+  body?: D
 ): Promise<T> => {
-  let response: AxiosResponse<T, any> | undefined;
+  let response: AxiosResponse<T, D> | undefined;
   const token = await getBearerToken();
   try {
-    response = await sendAxiosRequest<T>(url, requestType, token, body);
-  } catch (error: any) {
+    response = await sendAxiosRequest<T, D>(url, requestType, token, body);
+  } catch (error) {
+    if (!axios.isAxiosError(error)) {
+      throw error;
+    }
     response = error.response;
     if (!response) {
       console.log("No Axios error response returned", response);
@@ -203,4 +205,3 @@ export const getPendingAction = (
     throw new Error("No state provided");
   }
 };
-

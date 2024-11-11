@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { callResetPassword } from "../../../services/ApiService";
+import { callResetPassword } from "../../../services/api-service";
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 type PasswordDisplay = {
   visible: boolean;

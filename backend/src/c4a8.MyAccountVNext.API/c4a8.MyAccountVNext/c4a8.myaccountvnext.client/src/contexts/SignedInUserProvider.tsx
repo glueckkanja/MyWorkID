@@ -1,6 +1,6 @@
 import React, { ReactNode, useEffect } from "react";
-import { parseRoles } from "../services/RolesService";
-import { getMsalInfo } from "../services/MsalService";
+import { parseRoles } from "../services/roles-service";
+import { getMsalInfo } from "../services/msal-service";
 
 export type TSignedInUser = {
   roles: string[];
