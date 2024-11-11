@@ -9,7 +9,7 @@ namespace c4a8.MyAccountVNext.Server.Features.VerifiedId.Commands
     {
         public static void MapEndpoint(IEndpointRouteBuilder endpoints)
         {
-            endpoints.MapPostWithCreatedOpenApi("api/verifiedId/verify", HandleAsync)
+            endpoints.MapPostWithCreatedOpenApi("api/me/verifiedId/verify", HandleAsync)
                 .WithTags(Strings.VERIFIEDID_OPENAPI_TAG);
         }
 
