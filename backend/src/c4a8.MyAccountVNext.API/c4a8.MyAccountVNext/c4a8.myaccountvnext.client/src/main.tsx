@@ -3,7 +3,8 @@ import ReactDOM from "react-dom/client";
 import "./index.css";
 import { BrowserRouter } from "react-router-dom";
 import { AppAutentication } from "./app-authentication";
-import App from "./app-main";
+import App from "./app";
+import { Toaster } from "./components/ui/toaster";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
@@ -14,6 +15,7 @@ root.render(
     <React.StrictMode>
       <AppAutentication>
         <App />
+        <Toaster />
       </AppAutentication>
     </React.StrictMode>
   </BrowserRouter>

@@ -62,7 +62,7 @@ export const getUserImage = async (): Promise<Blob> => {
 export const dismissUserRisk = async (): Promise<TFunctionResult<unknown>> => {
   return convertTFunctionResult(
     await authenticateRequest(
-      `${backendApiUrl}/api/dismissuserrikscontroller/get`,
+      `${backendApiUrl}/me/riskstate/dismiss`,
       REQUEST_TYPE.PUT,
       EApiFunctionTypes.DISMISS_USER_RISK
     ),
@@ -74,7 +74,7 @@ export const generateTAP = async (): Promise<
 > => {
   return convertTFunctionResult(
     await authenticateRequest<TGenerateTapResponse>(
-      `${backendApiUrl}/api/createtap/generatetape`,
+      `${backendApiUrl}/me/generatetap`,
       REQUEST_TYPE.PUT,
       EApiFunctionTypes.CREATE_TAP
     ),
@@ -87,7 +87,7 @@ export const verifyIdentity = async (): Promise<
 > => {
   return convertTFunctionResult(
     await authenticateRequest<TVerifyIdentityReponse>(
-      `${backendApiUrl}/verifiedidcontroller/verify`,
+      `${backendApiUrl}/me/verifiedId/verify`,
       REQUEST_TYPE.POST,
       EApiFunctionTypes.VALIDATE_IDENTITY
     ),
@@ -100,7 +100,7 @@ export const callResetPassword = async (
 ): Promise<TFunctionResult<TGenerateTapResponse>> => {
   return convertTFunctionResult(
     await authenticateRequest(
-      `${backendApiUrl}/api/resetpasswordcontroller/resetpassword`,
+      `${backendApiUrl}/me/resetPassword`,
       REQUEST_TYPE.PUT,
       EApiFunctionTypes.PASSWORD_RESET,
       {

@@ -8,7 +8,7 @@ import {
 } from "../../services/msal-service";
 import { EApiFunctionTypes, TFunctionProps } from "../../types";
 import { UserDisplay } from "./user-display";
-import { useSignedInUser } from "../../contexts/SignedInUserProvider";
+import { useSignedInUser } from "../../contexts/signed-in-user-provider";
 import { Role } from "../../services/roles-service";
 import { ValidateIdentity } from "./function-plane-components/validate-identity";
 

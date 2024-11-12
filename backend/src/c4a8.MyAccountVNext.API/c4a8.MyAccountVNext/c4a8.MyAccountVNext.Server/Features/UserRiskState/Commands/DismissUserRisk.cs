@@ -18,6 +18,7 @@ namespace c4a8.MyAccountVNext.Server.Features.UserRiskState.Commands
         public static async Task<IResult> HandleAsync(ClaimsPrincipal user, HttpContext context, GraphServiceClient graphClient,
             IAuthContextService authContextService, CancellationToken cancellationToken)
         {
+
             string? claimsChallenge = authContextService.CheckForRequiredAuthContext(context, AppFunctions.DismissUserRisk);
             string? missingAuthContextId = authContextService.GetAuthContextId(AppFunctions.DismissUserRisk);
             if (string.IsNullOrWhiteSpace(claimsChallenge))

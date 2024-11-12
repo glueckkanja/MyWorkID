@@ -4,6 +4,7 @@ import { TFunctionProps } from "../../../types";
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import CircularProgress from "@mui/material/CircularProgress/CircularProgress";
 import { CardContent } from "@mui/material";
+import { useToast } from "@/hooks/use-toast";
 
 export const DismissUserRisk = (props: TFunctionProps) => {
   const [loading, setLoading] = useState<boolean>(false);
@@ -74,6 +75,7 @@ export const DismissUserRisk = (props: TFunctionProps) => {
       </g>
     </svg>
   );
+  const { toast } = useToast();
 
   useEffect(() => {
     if (props.comingFromRedirect) {
@@ -88,14 +90,19 @@ export const DismissUserRisk = (props: TFunctionProps) => {
         setLoading(false);
         setSuccess(true);
       })
-      .catch(() => {
+      .catch((error) => {
         setLoading(false);
         setSuccess(false);
+        toast({
+          variant: "destructive",
+          title: "Something went wrong trying to dismiss User risk.",
+          description: error.response.statusText,
+        });
       });
   };
   return (
     <div>
-      {!loading && success === undefined && (
+      {!loading && (success === undefined || success === false) && (
         <Card
           className="action-card"
           onClick={() => {

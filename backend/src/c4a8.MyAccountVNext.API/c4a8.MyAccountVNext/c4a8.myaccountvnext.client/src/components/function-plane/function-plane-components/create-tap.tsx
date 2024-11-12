@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 
 type TAPDisplay = {
   visible: boolean;
@@ -74,6 +75,7 @@ export const CreateTAP = (props: TFunctionProps) => {
     value: "",
     loading: false,
   });
+  const { toast } = useToast();
   const createTAP = async () => {
     generateTAP()
       .then((result) => {
@@ -84,10 +86,14 @@ export const CreateTAP = (props: TFunctionProps) => {
         });
       })
       .catch((error) => {
-        console.error("Something went wrong during TAP generation.", error);
+        toast({
+          variant: "destructive",
+          title: "Something went wrong during TAP generation.",
+          description: error.response.statusText,
+        });
         setTapDisplay({
-          visible: true,
-          value: "ERROR",
+          visible: false,
+          value: "",
           loading: false,
         });
       });

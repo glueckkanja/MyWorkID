@@ -8,6 +8,7 @@ import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { callResetPassword } from "../../../services/api-service";
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 type PasswordDisplay = {
   visible: boolean;
   value: string;
@@ -76,6 +77,8 @@ export const PasswordReset = (props: TFunctionProps) => {
       confirmPassword: "",
     },
   });
+  const { toast } = useToast();
+
   // Note this is the claim challenge check - if successfull comes back the password reset UI should be accasible - if not we have to close the menu again
   useEffect(() => {
     if (props.comingFromRedirect) {
@@ -110,10 +113,6 @@ export const PasswordReset = (props: TFunctionProps) => {
         });
       })
       .catch((error) => {
-        console.error(
-          "Something went wrong during Password reset generation.",
-          error
-        );
         setPasswordDisplay({
           visible: true,
           value: "",
@@ -123,6 +122,11 @@ export const PasswordReset = (props: TFunctionProps) => {
           loading: false,
           errorValue: "ERROR",
           errorValueConfirm: "ERROR",
+        });
+        toast({
+          variant: "destructive",
+          title: "Something went wrong during Password reset generation.",
+          description: error.response.statusText,
         });
       });
   };

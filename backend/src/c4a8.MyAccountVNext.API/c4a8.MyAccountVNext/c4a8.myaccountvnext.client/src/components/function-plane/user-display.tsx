@@ -1,4 +1,3 @@
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -17,7 +16,7 @@ type RiskUserState = {
   displayValue?: string;
 };
 
-const RISK_STATE_UPDATE_POLLING_INTERVAL_IN_MILLISECONDS = 30000; // 30 seconds
+const RISK_STATE_UPDATE_POLLING_INTERVAL_IN_MILLISECONDS = 30000000; // 30 seconds
 
 export const UserDisplay = () => {
   const theme = useTheme();
@@ -124,11 +123,7 @@ export const UserDisplay = () => {
         </Avatar>
         <div>
           <div style={{ textAlign: "center" }}>
-            <span
-              className="userdisplay__username"
-            >
-              {user?.displayName}
-            </span>
+            <span className="userdisplay__username">{user?.displayName}</span>
             <div style={{ display: "flex", gap: "0.5rem" }}>
               <div
                 style={{
@@ -147,9 +142,8 @@ export const UserDisplay = () => {
               >
                 {riskUserState.loading && (
                   <>
-                    <Skeleton className="h-[125px] w-[250px] rounded-xl" />
                     <div className="space-y-2">
-                      <Skeleton className="h-4 w-[250px]" />
+                      <Skeleton className="h-4 w-[200px]" />
                       <Skeleton className="h-4 w-[200px]" />
                     </div>
                   </>
