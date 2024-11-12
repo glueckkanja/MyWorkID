@@ -6,7 +6,7 @@ import {
 import { EApiFunctionTypes, REQUEST_TYPE } from "../types";
 import axios, { AxiosResponse } from "axios";
 import { parseChallenges } from "../utils";
-import { getFrontendOptions } from "./FrontendOptionsService";
+import { getFrontendOptions } from "./frontend-options-service";
 import { Mutex } from "async-mutex";
 
 export type TMsalInfo = {
