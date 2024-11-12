@@ -155,7 +155,7 @@ body {
   margin-left: -8px;
 }
 .header__title__text-ID {
-  color: var(--header-title-text-ID); ;
+  color: var(--header-title-text-ID);
 }
 .header__title__text-myWork {
   color: #5cbbff;
@@ -265,4 +265,37 @@ body {
   font-style: normal;
   font-weight: 400;
   line-height: normal;
+}
+.userdisplay__avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 32px;
+}
+.function-plane__container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr) /* 2 items per row */;
+  grid-auto-rows: minmax(auto, max-content);
+  gap: 10px /* Space between items */;
+  margin-right: 29px;
+  margin-left: 29px;
+}
+.userdisplay__risk-state {
+  font-family: "Lato";
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  color: #7a7d8a;
+  text-align: right;
+}
+.userdisplay__container {
+  display: flex;
+  gap: 0.5rem;
+}
+.userdisplay {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 28px;
+  flex-direction: column;
+  padding-top: 41px;
+  align-items: center;
 }

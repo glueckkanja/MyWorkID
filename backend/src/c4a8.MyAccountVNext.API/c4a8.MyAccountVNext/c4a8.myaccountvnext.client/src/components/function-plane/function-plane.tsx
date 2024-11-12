@@ -55,16 +55,7 @@ const FunctionPlane = () => {
   return (
     <div>
       <UserDisplay />
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(2, 1fr)" /* 2 items per row */,
-          gridAutoRows: "minmax(auto, max-content)",
-          gap: "10px" /* Space between items */,
-          marginRight: "29px",
-          marginLeft: "29px",
-        }}
-      >
+      <div className="function-plane__container">
         {FUNCTION_PLANE_COMPONENTS.map((functionComponent) => {
           if (
             !functionComponent.permissionRoleRequired ||

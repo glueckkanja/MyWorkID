@@ -102,54 +102,28 @@ export const UserDisplay = () => {
   );
 
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        marginBottom: "28px",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          paddingTop: "41px",
-          alignItems: "center",
-        }}
-      >
-        <Avatar style={{ width: 100, height: 100, borderRadius: "32px" }}>
-          <AvatarImage src={userImage} />
-          <AvatarFallback>CN</AvatarFallback>
-        </Avatar>
-        <div>
-          <div style={{ textAlign: "center" }}>
-            <span className="userdisplay__username">{user?.displayName}</span>
-            <div style={{ display: "flex", gap: "0.5rem" }}>
-              <div
-                style={{
-                  textAlign: "right",
-                  fontFamily: "Lato",
-                  fontSize: "16px",
-                  fontStyle: "normal",
-                  fontWeight: "400",
-                  color: "#7A7D8A",
-                }}
-              >
-                Risk State:
-              </div>
-              <div
-                style={{ color: getRiskStateColor(riskUserState.displayValue) }}
-              >
-                {riskUserState.loading && (
-                  <>
-                    <div className="space-y-2">
-                      <Skeleton className="h-4 w-[200px]" />
-                      <Skeleton className="h-4 w-[200px]" />
-                    </div>
-                  </>
-                )}
-                {riskUserState.displayValue}
-              </div>
+    <div className="userdisplay">
+      <Avatar className="userdisplay__avatar">
+        <AvatarImage src={userImage} />
+        <AvatarFallback>CN</AvatarFallback>
+      </Avatar>
+      <div>
+        <div style={{ textAlign: "center" }}>
+          <span className="userdisplay__username">{user?.displayName}</span>
+          <div className="userdisplay__container">
+            <div className="userdisplay__risk-state">Risk State:</div>
+            <div
+              style={{ color: getRiskStateColor(riskUserState.displayValue) }}
+            >
+              {riskUserState.loading && (
+                <>
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-[200px]" />
+                    <Skeleton className="h-4 w-[200px]" />
+                  </div>
+                </>
+              )}
+              {riskUserState.displayValue}
             </div>
           </div>
         </div>
