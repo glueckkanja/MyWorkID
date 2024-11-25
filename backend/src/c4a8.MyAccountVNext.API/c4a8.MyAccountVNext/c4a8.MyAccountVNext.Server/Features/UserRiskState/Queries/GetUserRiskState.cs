@@ -24,8 +24,6 @@ namespace c4a8.MyAccountVNext.Server.Features.UserRiskState.Queries
         public static async Task<IResult> HandleAsync(ClaimsPrincipal user, HttpContext context, GraphServiceClient graphClient,
             IAuthContextService authContextService, CancellationToken cancellationToken)
         {
-            return TypedResults.NotFound();
-
             var userId = user.GetObjectId();
             RiskyUser? riskyUser;
             try
