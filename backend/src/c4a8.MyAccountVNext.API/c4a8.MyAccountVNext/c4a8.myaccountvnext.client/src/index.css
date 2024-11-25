@@ -231,9 +231,9 @@ body {
 }
 .action-card__pasword-reset__submit-button {
   display: flex;
-  width: 164px;
   height: 50px;
   padding: 24px;
+  width: 100%;
   justify-content: space-between;
   align-items: center;
   border-radius: 24px;
@@ -248,7 +248,6 @@ body {
 }
 .action-card__pasword-reset__input {
   display: flex;
-  width: 164px;
   height: 50px;
   padding: 24px;
   justify-content: space-between;

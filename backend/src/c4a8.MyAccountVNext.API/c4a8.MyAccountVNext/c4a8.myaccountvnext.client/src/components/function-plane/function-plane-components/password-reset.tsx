@@ -220,6 +220,7 @@ export const PasswordReset = (props: TFunctionProps) => {
   };
   function onSubmit(values: z.infer<typeof formSchema>) {
     handleInput(PasswordInputType.CONFIRM, values.password);
+    resetPassword();
   }
   // const handleMouseDownPassword = (
   //   event: React.MouseEvent<HTMLButtonElement>
@@ -400,8 +401,8 @@ export const PasswordReset = (props: TFunctionProps) => {
         }
       >
         <CircularProgress />
-      </div> */}
-      {/* {passwordDisplay.visible && ()}
+      </div> }
+      { {passwordDisplay.visible && ()}
       <div
         className={
           passwordDisplay.loading
