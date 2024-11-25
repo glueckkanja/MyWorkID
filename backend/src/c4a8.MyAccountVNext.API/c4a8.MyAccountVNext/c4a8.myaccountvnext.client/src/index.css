@@ -307,6 +307,6 @@ body {
 
 .action-card__pasword-reser__input-container .action-card__pasword-reser__input-container__icon {
   position: absolute;
-  right: 10px; /* Adjust based on icon size */
+  right: 24px; /* Adjust based on icon size */
   cursor: pointer;
 }
