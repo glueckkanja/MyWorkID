@@ -298,3 +298,15 @@ body {
   padding-top: 41px;
   align-items: center;
 }
+.action-card__pasword-reser__input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+
+.action-card__pasword-reser__input-container .action-card__pasword-reser__input-container__icon {
+  position: absolute;
+  right: 10px; /* Adjust based on icon size */
+  cursor: pointer;
+}
