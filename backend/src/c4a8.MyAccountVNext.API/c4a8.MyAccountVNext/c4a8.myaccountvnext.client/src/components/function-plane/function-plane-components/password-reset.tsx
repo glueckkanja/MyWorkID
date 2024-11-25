@@ -115,7 +115,6 @@ const formSchema = z.object({
   password: z.string().min(2).max(50),
   confirmPassword: z.string().min(2).max(50),
 });
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- This is a placeholder component
 export const PasswordReset = (props: TFunctionProps) => {
   const [passwordDisplay, setPasswordDisplay] = useState<PasswordDisplay>({
     visible: false,
