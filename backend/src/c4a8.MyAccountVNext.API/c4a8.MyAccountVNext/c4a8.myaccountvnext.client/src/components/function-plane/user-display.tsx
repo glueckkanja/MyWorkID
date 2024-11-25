@@ -8,7 +8,6 @@ import {
 } from "../../services/api-service";
 import { TGetRiskStateResponse, User } from "../../types";
 import { useTheme } from "@mui/material";
-// import { useTheme } from "../use-theme";
 
 type RiskUserState = {
   loading: boolean;
