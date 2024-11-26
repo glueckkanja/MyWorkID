@@ -3,13 +3,14 @@ import fs from "fs";
 import path from "path";
 import child_process from "child_process";
 import { env } from "process";
-import react from "@vitejs/plugin-react"
-
+import react from "@vitejs/plugin-react";
 
 const baseFolder =
   env.APPDATA !== undefined && env.APPDATA !== ""
     ? `${env.APPDATA}/ASP.NET/https`
     : `${env.HOME}/.aspnet/https`;
+    
+fs.mkdirSync(baseFolder, { recursive: true });
 
 const certificateName = "c4a8.myaccountvnext.client";
 const certFilePath = path.join(baseFolder, `${certificateName}.pem`);
@@ -42,7 +43,9 @@ const target = env.ASPNETCORE_HTTPS_PORT
   ? env.ASPNETCORE_URLS.split(";")[0]
   : "https://localhost:7266";
 
-const targetWebSocket = target.replace("https://", "wss://").replace("http://", "wss://");
+const targetWebSocket = target
+  .replace("https://", "wss://")
+  .replace("http://", "wss://");
 
 // https://vitejs.dev/config/
 export default defineConfig({
