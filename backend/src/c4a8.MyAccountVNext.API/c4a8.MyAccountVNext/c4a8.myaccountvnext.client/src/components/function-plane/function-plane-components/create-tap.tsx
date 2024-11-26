@@ -103,6 +103,7 @@ export const CreateTAP = (props: TFunctionProps) => {
     if (props.comingFromRedirect) {
       createTAP();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

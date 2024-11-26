@@ -9,6 +9,7 @@ export type TSignedInUser = {
 const SignedInUserContext = React.createContext(
   undefined as TSignedInUser | undefined
 );
+// eslint-disable-next-line react-refresh/only-export-components
 export const useSignedInUser = () => React.useContext(SignedInUserContext);
 
 export type SignedInUserProviderProps = {

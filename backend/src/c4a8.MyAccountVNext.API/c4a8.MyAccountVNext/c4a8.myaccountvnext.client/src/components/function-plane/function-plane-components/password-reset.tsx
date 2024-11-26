@@ -139,6 +139,7 @@ export const PasswordReset = (props: TFunctionProps) => {
       resetPassword();
       togglePasswordResetUI();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const resetPassword = () => {
