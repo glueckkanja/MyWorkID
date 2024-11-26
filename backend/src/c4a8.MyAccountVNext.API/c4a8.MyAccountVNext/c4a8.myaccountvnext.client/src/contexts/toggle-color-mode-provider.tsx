@@ -2,7 +2,6 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import React, { ReactNode } from "react";
 
-// eslint-disable-next-line @typescript-eslint/no-empty-function
 const ColorModeContext = React.createContext({ toggleColorMode: () => {} }); 
 
 export type ToggleColorModeProviderProps = {
