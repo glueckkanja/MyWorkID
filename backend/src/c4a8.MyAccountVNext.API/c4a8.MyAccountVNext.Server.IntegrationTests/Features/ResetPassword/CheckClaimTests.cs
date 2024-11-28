@@ -1,5 +1,4 @@
 ﻿using c4a8.MyAccountVNext.Server.Common;
-using c4a8.MyAccountVNext.Server.IntegrationTests.Authentication;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,8 +31,7 @@ namespace c4a8.MyAccountVNext.Server.IntegrationTests.Features.PasswordReset
         [Fact]
         public async Task CheckClaim_WithWrongRole_Returns403()
         {
-            var provider = new TestClaimsProvider().WithDismissUserRiskRole();
-            var client = _testApplicationFactory.CreateClientWithTestAuth(provider);
+            var client = TestHelper.CreateClientWithRole(_testApplicationFactory, provider => provider.WithDismissUserRiskRole());
             var response = await client.GetAsync(_baseUrl);
             response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         }
@@ -41,8 +39,7 @@ namespace c4a8.MyAccountVNext.Server.IntegrationTests.Features.PasswordReset
         [Fact]
         public async Task CheckClaim_WithAuth_WithoutAuthContext_Returns401WithMessage()
         {
-            var provider = new TestClaimsProvider().WithResetPasswordRole();
-            var client = _testApplicationFactory.CreateClientWithTestAuth(provider);
+            var client = TestHelper.CreateClientWithRole(_testApplicationFactory, provider => provider.WithResetPasswordRole());
             var response = await client.GetAsync(_baseUrl);
             response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             await CheckResponseHelper.CheckForInsuffienctClaimsResponse(response);
@@ -51,8 +48,8 @@ namespace c4a8.MyAccountVNext.Server.IntegrationTests.Features.PasswordReset
         [Fact]
         public async Task CheckClaim_WithAuthContext_Returns204()
         {
-            var provider = new TestClaimsProvider().WithResetPasswordRole().WithAuthContext(_appFunctionsOptions.ResetPassword!);
-            var client = _testApplicationFactory.CreateClientWithTestAuth(provider);
+            var client = TestHelper.CreateClientWithRole(_testApplicationFactory,
+                provider => provider.WithResetPasswordRole().WithAuthContext(_appFunctionsOptions.ResetPassword!));
             var response = await client.GetAsync(_baseUrl);
             response.StatusCode.Should().Be(HttpStatusCode.NoContent);
         }

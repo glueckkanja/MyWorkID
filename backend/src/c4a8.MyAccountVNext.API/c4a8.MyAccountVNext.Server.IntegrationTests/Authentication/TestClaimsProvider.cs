@@ -16,11 +16,23 @@ namespace c4a8.MyAccountVNext.Server.IntegrationTests.Authentication
             Claims = new List<Claim>();
         }
 
-        public TestClaimsProvider WithRandomUserId()
+        public TestClaimsProvider WithRandomSubAndOid()
         {
             var userId = Guid.NewGuid().ToString();
             Claims.Add(new Claim("sub", userId));
             Claims.Add(new Claim("oid", userId));
+            return this;
+        }
+
+        public TestClaimsProvider WithRandomUserId()
+        {
+            var userId = Guid.NewGuid().ToString();
+            Claims.Add(new Claim("userId", userId));
+            return this;
+        }
+        public TestClaimsProvider WithUserId(string userId)
+        {
+            Claims.Add(new Claim("userId", userId));
             return this;
         }
 
@@ -45,6 +57,11 @@ namespace c4a8.MyAccountVNext.Server.IntegrationTests.Authentication
         public TestClaimsProvider WithDismissUserRiskRole()
         {
             Claims.Add(new Claim(ClaimTypes.Role, Strings.DISMISS_USER_RISK_ROLE));
+            return this;
+        }
+        public TestClaimsProvider WithValidateIdentityRole()
+        {
+            Claims.Add(new Claim(ClaimTypes.Role, Strings.VALIDATE_IDENTITY_ROLE));
             return this;
         }
 

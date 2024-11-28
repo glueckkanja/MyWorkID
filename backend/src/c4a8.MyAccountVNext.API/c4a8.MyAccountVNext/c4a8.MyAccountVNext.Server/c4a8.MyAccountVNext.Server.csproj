@@ -27,8 +27,4 @@
     </ProjectReference>
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="HttpClients\VerifiedId\" />
-  </ItemGroup>
-
 </Project>

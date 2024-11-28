@@ -19,7 +19,7 @@ namespace c4a8.MyAccountVNext.Server.Features.VerifiedId.Commands
         }
 
         public static async Task<IResult> HandleAsync(
-            VerifiedIdSignalRRepository verifiedIdSignalRRepository,
+            IVerifiedIdSignalRRepository verifiedIdSignalRRepository,
             VerifiedIdService verifiedIdService,
             IHubContext<VerifiedIdHub, IVerifiedIdHub> hubContext,
             IOptions<VerifiedIdOptions> verifiedIdIOptions,
@@ -54,7 +54,7 @@ namespace c4a8.MyAccountVNext.Server.Features.VerifiedId.Commands
             {
                 if (e is JsonException || e is ArgumentNullException)
                 {
-                    return TypedResults.BadRequest("Invalid body");
+                    return TypedResults.BadRequest(Strings.ERROR_INVALID_BODY);
                 }
                 else
                 {
@@ -64,7 +64,7 @@ namespace c4a8.MyAccountVNext.Server.Features.VerifiedId.Commands
 
             if (parsedBody == null)
             {
-                return TypedResults.BadRequest("Invalid body");
+                return TypedResults.BadRequest(Strings.ERROR_INVALID_BODY);
             }
 
             await verifiedIdService.HandlePresentationCallback(userId, parsedBody);

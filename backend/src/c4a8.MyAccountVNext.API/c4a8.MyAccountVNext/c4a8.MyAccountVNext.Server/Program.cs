@@ -1,7 +1,6 @@
 using c4a8.MyAccountVNext.API;
 using c4a8.MyAccountVNext.Server.Features.VerifiedId.SignalR;
 using c4a8.MyAccountVNext.Server.Kernel;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Json;
 using System.Reflection;
 using System.Text.Json;
@@ -11,7 +10,7 @@ var appAssembly = Assembly.GetExecutingAssembly();
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSignalR();
-builder.Services.AddVerifiedIdAuthentication(builder.Configuration, JwtBearerDefaults.AuthenticationScheme);
+builder.Services.AddCustomAuthentication(builder.Configuration);
 
 builder.Services.Configure<JsonOptions>(options =>
 {

@@ -1,10 +1,13 @@
-﻿using c4a8.MyAccountVNext.Server.IntegrationTests.Authentication;
+﻿using c4a8.MyAccountVNext.Server.Features.VerifiedId;
+using c4a8.MyAccountVNext.Server.Features.VerifiedId.SignalR;
+using c4a8.MyAccountVNext.Server.IntegrationTests.Authentication;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Microsoft.Graph;
 using Microsoft.Kiota.Abstractions;
 using NSubstitute;
@@ -62,40 +65,72 @@ namespace c4a8.MyAccountVNext.Server.IntegrationTests
             return client;
         }
 
-        public static WebApplicationFactory<T> WithJwtBearerAuthentication<T>(
-        this WebApplicationFactory<T> factory,
-        string jwtToken) where T : class
+        public static WebApplicationFactory<T> WithAuthenticationVerifiedId<T>(
+            this WebApplicationFactory<T> factory,
+            TestClaimsProvider claimsProvider,
+            IVerifiedIdSignalRRepository? verifiedIdSignalRRepository = null,
+            VerifiedIdOptions? verifiedIdOptions = null,
+            IHubContext<VerifiedIdHub, IVerifiedIdHub>? hubContext = null,
+            IRequestAdapter? requestAdapter = null) where T : class
         {
+
             return factory.WithWebHostBuilder(builder =>
             {
                 builder.ConfigureTestServices(services =>
                 {
+                    requestAdapter ??= Substitute.For<IRequestAdapter>();
+                    var graphServiceClientMock = new GraphServiceClient(requestAdapter);
+                    services.AddSingleton(graphServiceClientMock);
+
                     services
-                        .AddAuthentication(TestJwtAuthHandler.TestScheme)
-                        .AddScheme<AuthenticationSchemeOptions, TestJwtAuthHandler>(TestJwtAuthHandler.TestScheme, options => { });
+                        .AddAuthentication(TestAuthHandler.TestScheme)
+                        .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.TestScheme, options => { });
 
                     services.AddAuthorization(options =>
                     {
                         options.AddPolicy(Strings.VERIFIED_ID_CALLBACK_SCHEMA, policy =>
                         {
                             policy.RequireAuthenticatedUser();
-                            policy.AuthenticationSchemes.Add(TestJwtAuthHandler.TestScheme);
+                            policy.AuthenticationSchemes.Add(TestAuthHandler.TestScheme);
                         });
-
-                        options.DefaultPolicy = new AuthorizationPolicyBuilder(TestJwtAuthHandler.TestScheme)
-                            .RequireAuthenticatedUser()
-                            .Build();
                     });
+
+                    if (verifiedIdSignalRRepository != null)
+                    {
+                        services.AddSingleton(verifiedIdSignalRRepository);
+                    }
+
+                    if (hubContext != null)
+                    {
+                        services.AddSingleton(hubContext);
+                    }
+
+                    if (verifiedIdOptions != null)
+                    {
+                        services.AddSingleton(verifiedIdOptions);
+                        var options = Options.Create(verifiedIdOptions);
+                        services.AddSingleton(options);
+                    }
+
+                    services.AddScoped(_ => claimsProvider);
                 });
             });
         }
 
-        public static HttpClient CreateClientWithJwtBearerAuth<T>(
+        public static HttpClient CreateClientWithTestAuthVerifiedId<T>(
             this WebApplicationFactory<T> factory,
-            string jwtToken) where T : class
+            TestClaimsProvider claimsProvider,
+            IVerifiedIdSignalRRepository? verifiedIdSignalRRepository = null,
+            VerifiedIdOptions? verifiedIdOptions = null,
+            IHubContext<VerifiedIdHub, IVerifiedIdHub>? hubContext = null,
+            IRequestAdapter? requestAdapter = null) where T : class
         {
-            var client = factory.WithJwtBearerAuthentication(jwtToken).CreateClient();
-            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+            var client = factory.WithAuthenticationVerifiedId(
+                claimsProvider,
+                verifiedIdSignalRRepository,
+                verifiedIdOptions,
+                hubContext,
+                requestAdapter).CreateClient();
             return client;
         }
     }

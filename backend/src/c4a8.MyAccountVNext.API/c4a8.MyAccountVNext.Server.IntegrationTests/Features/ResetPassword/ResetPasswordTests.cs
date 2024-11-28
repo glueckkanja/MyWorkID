@@ -1,6 +1,5 @@
 ﻿using c4a8.MyAccountVNext.Server.Common;
 using c4a8.MyAccountVNext.Server.Features.ResetPassword.Entities;
-using c4a8.MyAccountVNext.Server.IntegrationTests.Authentication;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -35,8 +34,7 @@ namespace c4a8.MyAccountVNext.Server.IntegrationTests.Features.PasswordReset
         [Fact]
         public async Task ResetPassword_WithWrongRole_Returns403()
         {
-            var provider = new TestClaimsProvider().WithDismissUserRiskRole();
-            var client = _testApplicationFactory.CreateClientWithTestAuth(provider);
+            var client = TestHelper.CreateClientWithRole(_testApplicationFactory, provider => provider.WithDismissUserRiskRole());
             var response = await client.PutAsync(_baseUrl, null);
             response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         }
@@ -44,8 +42,7 @@ namespace c4a8.MyAccountVNext.Server.IntegrationTests.Features.PasswordReset
         [Fact]
         public async Task ResetPassword_WithAuth_WithoutAuthContext_Returns401WithMessage()
         {
-            var provider = new TestClaimsProvider().WithResetPasswordRole();
-            var client = _testApplicationFactory.CreateClientWithTestAuth(provider);
+            var client = TestHelper.CreateClientWithRole(_testApplicationFactory, provider => provider.WithResetPasswordRole());
             var pwRequest = new PasswordResetRequest();
             var response = await client.PutAsJsonAsync(_baseUrl, pwRequest);
             response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -55,8 +52,8 @@ namespace c4a8.MyAccountVNext.Server.IntegrationTests.Features.PasswordReset
         [Fact]
         public async Task ResetPassword_WithAuthContext_ButNoUserId_Returns401()
         {
-            var provider = new TestClaimsProvider().WithResetPasswordRole().WithAuthContext(_appFunctionsOptions.ResetPassword!);
-            var client = _testApplicationFactory.CreateClientWithTestAuth(provider);
+            var client = TestHelper.CreateClientWithRole(_testApplicationFactory,
+                provider => provider.WithResetPasswordRole().WithAuthContext(_appFunctionsOptions.ResetPassword!));
             var pwRequest = new PasswordResetRequest();
             var response = await client.PutAsJsonAsync(_baseUrl, pwRequest);
             response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -66,8 +63,8 @@ namespace c4a8.MyAccountVNext.Server.IntegrationTests.Features.PasswordReset
         [MemberData(nameof(GetInvalidPasswordInputsAndProblemDetailsErrorValidator))]
         public async Task ResetPassword_WithInvalidPassword_Returns400(PasswordResetRequest request, Action<KeyValuePair<string, string[]>> validator)
         {
-            var provider = new TestClaimsProvider().WithRandomUserId().WithResetPasswordRole().WithAuthContext(_appFunctionsOptions.ResetPassword!);
-            var client = _testApplicationFactory.CreateClientWithTestAuth(provider);
+            var client = TestHelper.CreateClientWithRole(_testApplicationFactory,
+                provider => provider.WithRandomSubAndOid().WithResetPasswordRole().WithAuthContext(_appFunctionsOptions.ResetPassword!));
             var response = await client.PutAsJsonAsync(_baseUrl, request);
             response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
             var problemDetails = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
@@ -138,45 +135,30 @@ namespace c4a8.MyAccountVNext.Server.IntegrationTests.Features.PasswordReset
         }
 
         [Theory]
-        [MemberData(nameof(GetValidPasswordInputsAndProblemDetailsErrorValidator))]
-        public async Task ResetPassword_WithValidPasswordButInvaliUserId_Returns200(PasswordResetRequest request, Action<KeyValuePair<string, string[]>> validator)
+        [MemberData(nameof(GetValidPasswordInputs))]
+        public async Task ResetPassword_WithValidPasswords_Returns200(PasswordResetRequest request)
         {
-            var provider = new TestClaimsProvider().WithRandomUserId().WithResetPasswordRole().WithAuthContext(_appFunctionsOptions.ResetPassword!);
-            var client = _testApplicationFactory.CreateClientWithTestAuth(provider);
+            var client = TestHelper.CreateClientWithRole(_testApplicationFactory,
+                provider => provider.WithRandomSubAndOid().WithResetPasswordRole().WithAuthContext(_appFunctionsOptions.ResetPassword!));
             var response = await client.PutAsJsonAsync(_baseUrl, request);
             response.StatusCode.Should().Be(HttpStatusCode.OK);
         }
 
-        public static IEnumerable<object[]> GetValidPasswordInputsAndProblemDetailsErrorValidator()
+        public static IEnumerable<object[]> GetValidPasswordInputs()
         {
             var testData = new List<object[]>
             {
                 new object[]
                 {
-                    new PasswordResetRequest { NewPassword = "passwordA0" },
-                    new Action<KeyValuePair<string, string[]>>(kvp =>
-                    {
-                        kvp.Key.Should().Be(nameof(PasswordResetRequest.NewPassword));
-                        kvp.Value.Should().ContainSingle().Which.Should().Be(Strings.PASSWORD_VALIDATION_SYMBOLS_ERROR);
-                    })
+                    new PasswordResetRequest { NewPassword = "passwordA0" }
                 },
                 new object[]
                 {
-                    new PasswordResetRequest { NewPassword = "passwordA#" },
-                    new Action<KeyValuePair<string, string[]>>(kvp =>
-                    {
-                        kvp.Key.Should().Be(nameof(PasswordResetRequest.NewPassword));
-                        kvp.Value.Should().ContainSingle().Which.Should().Be(Strings.PASSWORD_VALIDATION_SYMBOLS_ERROR);
-                    })
+                    new PasswordResetRequest { NewPassword = "passwordA#" }
                 },
                 new object[]
                 {
-                    new PasswordResetRequest { NewPassword = "PASSWORD#1" },
-                    new Action<KeyValuePair<string, string[]>>(kvp =>
-                    {
-                        kvp.Key.Should().Be(nameof(PasswordResetRequest.NewPassword));
-                        kvp.Value.Should().ContainSingle().Which.Should().Be(Strings.PASSWORD_VALIDATION_SYMBOLS_ERROR);
-                    })
+                    new PasswordResetRequest { NewPassword = "PASSWORD#1" }
                 },
             };
 

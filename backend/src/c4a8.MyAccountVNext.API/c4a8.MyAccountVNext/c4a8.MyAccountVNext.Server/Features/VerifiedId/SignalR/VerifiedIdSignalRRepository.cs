@@ -2,7 +2,14 @@
 
 namespace c4a8.MyAccountVNext.Server.Features.VerifiedId.SignalR
 {
-    public class VerifiedIdSignalRRepository
+    public interface IVerifiedIdSignalRRepository
+    {
+        public void AddUser(string userId, string connectionId);
+        public void RemoveUser(string? userId, string connectionId);
+        public bool TryGetConnections(string userId, [MaybeNullWhen(false)] out HashSet<string> connections);
+    }
+
+    public class VerifiedIdSignalRRepository : IVerifiedIdSignalRRepository
     {
         private readonly Dictionary<string, HashSet<string>> _connections = new();
 

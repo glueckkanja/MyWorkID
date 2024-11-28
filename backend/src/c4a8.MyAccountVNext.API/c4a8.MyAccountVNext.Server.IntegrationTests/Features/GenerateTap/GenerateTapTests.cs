@@ -1,5 +1,4 @@
 ﻿using c4a8.MyAccountVNext.Server.Common;
-using c4a8.MyAccountVNext.Server.IntegrationTests.Authentication;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -12,7 +11,7 @@ namespace c4a8.MyAccountVNext.Server.IntegrationTests.Features.GenerateTap
 {
     public class GenerateTapTests : IClassFixture<TestApplicationFactory>
     {
-        private readonly string _baseUrl = "/api/me/generatetap";
+        private const string _baseUrl = "/api/me/generatetap";
         private readonly TestApplicationFactory _testApplicationFactory;
         private readonly AppFunctionsOptions _appFunctionsOptions;
 
@@ -34,8 +33,7 @@ namespace c4a8.MyAccountVNext.Server.IntegrationTests.Features.GenerateTap
         [Fact]
         public async Task GenerateTap_WithWrongRole_Returns403()
         {
-            var provider = new TestClaimsProvider().WithResetPasswordRole();
-            var client = _testApplicationFactory.CreateClientWithTestAuth(provider);
+            var client = TestHelper.CreateClientWithRole(_testApplicationFactory, provider => provider.WithResetPasswordRole());
             var response = await client.PutAsync(_baseUrl, null);
             response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         }
@@ -43,8 +41,7 @@ namespace c4a8.MyAccountVNext.Server.IntegrationTests.Features.GenerateTap
         [Fact]
         public async Task GenerateTap_WithAuth_WithoutAuthContext_Returns401WithMessage()
         {
-            var provider = new TestClaimsProvider().WithGenerateTapRole();
-            var client = _testApplicationFactory.CreateClientWithTestAuth(provider);
+            var client = TestHelper.CreateClientWithRole(_testApplicationFactory, provider => provider.WithGenerateTapRole());
             var response = await client.PutAsync(_baseUrl, null);
             response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             await CheckResponseHelper.CheckForInsuffienctClaimsResponse(response);
@@ -53,8 +50,8 @@ namespace c4a8.MyAccountVNext.Server.IntegrationTests.Features.GenerateTap
         [Fact]
         public async Task GenerateTap_WithAuthContext_ButNoUserId_Returns401()
         {
-            var provider = new TestClaimsProvider().WithGenerateTapRole().WithAuthContext(_appFunctionsOptions.GenerateTap!);
-            var client = _testApplicationFactory.CreateClientWithTestAuth(provider);
+            var client = TestHelper.CreateClientWithRole(_testApplicationFactory,
+                provider => provider.WithGenerateTapRole().WithAuthContext(_appFunctionsOptions.GenerateTap!));
             var response = await client.PutAsync(_baseUrl, null);
             response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         }
@@ -62,8 +59,8 @@ namespace c4a8.MyAccountVNext.Server.IntegrationTests.Features.GenerateTap
         [Fact]
         public async Task GenerateTap_WithAuth_Returns500()
         {
-            var provider = new TestClaimsProvider().WithGenerateTapRole().WithRandomUserId().WithAuthContext(_appFunctionsOptions.GenerateTap!);
-            var client = _testApplicationFactory.CreateClientWithTestAuth(provider);
+            var client = TestHelper.CreateClientWithRole(_testApplicationFactory,
+                provider => provider.WithGenerateTapRole().WithRandomSubAndOid().WithAuthContext(_appFunctionsOptions.GenerateTap!));
             var response = await client.PutAsync(_baseUrl, null);
             response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
             var problemDetails = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();

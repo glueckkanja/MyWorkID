@@ -1,5 +1,4 @@
 ﻿using c4a8.MyAccountVNext.Server.Common;
-using c4a8.MyAccountVNext.Server.IntegrationTests.Authentication;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,8 +31,7 @@ namespace c4a8.MyAccountVNext.Server.IntegrationTests.Features.UserRiskState
         [Fact]
         public async Task DismissUserRisk_WithoutAuthContext_Returns401WithMessage()
         {
-            var provider = new TestClaimsProvider().WithDismissUserRiskRole();
-            var client = _testApplicationFactory.CreateClientWithTestAuth(provider);
+            var client = TestHelper.CreateClientWithRole(_testApplicationFactory, provider => provider.WithDismissUserRiskRole());
             var response = await client.PutAsync(_baseUrl, null);
             response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             await CheckResponseHelper.CheckForInsuffienctClaimsResponse(response);
@@ -42,8 +40,7 @@ namespace c4a8.MyAccountVNext.Server.IntegrationTests.Features.UserRiskState
         [Fact]
         public async Task DismissUserRisk_WithWrongRole_Returns403()
         {
-            var provider = new TestClaimsProvider().WithResetPasswordRole();
-            var client = _testApplicationFactory.CreateClientWithTestAuth(provider);
+            var client = TestHelper.CreateClientWithRole(_testApplicationFactory, provider => provider.WithResetPasswordRole());
             var response = await client.PutAsync(_baseUrl, null);
             response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         }
@@ -51,8 +48,8 @@ namespace c4a8.MyAccountVNext.Server.IntegrationTests.Features.UserRiskState
         [Fact]
         public async Task DismissUserRisk_WithAuthContext_ButNoUserId_Returns401()
         {
-            var provider = new TestClaimsProvider().WithDismissUserRiskRole().WithAuthContext(_appFunctionsOptions.DismissUserRisk!);
-            var client = _testApplicationFactory.CreateClientWithTestAuth(provider);
+            var client = TestHelper.CreateClientWithRole(_testApplicationFactory,
+                provider => provider.WithDismissUserRiskRole().WithAuthContext(_appFunctionsOptions.DismissUserRisk!));
             var response = await client.PutAsync(_baseUrl, null);
             response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         }
@@ -60,8 +57,8 @@ namespace c4a8.MyAccountVNext.Server.IntegrationTests.Features.UserRiskState
         [Fact]
         public async Task DismissUserRisk_WithRandomUserId_Returns500()
         {
-            var provider = new TestClaimsProvider().WithDismissUserRiskRole().WithRandomUserId().WithAuthContext(_appFunctionsOptions.DismissUserRisk!);
-            var client = _testApplicationFactory.CreateClientWithTestAuth(provider);
+            var client = TestHelper.CreateClientWithRole(_testApplicationFactory,
+                provider => provider.WithDismissUserRiskRole().WithRandomSubAndOid().WithAuthContext(_appFunctionsOptions.DismissUserRisk!));
             var response = await client.PutAsync(_baseUrl, null);
             response.StatusCode.Should().Be(HttpStatusCode.OK);
         }

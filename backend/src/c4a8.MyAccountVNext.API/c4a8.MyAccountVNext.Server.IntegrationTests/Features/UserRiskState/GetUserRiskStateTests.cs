@@ -1,10 +1,6 @@
-﻿using c4a8.MyAccountVNext.Server.Common;
-using c4a8.MyAccountVNext.Server.IntegrationTests.Authentication;
+﻿using c4a8.MyAccountVNext.Server.IntegrationTests.Authentication;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using Microsoft.Graph.Models;
 using Microsoft.Graph.Models.ODataErrors;
 using Microsoft.Kiota.Abstractions;
@@ -20,13 +16,10 @@ namespace c4a8.MyAccountVNext.Server.IntegrationTests.Features.UserRiskState
     {
         private readonly string _baseUrl = "/api/me/riskstate";
         private readonly TestApplicationFactory _testApplicationFactory;
-        private readonly AppFunctionsOptions _appFunctionsOptions;
 
         public GetUserRiskStateTests(TestApplicationFactory testApplicationFactory)
         {
             _testApplicationFactory = testApplicationFactory;
-            var configuration = testApplicationFactory.Services.GetRequiredService<IConfiguration>();
-            _appFunctionsOptions = testApplicationFactory.Services.GetRequiredService<IOptions<AppFunctionsOptions>>().Value;
         }
 
         [Fact]
@@ -36,7 +29,6 @@ namespace c4a8.MyAccountVNext.Server.IntegrationTests.Features.UserRiskState
             var response = await unauthenticatedClient.GetAsync(_baseUrl);
             response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         }
-
 
         [Fact]
         public async Task GetUserRisk_ButNoUserId_Returns401()
@@ -50,8 +42,7 @@ namespace c4a8.MyAccountVNext.Server.IntegrationTests.Features.UserRiskState
         [Fact]
         public async Task GetUserRisk_GraphDoesNotReturnRiskyUser_Returns404()
         {
-            var provider = new TestClaimsProvider().WithRandomUserId();
-            var client = _testApplicationFactory.CreateClientWithTestAuth(provider);
+            var client = TestHelper.CreateClientWithRole(_testApplicationFactory, provider => provider.WithRandomSubAndOid());
             var response = await client.GetAsync(_baseUrl);
             response.StatusCode.Should().Be(HttpStatusCode.NotFound);
         }
@@ -61,8 +52,8 @@ namespace c4a8.MyAccountVNext.Server.IntegrationTests.Features.UserRiskState
         {
             RiskyUser riskyUser = new RiskyUser();
             IRequestAdapter requestAdapter = GetGraphRequestAdapterForRiskyUser(riskyUser);
-            var provider = new TestClaimsProvider().WithRandomUserId();
-            var client = _testApplicationFactory.CreateClientWithTestAuth(provider, requestAdapter);
+            var client = TestHelper.CreateClientWithRole(_testApplicationFactory,
+                provider => provider.WithRandomSubAndOid(), requestAdapter);
             var response = await client.GetAsync(_baseUrl);
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             var getRiskStateResponse = await response.Content.ReadFromJsonAsync<GetRiskStateTestResponse>();
@@ -79,8 +70,7 @@ namespace c4a8.MyAccountVNext.Server.IntegrationTests.Features.UserRiskState
                 RiskLevel = RiskLevel.Medium
             };
             IRequestAdapter requestAdapter = GetGraphRequestAdapterForRiskyUser(riskyUser);
-            var provider = new TestClaimsProvider().WithRandomUserId();
-            var client = _testApplicationFactory.CreateClientWithTestAuth(provider, requestAdapter);
+            var client = TestHelper.CreateClientWithRole(_testApplicationFactory, provider => provider.WithRandomSubAndOid(), requestAdapter);
             var response = await client.GetAsync(_baseUrl);
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             var getRiskStateResponse = await response.Content.ReadFromJsonAsync<GetRiskStateTestResponse>();
@@ -97,8 +87,7 @@ namespace c4a8.MyAccountVNext.Server.IntegrationTests.Features.UserRiskState
                 RiskLevel = RiskLevel.High
             };
             IRequestAdapter requestAdapter = GetGraphRequestAdapterForRiskyUser(riskyUser);
-            var provider = new TestClaimsProvider().WithRandomUserId();
-            var client = _testApplicationFactory.CreateClientWithTestAuth(provider, requestAdapter);
+            var client = TestHelper.CreateClientWithRole(_testApplicationFactory, provider => provider.WithRandomSubAndOid(), requestAdapter);
             var response = await client.GetAsync(_baseUrl);
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             var getRiskStateResponse = await response.Content.ReadFromJsonAsync<GetRiskStateTestResponse>();
@@ -114,8 +103,7 @@ namespace c4a8.MyAccountVNext.Server.IntegrationTests.Features.UserRiskState
                 ResponseStatusCode = StatusCodes.Status404NotFound
             };
             IRequestAdapter requestAdapter = GetGraphRequestAdapterForException(oDataError);
-            var provider = new TestClaimsProvider().WithRandomUserId();
-            var client = _testApplicationFactory.CreateClientWithTestAuth(provider, requestAdapter);
+            var client = TestHelper.CreateClientWithRole(_testApplicationFactory, provider => provider.WithRandomSubAndOid(), requestAdapter);
             var response = await client.GetAsync(_baseUrl);
             response.StatusCode.Should().Be(HttpStatusCode.NotFound);
         }
@@ -124,8 +112,7 @@ namespace c4a8.MyAccountVNext.Server.IntegrationTests.Features.UserRiskState
         public async Task GetUserRisk_GraphReturnsOtherError_Returns500()
         {
             IRequestAdapter requestAdapter = GetGraphRequestAdapterForException(new ODataError());
-            var provider = new TestClaimsProvider().WithRandomUserId();
-            var client = _testApplicationFactory.CreateClientWithTestAuth(provider, requestAdapter);
+            var client = TestHelper.CreateClientWithRole(_testApplicationFactory, provider => provider.WithRandomSubAndOid(), requestAdapter);
             var response = await client.GetAsync(_baseUrl);
             response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
         }
