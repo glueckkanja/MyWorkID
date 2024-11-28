@@ -27,21 +27,6 @@ namespace c4a8.MyAccountVNext.API
                     options.TokenValidationParameters.ClockSkew = TimeSpan.Zero;
                 })
                 .AddMicrosoftIdentityWebApi(configuration.GetSection("AzureAd"));
-            //}
-
-            //public static void AddConfig(this IServiceCollection services, IConfiguration config)
-            //{
-            //    services.Configure<AppFunctionsOptions>(config.GetSection("AppFunctions"));
-            //    services.Configure<FrontendOptions>(config.GetSection("Frontend"));
-            //    services.Configure<VerifiedIdOptions>(config.GetSection("VerifiedId"));
-            //}
-
-            //public static void AddVerifiedIdHttpClient<TInjectionTarget>(this IServiceCollection services, TokenCredential verifiedIdTokenCredentials) where TInjectionTarget : class
-            //{
-            //    services.AddTransient<VerifiedIdAuthenticationHandler>();
-            //    services.AddSingleton(new VerifiedIdAccessTokenService(verifiedIdTokenCredentials));
-            //    services.AddHttpClient<TInjectionTarget>().AddHttpMessageHandler<VerifiedIdAuthenticationHandler>();
-            //}
         }
     }
 }

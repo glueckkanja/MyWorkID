@@ -85,7 +85,7 @@ export const verifyIdentity = async (): Promise<
 > => {
   return convertTFunctionResult(
     await authenticateRequest<TVerifyIdentityReponse>(
-      `${backendApiUrl}/verifiedid/verify`,
+      `${backendApiUrl}/me/verifiedid/verify`,
       REQUEST_TYPE.POST,
       EApiFunctionTypes.VALIDATE_IDENTITY
     ),

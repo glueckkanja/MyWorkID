@@ -31,7 +31,7 @@ namespace c4a8.MyAccountVNext.API.Controllers
             {
                 return StatusCode(StatusCodes.Status204NoContent);
             }
-            await _authContextService.AddClaimsChallengeHeader(HttpContext, missingAuthContextId);
+            _authContextService.AddClaimsChallengeHeader(HttpContext, missingAuthContextId);
             return Unauthorized(_authContextService.GetClaimsChallengeMessage());
         }
 
@@ -64,7 +64,7 @@ namespace c4a8.MyAccountVNext.API.Controllers
                 return Ok();
 
             }
-            await _authContextService.AddClaimsChallengeHeader(HttpContext, missingAuthContextId);
+            _authContextService.AddClaimsChallengeHeader(HttpContext, missingAuthContextId);
             return Unauthorized(_authContextService.GetClaimsChallengeMessage());
         }
     }

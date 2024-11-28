@@ -17,8 +17,16 @@ namespace c4a8.MyAccountVNext.Server.Features.VerifiedId.Commands
                 .WithTags(Strings.VERIFIEDID_OPENAPI_TAG);
         }
 
-        public static async Task<IResult> HandleAsync(VerifiedIdSignalRRepository verifiedIdSignalRRepository, VerifiedIdService verifiedIdService, IHubContext<VerifiedIdHub, IVerifiedIdHub> hubContext, VerifiedIdOptions verifiedIdOptions, ClaimsPrincipal user, HttpContext context, GraphServiceClient graphClient,
-            IAuthContextService authContextService, CancellationToken cancellationToken)
+        public static async Task<IResult> HandleAsync(VerifiedIdSignalRRepository verifiedIdSignalRRepository,
+            VerifiedIdService verifiedIdService,
+            IHubContext<VerifiedIdHub,
+            IVerifiedIdHub> hubContext,
+            VerifiedIdOptions verifiedIdOptions,
+            ClaimsPrincipal user,
+            HttpContext context,
+            GraphServiceClient graphClient,
+            IAuthContextService authContextService,
+            CancellationToken cancellationToken)
         {
             var userIdClaim = user.Claims.Where(claim => claim.Type == "userId").FirstOrDefault();
             string? userId = userIdClaim?.Value;

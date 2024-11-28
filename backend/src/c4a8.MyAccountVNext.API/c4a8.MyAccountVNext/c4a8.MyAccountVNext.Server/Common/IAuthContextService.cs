@@ -4,7 +4,7 @@
     {
         string? GetAuthContextId(AppFunctions appFunction);
         string? CheckForRequiredAuthContext(HttpContext context, AppFunctions appFunction);
-        Task AddClaimsChallengeHeader(HttpContext httpContext, string authContextId);
+        void AddClaimsChallengeHeader(HttpContext httpContext, string authContextId);
         string GetClaimsChallengeMessage();
     }
 }
