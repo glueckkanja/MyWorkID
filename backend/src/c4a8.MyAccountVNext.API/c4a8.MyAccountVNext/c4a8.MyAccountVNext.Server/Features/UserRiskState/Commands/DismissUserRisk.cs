@@ -1,4 +1,5 @@
 ﻿using c4a8.MyAccountVNext.Server.Common;
+using c4a8.MyAccountVNext.Server.Filters;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Graph;
 using Microsoft.Identity.Web;
@@ -11,28 +12,24 @@ namespace c4a8.MyAccountVNext.Server.Features.UserRiskState.Commands
         public static void MapEndpoint(IEndpointRouteBuilder endpoints)
         {
             endpoints.MapPutWithOpenApi("api/me/riskstate/dismiss", HandleAsync)
-                .WithTags(Strings.USERRISKSTATE_OPENAPI_TAG);
+                .WithTags(Strings.USERRISKSTATE_OPENAPI_TAG)
+                .RequireAuthorization()
+                .AddEndpointFilter<DismissUserRiskAuthContextEndpointFilter>()
+                .AddEndpointFilter<CheckForUserIdEndpointFilter>();
         }
 
-        [Authorize(Roles = "MyAccount.VNext.DismissUserRisk")]
-        public static async Task<IResult> HandleAsync(ClaimsPrincipal user, HttpContext context, GraphServiceClient graphClient,
-            IAuthContextService authContextService, CancellationToken cancellationToken)
+        [Authorize(Roles = Strings.DISMISS_USER_RISK_ROLE)]
+        public static async Task<IResult> HandleAsync(ClaimsPrincipal user,
+            GraphServiceClient graphClient, CancellationToken cancellationToken)
         {
-
-            string? claimsChallenge = authContextService.CheckForRequiredAuthContext(context, AppFunctions.DismissUserRisk);
-            string? missingAuthContextId = authContextService.GetAuthContextId(AppFunctions.DismissUserRisk);
-            if (string.IsNullOrWhiteSpace(claimsChallenge))
-            {
-                var userId = user.GetObjectId();
-                if (userId == null)
+            var userId = user.GetObjectId();
+            await graphClient.IdentityProtection.RiskyUsers.Dismiss.PostAsync(
+                new Microsoft.Graph.IdentityProtection.RiskyUsers.Dismiss.DismissPostRequestBody()
                 {
-                    return TypedResults.StatusCode(StatusCodes.Status412PreconditionFailed);
-                }
-                await graphClient.IdentityProtection.RiskyUsers.Dismiss.PostAsync(new Microsoft.Graph.IdentityProtection.RiskyUsers.Dismiss.DismissPostRequestBody() { UserIds = new List<string> { userId } });
-                return TypedResults.Ok();
-            }
-            await authContextService.AddClaimsChallengeHeader(context, missingAuthContextId);
-            return TypedResults.Unauthorized();
+                    UserIds = new List<string> { userId! }
+                },
+                cancellationToken: cancellationToken);
+            return TypedResults.Ok();
         }
     }
 }

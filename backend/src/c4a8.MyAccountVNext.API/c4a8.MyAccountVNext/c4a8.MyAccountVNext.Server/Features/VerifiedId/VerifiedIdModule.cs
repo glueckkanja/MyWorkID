@@ -22,7 +22,7 @@ namespace c4a8.MyAccountVNext.Server.Features.VerifiedId
             services.AddTransient<VerifiedIdAuthenticationHandler>();
             services.AddSingleton(new VerifiedIdAccessTokenService(verifiedIdCredentials));
             services.AddHttpClient<VerifiedIdService>().AddHttpMessageHandler<VerifiedIdAuthenticationHandler>();
-            services.AddSingleton<VerifiedIdSignalRRepository>();
+            services.AddSingleton<IVerifiedIdSignalRRepository, VerifiedIdSignalRRepository>();
         }
     }
 }

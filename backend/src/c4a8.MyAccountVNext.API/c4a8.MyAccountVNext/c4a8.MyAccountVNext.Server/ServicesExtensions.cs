@@ -13,7 +13,7 @@ namespace c4a8.MyAccountVNext.API
         {
             VerifiedIdOptions verifiedIdConfig = new();
             configuration.GetSection("VerifiedId").Bind(verifiedIdConfig);
-            var signingByte = Encoding.UTF8.GetBytes(verifiedIdConfig.JwtSigningKey ?? "GodDamnitYouForgottToSpecifyASigningKey");
+            var signingByte = Encoding.UTF8.GetBytes(verifiedIdConfig.JwtSigningKey ?? Strings.JWT_SIGNING_KEY_DEFAULT);
 
             // Add services to the container.
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -27,21 +27,15 @@ namespace c4a8.MyAccountVNext.API
                     options.TokenValidationParameters.ClockSkew = TimeSpan.Zero;
                 })
                 .AddMicrosoftIdentityWebApi(configuration.GetSection("AzureAd"));
-            //}
 
-            //public static void AddConfig(this IServiceCollection services, IConfiguration config)
-            //{
-            //    services.Configure<AppFunctionsOptions>(config.GetSection("AppFunctions"));
-            //    services.Configure<FrontendOptions>(config.GetSection("Frontend"));
-            //    services.Configure<VerifiedIdOptions>(config.GetSection("VerifiedId"));
-            //}
-
-            //public static void AddVerifiedIdHttpClient<TInjectionTarget>(this IServiceCollection services, TokenCredential verifiedIdTokenCredentials) where TInjectionTarget : class
-            //{
-            //    services.AddTransient<VerifiedIdAuthenticationHandler>();
-            //    services.AddSingleton(new VerifiedIdAccessTokenService(verifiedIdTokenCredentials));
-            //    services.AddHttpClient<TInjectionTarget>().AddHttpMessageHandler<VerifiedIdAuthenticationHandler>();
-            //}
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy(Strings.VERIFIED_ID_CALLBACK_POLICY, policy =>
+                {
+                    policy.RequireAuthenticatedUser();
+                    policy.AuthenticationSchemes.Add(Strings.VERIFIED_ID_CALLBACK_SCHEMA);
+                });
+            });
         }
     }
 }

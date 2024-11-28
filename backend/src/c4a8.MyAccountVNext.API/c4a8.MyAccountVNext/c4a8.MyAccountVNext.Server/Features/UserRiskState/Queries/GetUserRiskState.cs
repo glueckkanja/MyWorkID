@@ -1,5 +1,6 @@
 ﻿using c4a8.MyAccountVNext.Server.Common;
 using c4a8.MyAccountVNext.Server.Features.UserRiskState.Entities;
+using c4a8.MyAccountVNext.Server.Filters;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
 using Microsoft.Graph.Models.ODataErrors;
@@ -17,18 +18,19 @@ namespace c4a8.MyAccountVNext.Server.Features.UserRiskState.Queries
         public static void MapEndpoint(IEndpointRouteBuilder endpoints)
         {
             endpoints.MapGetWithOpenApi<GetRiskStateResponse>("/api/me/riskstate", HandleAsync)
-            .RequireAuthorization()
-            .WithTags(Strings.USERRISKSTATE_OPENAPI_TAG);
+            .WithTags(Strings.USERRISKSTATE_OPENAPI_TAG)
+                .RequireAuthorization()
+                .AddEndpointFilter<CheckForUserIdEndpointFilter>();
         }
 
-        public static async Task<IResult> HandleAsync(ClaimsPrincipal user, HttpContext context, GraphServiceClient graphClient,
-            IAuthContextService authContextService, CancellationToken cancellationToken)
+        public static async Task<IResult> HandleAsync(ClaimsPrincipal user,
+            GraphServiceClient graphClient, CancellationToken cancellationToken)
         {
             var userId = user.GetObjectId();
             RiskyUser? riskyUser;
             try
             {
-                riskyUser = await graphClient.IdentityProtection.RiskyUsers[userId].GetAsync();
+                riskyUser = await graphClient.IdentityProtection.RiskyUsers[userId].GetAsync(cancellationToken: cancellationToken);
             }
             catch (ODataError e)
             {

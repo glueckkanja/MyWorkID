@@ -1,6 +1,6 @@
 ﻿using c4a8.MyAccountVNext.Server.Common;
+using c4a8.MyAccountVNext.Server.Filters;
 using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims;
 
 namespace c4a8.MyAccountVNext.Server.Features.ResetPassword.Queries
 {
@@ -8,22 +8,16 @@ namespace c4a8.MyAccountVNext.Server.Features.ResetPassword.Queries
     {
         public static void MapEndpoint(IEndpointRouteBuilder endpoints)
         {
-            endpoints.MapGetWithOpenApi<IResult>("/api/me/resetPassword/checkClaim", HandleAsync)
-                .WithTags(Strings.RESETPASSWORD_OPENAPI_TAG);
+            endpoints.MapGetWithOpenApi<IResult>("/api/me/resetPassword/checkClaim", Handle)
+                .WithTags(Strings.RESET_PASSWORD_OPENAPI_TAG)
+                .RequireAuthorization()
+                .AddEndpointFilter<ResetPasswordAuthContextEndpointFilter>();
         }
 
-        [Authorize(Roles = "MyAccount.VNext.PasswordReset")]
-        public static async Task<IResult> HandleAsync(ClaimsPrincipal user, HttpContext context,
-            IAuthContextService authContextService, CancellationToken cancellationToken)
+        [Authorize(Roles = Strings.RESET_PASSWORD_ROLE)]
+        public static IResult Handle()
         {
-            string? claimsChallenge = authContextService.CheckForRequiredAuthContext(context, AppFunctions.ResetPassword);
-            string? missingAuthContextId = authContextService.GetAuthContextId(AppFunctions.ResetPassword);
-            if (string.IsNullOrWhiteSpace(claimsChallenge))
-            {
-                return TypedResults.NoContent();
-            }
-            await authContextService.AddClaimsChallengeHeader(context, missingAuthContextId);
-            return TypedResults.Unauthorized();
+            return TypedResults.NoContent();
         }
     }
 }

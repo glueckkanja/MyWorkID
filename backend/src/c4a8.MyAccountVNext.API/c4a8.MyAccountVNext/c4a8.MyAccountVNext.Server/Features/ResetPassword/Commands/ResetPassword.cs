@@ -1,5 +1,7 @@
 ﻿using c4a8.MyAccountVNext.Server.Common;
 using c4a8.MyAccountVNext.Server.Features.ResetPassword.Entities;
+using c4a8.MyAccountVNext.Server.Features.ResetPassword.Filters;
+using c4a8.MyAccountVNext.Server.Filters;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Graph;
@@ -14,37 +16,29 @@ namespace c4a8.MyAccountVNext.Server.Features.ResetPassword.Commands
         public static void MapEndpoint(IEndpointRouteBuilder endpoints)
         {
             endpoints.MapPutWithOpenApi("api/me/resetPassword", HandleAsync)
-                .WithTags(Strings.RESETPASSWORD_OPENAPI_TAG);
+                .WithTags(Strings.RESET_PASSWORD_OPENAPI_TAG)
+                .RequireAuthorization()
+                .AddEndpointFilter<ResetPasswordAuthContextEndpointFilter>()
+                .AddEndpointFilter<CheckForUserIdEndpointFilter>()
+                .AddEndpointFilter<PasswordValidationFilter>();
         }
 
-        [Authorize(Roles = "MyAccount.VNext.PasswordReset")]
-        public static async Task<IResult> HandleAsync([FromBody] PasswordResetRequest passwordResetRequest, ClaimsPrincipal user, HttpContext context, GraphServiceClient graphClient,
-            IAuthContextService authContextService, CancellationToken cancellationToken)
+        [Authorize(Roles = Strings.RESET_PASSWORD_ROLE)]
+        public static async Task<IResult> HandleAsync([FromBody] PasswordResetRequest passwordResetRequest,
+            ClaimsPrincipal user, GraphServiceClient graphClient, CancellationToken cancellationToken)
         {
-            string? claimsChallenge = authContextService.CheckForRequiredAuthContext(context, AppFunctions.ResetPassword);
-            string? missingAuthContextId = authContextService.GetAuthContextId(AppFunctions.ResetPassword);
-            if (string.IsNullOrWhiteSpace(claimsChallenge))
-            {
-                var userId = user.GetObjectId();
-                if (userId == null)
+            var userId = user.GetObjectId();
+            await graphClient.Users[userId].PatchAsync(
+                new User
                 {
-                    return TypedResults.StatusCode(StatusCodes.Status412PreconditionFailed);
-                }
-                await graphClient.Users[userId].PatchAsync(
-                    new User
+                    PasswordProfile = new PasswordProfile
                     {
-                        PasswordProfile = new PasswordProfile
-                        {
-                            Password = passwordResetRequest.NewPassword,
-                            ForceChangePasswordNextSignIn = false
-                        }
-                    });
-
-                return TypedResults.Ok();
-
-            }
-            await authContextService.AddClaimsChallengeHeader(context, missingAuthContextId);
-            return TypedResults.Unauthorized();
+                        Password = passwordResetRequest.NewPassword,
+                        ForceChangePasswordNextSignIn = false
+                    }
+                },
+                cancellationToken: cancellationToken);
+            return TypedResults.Ok();
         }
     }
 }

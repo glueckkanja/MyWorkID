@@ -2,10 +2,6 @@
 using Microsoft.Extensions.Options;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 
 namespace c4a8.MyAccountVNext.Server.Features.VerifiedId
 {
@@ -16,7 +12,11 @@ namespace c4a8.MyAccountVNext.Server.Features.VerifiedId
         private readonly GraphServiceClient _graphClient;
         private readonly ILogger _logger;
 
-        public VerifiedIdService(HttpClient verifiedIdClient, IOptions<VerifiedIdOptions> verifiedIdOptions, GraphServiceClient graphClient, ILogger<VerifiedIdService> logger)
+        public VerifiedIdService(
+            HttpClient verifiedIdClient,
+            IOptions<VerifiedIdOptions> verifiedIdOptions,
+            GraphServiceClient graphClient,
+            ILogger<VerifiedIdService> logger)
         {
             _verifiedIdClient = verifiedIdClient;
             _verifiedIdOptions = verifiedIdOptions.Value;
@@ -24,35 +24,34 @@ namespace c4a8.MyAccountVNext.Server.Features.VerifiedId
             _logger = logger;
         }
 
-        private string GenerateToken(string userId)
-        {
-            // generate token that is valid for 30 minutes
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.UTF8.GetBytes(_verifiedIdOptions.JwtSigningKey ?? "GodDamnitYouForgottToSpecifyASigningKey");
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(new[] { new Claim("userId", userId) }),
-                Expires = DateTime.UtcNow.AddMinutes(30),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-            };
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token);
-        }
-
         public async Task<CreatePresentationResponse> CreatePresentationRequest(string userId)
         {
-            RequestRegistration requestRegistration = new(clientName: "My Account VNext", purpose: "Verify your identity");
-            Callback callback = new(url: $"{_verifiedIdOptions.BackendUrl}/api/verifiedid/callback", state: userId, headers: new Dictionary<string, string>() { { "Authorization", $"Bearer {GenerateToken(userId)}" } });
+            RequestRegistration requestRegistration = new(clientName: "MyWorkID", purpose: "Verify your identity");
+            var jwtSigningKey = _verifiedIdOptions.JwtSigningKey ?? Strings.JWT_SIGNING_KEY_DEFAULT;
+            Callback callback = new(
+                url: $"{_verifiedIdOptions.BackendUrl}/api/me/verifiedid/callback",
+                state: userId,
+                headers: new Dictionary<string, string>() { { "Authorization", $"Bearer {JwtTokenProvider.GenerateToken(userId, jwtSigningKey)}" } });
 
             FaceCheck faceCheck = new(sourcePhotoClaimName: "photo", matchConfidenceThreshold: 50);
 
             Validation validation = new(allowRevoked: false, validateLinkedDomain: true, faceCheck: faceCheck);
 
             List<RequestCredential> credentialList = new() {
-                new RequestCredential(type: "VerifiedEmployee", purpose: "Verify users identity", acceptedIssuers: null, configuration: new Entities.Configuration(validation))
+                new RequestCredential(
+                    type: "VerifiedEmployee",
+                    purpose: "Verify users identity",
+                    acceptedIssuers: null,
+                    configuration: new Entities.Configuration(validation))
             };
 
-            var request = new CreatePresentationRequest(authority: _verifiedIdOptions.DecentralizedIdentifier!, registration: requestRegistration, callback: callback, requestedCredentials: credentialList, includeQRCode: true, includeReceipt: false);
+            var request = new CreatePresentationRequest(
+                authority: _verifiedIdOptions.DecentralizedIdentifier!,
+                registration: requestRegistration,
+                callback: callback,
+                requestedCredentials: credentialList,
+                includeQRCode: true,
+                includeReceipt: false);
 
             var response = await _verifiedIdClient.PostAsJsonAsync("https://verifiedid.did.msidentity.com/v1.0/verifiableCredentials/createPresentationRequest", request);
             try
@@ -99,29 +98,34 @@ namespace c4a8.MyAccountVNext.Server.Features.VerifiedId
                     return;
                 }
 
-                var requestBody = new User
-                {
-                    CustomSecurityAttributes = new CustomSecurityAttributeValue
-                    {
-                        AdditionalData = new Dictionary<string, object>
-                        {
-                            {
-                                _verifiedIdOptions.TargetSecurityAttributeSet , new CustomSecurityAttributeValue()
-                                {
-                                    OdataType = "#Microsoft.DirectoryServices.CustomSecurityAttributeValue",
-                                    AdditionalData = new Dictionary<string, object>
-                                    {
-                                        { _verifiedIdOptions.TargetSecurityAttribute, DateTime.UtcNow.ToString("O") }
-                                    }
-                                }
-                            },
-                        },
-                    },
-                };
+                User requestBody = CreateSetTargetSecurityAttributeRequestBody(DateTime.UtcNow.ToString("O"));
 
                 await _graphClient.Users[userId].PatchAsync(requestBody);
             }
 
+        }
+
+        public User CreateSetTargetSecurityAttributeRequestBody(string targetSecurityAttributeValue)
+        {
+            return new User
+            {
+                CustomSecurityAttributes = new CustomSecurityAttributeValue
+                {
+                    AdditionalData = new Dictionary<string, object>
+                        {
+                            {
+                                _verifiedIdOptions.TargetSecurityAttributeSet! , new CustomSecurityAttributeValue()
+                                {
+                                    OdataType = "#Microsoft.DirectoryServices.CustomSecurityAttributeValue",
+                                    AdditionalData = new Dictionary<string, object>
+                                    {
+                                        { _verifiedIdOptions.TargetSecurityAttribute!, targetSecurityAttributeValue }
+                                    }
+                                }
+                            },
+                        },
+                },
+            };
         }
     }
 }

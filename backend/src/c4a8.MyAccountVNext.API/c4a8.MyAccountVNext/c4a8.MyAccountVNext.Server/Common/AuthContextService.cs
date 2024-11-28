@@ -20,7 +20,7 @@ namespace c4a8.MyAccountVNext.Server.Common
             services.AddScoped<IAuthContextService, AuthContextService>();
         }
 
-        public async Task AddClaimsChallengeHeader(HttpContext httpContext, string authContextId)
+        public void AddClaimsChallengeHeader(HttpContext httpContext, string authContextId)
         {
             var base64str = Convert.ToBase64String(Encoding.UTF8.GetBytes("{\"access_token\":{\"acrs\":{\"essential\":true,\"value\":\"" + authContextId + "\"}}}"));
             httpContext.Response.Headers.Append("WWW-Authenticate", $"Bearer realm=\"\", authorization_uri=\"https://login.microsoftonline.com/common/oauth2/authorize\", error=\"insufficient_claims\", claims=\"" + base64str + "\"");
@@ -34,19 +34,16 @@ namespace c4a8.MyAccountVNext.Server.Common
 
             if (!string.IsNullOrEmpty(authContextId))
             {
-                string authenticationContextClassReferencesClaim = "acrs";
-
                 if (context == null || context.User == null || context.User.Claims == null || !context.User.Claims.Any())
                 {
-                    throw new ArgumentNullException("No Usercontext is available to pick claims from");
+                    throw new ArgumentNullException("No user context is available to pick claims from");
                 }
 
-                Claim acrsClaim = context.User.FindAll(authenticationContextClassReferencesClaim).FirstOrDefault(x => x.Value == authContextId);
+                Claim? acrsClaim = context.User.FindAll("acrs").FirstOrDefault(x => x.Value == authContextId);
 
                 if (acrsClaim?.Value != authContextId)
                 {
                     claimsChallenge = "{\"id_token\":{\"acrs\":{\"essential\":true,\"value\":\"" + authContextId + "\"}}}";
-
                 }
             }
 
@@ -75,7 +72,7 @@ namespace c4a8.MyAccountVNext.Server.Common
 
         public string GetClaimsChallengeMessage()
         {
-            return string.Format(CultureInfo.InvariantCulture, "The presented access tokens had insufficient claims. Please request for claims requested in the WWW-Authentication header and try again.");
+            return string.Format(CultureInfo.InvariantCulture, Strings.ERROR_INSUFFICIENT_CLAIMS);
         }
     }
 }
