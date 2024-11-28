@@ -42,7 +42,7 @@ namespace c4a8.MyAccountVNext.Server.Features.VerifiedId
         public async Task<CreatePresentationResponse> CreatePresentationRequest(string userId)
         {
             RequestRegistration requestRegistration = new(clientName: "My Account VNext", purpose: "Verify your identity");
-            Callback callback = new(url: $"{_verifiedIdOptions.BackendUrl}/api/verifiedid/callback", state: userId, headers: new Dictionary<string, string>() { { "Authorization", $"Bearer {GenerateToken(userId)}" } });
+            Callback callback = new(url: $"{_verifiedIdOptions.BackendUrl}/api/me/verifiedid/callback", state: userId, headers: new Dictionary<string, string>() { { "Authorization", $"Bearer {GenerateToken(userId)}" } });
 
             FaceCheck faceCheck = new(sourcePhotoClaimName: "photo", matchConfidenceThreshold: 50);
 

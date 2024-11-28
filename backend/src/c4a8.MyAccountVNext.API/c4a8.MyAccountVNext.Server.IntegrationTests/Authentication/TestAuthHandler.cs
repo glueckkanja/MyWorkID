@@ -8,6 +8,8 @@ namespace c4a8.MyAccountVNext.Server.IntegrationTests.Authentication
 {
     public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
     {
+        public const string TestScheme = "TestScheme";
+
         private readonly IList<Claim> _claims;
 
         public TestAuthHandler(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger,
@@ -20,7 +22,7 @@ namespace c4a8.MyAccountVNext.Server.IntegrationTests.Authentication
         {
             var identity = new ClaimsIdentity(_claims, "Test");
             var principal = new ClaimsPrincipal(identity);
-            var ticket = new AuthenticationTicket(principal, "TestScheme");
+            var ticket = new AuthenticationTicket(principal, TestScheme);
 
             var result = AuthenticateResult.Success(ticket);
 

@@ -2,6 +2,7 @@
 using c4a8.MyAccountVNext.Server.Features.VerifiedId.Entities;
 using c4a8.MyAccountVNext.Server.Features.VerifiedId.SignalR;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Options;
 using Microsoft.Graph;
 using System.Security.Claims;
 using System.Text.Json;
@@ -12,16 +13,16 @@ namespace c4a8.MyAccountVNext.Server.Features.VerifiedId.Commands
     {
         public static void MapEndpoint(IEndpointRouteBuilder endpoints)
         {
-            endpoints.MapPostWithUpdatedOpenApi("api/me/verfiedId/callback", HandleAsync)
+            endpoints.MapPostWithUpdatedOpenApi("api/me/verifiedid/callback", HandleAsync)
                 .RequireAuthorization(Strings.VERIFIED_ID_CALLBACK_SCHEMA)
                 .WithTags(Strings.VERIFIEDID_OPENAPI_TAG);
         }
 
-        public static async Task<IResult> HandleAsync(VerifiedIdSignalRRepository verifiedIdSignalRRepository,
+        public static async Task<IResult> HandleAsync(
+            VerifiedIdSignalRRepository verifiedIdSignalRRepository,
             VerifiedIdService verifiedIdService,
-            IHubContext<VerifiedIdHub,
-            IVerifiedIdHub> hubContext,
-            VerifiedIdOptions verifiedIdOptions,
+            IHubContext<VerifiedIdHub, IVerifiedIdHub> hubContext,
+            IOptions<VerifiedIdOptions> verifiedIdIOptions,
             ClaimsPrincipal user,
             HttpContext context,
             GraphServiceClient graphClient,
@@ -34,7 +35,7 @@ namespace c4a8.MyAccountVNext.Server.Features.VerifiedId.Commands
             {
                 return TypedResults.StatusCode(StatusCodes.Status401Unauthorized);
             }
-
+            var verifiedIdOptions = verifiedIdIOptions.Value;
             if (!verifiedIdOptions.DisableQrCodeHide && verifiedIdSignalRRepository.TryGetConnections(userId, out var connections))
             {
                 await hubContext.Clients.Clients(connections).HideQrCode();

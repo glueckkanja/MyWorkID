@@ -1,6 +1,5 @@
 ﻿using c4a8.MyAccountVNext.Server;
 using c4a8.MyAccountVNext.Server.Features.VerifiedId;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -9,14 +8,15 @@ namespace c4a8.MyAccountVNext.API
 {
     public static class ServicesExtensions
     {
-        public static void AddCustomAuthentication(this IServiceCollection services, IConfiguration configuration)
+        public static void AddVerifiedIdAuthentication(this IServiceCollection services, IConfiguration configuration,
+            string authenticationSchemaName)
         {
             VerifiedIdOptions verifiedIdConfig = new();
             configuration.GetSection("VerifiedId").Bind(verifiedIdConfig);
             var signingByte = Encoding.UTF8.GetBytes(verifiedIdConfig.JwtSigningKey ?? "GodDamnitYouForgottToSpecifyASigningKey");
 
             // Add services to the container.
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            services.AddAuthentication(authenticationSchemaName)
                 .AddJwtBearer(Strings.VERIFIED_ID_CALLBACK_SCHEMA, options =>
                 {
                     options.TokenValidationParameters.ValidateIssuerSigningKey = true;

@@ -1,5 +1,4 @@
 ﻿using c4a8.MyAccountVNext.Server.Common;
-using c4a8.MyAccountVNext.Server.IntegrationTests.Authentication;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,7 +9,7 @@ namespace c4a8.MyAccountVNext.Server.IntegrationTests.Features.VerifiedId
 {
     public class RequestPresentationTests : IClassFixture<TestApplicationFactory>
     {
-        private readonly string _baseUrl = "/api/me/verfiedId/callback";
+        private readonly string _baseUrl = "/api/me/verifiedid/callback";
         private readonly TestApplicationFactory _testApplicationFactory;
         private readonly AppFunctionsOptions _appFunctionsOptions;
 
@@ -24,8 +23,8 @@ namespace c4a8.MyAccountVNext.Server.IntegrationTests.Features.VerifiedId
         [Fact]
         public async Task RequestPresentation_WithoutAuth_Returns401()
         {
-            var provider = new TestClaimsProvider().WithResetPasswordRole();
-            var client = _testApplicationFactory.CreateClientWithTestAuth(provider);
+            var jwtToken = JwtTokenGenerator.GenerateTestJwtToken();
+            var client = _testApplicationFactory.WithJwtBearerAuthentication(jwtToken).CreateClient();
             var response = await client.PostAsync(_baseUrl, null);
             response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         }
