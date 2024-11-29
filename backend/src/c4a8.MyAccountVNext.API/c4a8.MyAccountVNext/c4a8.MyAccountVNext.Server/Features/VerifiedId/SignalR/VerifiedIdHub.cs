@@ -1,7 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Primitives;
-using Microsoft.Identity.Web;
+﻿using Microsoft.AspNetCore.SignalR;
 
 namespace c4a8.MyAccountVNext.Server.Features.VerifiedId.SignalR
 {
