@@ -9,13 +9,13 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - 'backend/**'
+      - 'src/**'
     branches:
       - 'main'
 
 env:
-  AZURE_WEBAPP_PACKAGE_PATH: './backend/src/c4a8.MyAccountVNext.API'      # set this to the path to your web app project, defaults to the repository root
-  DOTNET_VERSION: '6.0.x'
+  AZURE_WEBAPP_PACKAGE_PATH: './'      # set this to the path to your web app project, defaults to the repository root
+  DOTNET_VERSION: '8.0.x'
 
 jobs:
   build:
