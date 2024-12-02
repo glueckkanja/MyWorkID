@@ -29,7 +29,7 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId.Commands
             IAuthContextService authContextService,
             CancellationToken cancellationToken)
         {
-            var userIdClaim = user.Claims.Where(claim => claim.Type == "userId").FirstOrDefault();
+            var userIdClaim = user.Claims.FirstOrDefault(claim => claim.Type == "userId");
             string? userId = userIdClaim?.Value;
             if (string.IsNullOrWhiteSpace(userId))
             {

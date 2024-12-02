@@ -142,7 +142,7 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId.Entities
         [JsonPropertyName("callback")]
         public Callback Callback { get; set; }
         [JsonPropertyName("requestedCredentials")]
-        public IEnumerable<RequestCredential> RequestedCredentials { get; set; } = Enumerable.Empty<RequestCredential>();
+        public IEnumerable<RequestCredential> RequestedCredentials { get; set; }
 
         [JsonConstructor]
         public CreatePresentationRequest(string authority, RequestRegistration registration, Callback callback, IEnumerable<RequestCredential> requestedCredentials, bool? includeQRCode = true, bool? includeReceipt = false)

@@ -1,11 +1,9 @@
-﻿using c4a8.MyWorkID.Server.Common;
-using c4a8.MyWorkID.Server.Features.VerifiedId;
+﻿using c4a8.MyWorkID.Server.Features.VerifiedId;
 using c4a8.MyWorkID.Server.Features.VerifiedId.Entities;
 using c4a8.MyWorkID.Server.Features.VerifiedId.SignalR;
 using c4a8.MyWorkID.Server.IntegrationTests.Authentication;
 using FluentAssertions;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.Graph.Models;
@@ -21,14 +19,11 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.VerifiedId
     {
         private readonly string _baseUrl = "/api/me/verifiedid/callback";
         private readonly TestApplicationFactory _testApplicationFactory;
-        private readonly AppFunctionsOptions _appFunctionsOptions;
         private readonly VerifiedIdOptions _verifiedIdOptions;
 
         public RequestPresentationTests(TestApplicationFactory testApplicationFactory)
         {
             _testApplicationFactory = testApplicationFactory;
-            var configuration = testApplicationFactory.Services.GetRequiredService<IConfiguration>();
-            _appFunctionsOptions = testApplicationFactory.Services.GetRequiredService<IOptions<AppFunctionsOptions>>().Value;
             _verifiedIdOptions = testApplicationFactory.Services.GetRequiredService<IOptions<VerifiedIdOptions>>().Value;
         }
 

@@ -1,5 +1,8 @@
-﻿public static class TestAuthSchemes
+﻿namespace c4a8.MyWorkID.Server.IntegrationTests.Authentication
 {
-    public const string TestScheme = "TestScheme";
-    public const string TestJwtBearerScheme = "TestJwtBearer";
+    public static class TestAuthSchemes
+    {
+        public const string TestScheme = "TestScheme";
+        public const string TestJwtBearerScheme = "TestJwtBearer";
+    }
 }

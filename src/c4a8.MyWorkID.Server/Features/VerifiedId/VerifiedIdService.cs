@@ -1,4 +1,5 @@
 ﻿using c4a8.MyWorkID.Server.Features.VerifiedId.Entities;
+using c4a8.MyWorkID.Server.Features.VerifiedId.Exceptions;
 using Microsoft.Extensions.Options;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
@@ -24,7 +25,7 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId
             _logger = logger;
         }
 
-        public async Task<CreatePresentationResponse> CreatePresentationRequest(string userId)
+        public async Task<CreatePresentationResponse?> CreatePresentationRequest(string userId)
         {
             RequestRegistration requestRegistration = new(clientName: "MyWorkID", purpose: "Verify your identity");
             var jwtSigningKey = _verifiedIdOptions.JwtSigningKey ?? Strings.JWT_SIGNING_KEY_DEFAULT;
@@ -53,19 +54,26 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId
                 includeQRCode: true,
                 includeReceipt: false);
 
-            var response = await _verifiedIdClient.PostAsJsonAsync("https://verifiedid.did.msidentity.com/v1.0/verifiableCredentials/createPresentationRequest", request);
+            HttpResponseMessage? response = null;
             try
             {
+                response = await _verifiedIdClient.PostAsJsonAsync(_verifiedIdOptions.CreatePresentationRequestUri, request);
                 response.EnsureSuccessStatusCode();
+                return await response.Content.ReadFromJsonAsync<CreatePresentationResponse>();
             }
-            catch (Exception e)
+            catch (HttpRequestException e)
             {
-                _logger.LogError(e, "Failed to create presentation request");
-                _logger.LogError($"Reponse was: {await response.Content.ReadAsStringAsync()}");
-                throw;
+                if (response != null)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError(e, "Failed to create presentation request. Response: {0}", responseContent);
+                }
+                else
+                {
+                    _logger.LogError(e, "Failed to create presentation request. No response received.");
+                }
+                return null;
             }
-
-            return await response.Content.ReadFromJsonAsync<CreatePresentationResponse>() ?? throw new Exception("Unexpected response");
         }
 
         /// <summary>
@@ -90,7 +98,7 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId
             {
                 if (!string.Equals(callbackBody.State, userId, StringComparison.OrdinalIgnoreCase))
                 {
-                    throw new Exception("invalid state");
+                    throw new PresentationCallbackException($"Invalid state. Expected {userId} but state is {callbackBody.State}.");
                 }
 
                 if (string.IsNullOrWhiteSpace(_verifiedIdOptions.TargetSecurityAttributeSet) || string.IsNullOrWhiteSpace(_verifiedIdOptions.TargetSecurityAttribute))

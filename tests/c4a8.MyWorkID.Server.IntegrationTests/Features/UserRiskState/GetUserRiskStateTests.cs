@@ -74,7 +74,7 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.UserRiskState
             var response = await client.GetAsync(_baseUrl);
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             var getRiskStateResponse = await response.Content.ReadFromJsonAsync<GetRiskStateTestResponse>();
-            getRiskStateResponse?.RiskState.Should().Be(RiskState.None.ToString());
+            getRiskStateResponse?.RiskState.Should().Be(RiskState.AtRisk.ToString());
             getRiskStateResponse?.RiskLevel.Should().Be(RiskLevel.Medium.ToString());
         }
 
@@ -91,7 +91,7 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.UserRiskState
             var response = await client.GetAsync(_baseUrl);
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             var getRiskStateResponse = await response.Content.ReadFromJsonAsync<GetRiskStateTestResponse>();
-            getRiskStateResponse?.RiskState.Should().Be(RiskState.None.ToString());
+            getRiskStateResponse?.RiskState.Should().Be(RiskState.ConfirmedCompromised.ToString());
             getRiskStateResponse?.RiskLevel.Should().Be(RiskLevel.High.ToString());
         }
 

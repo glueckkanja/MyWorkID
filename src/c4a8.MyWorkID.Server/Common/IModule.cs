@@ -2,6 +2,6 @@
 {
     public interface IModule
     {
-        static abstract void ConfigureServices(IServiceCollection services, IConfigurationManager configurationManager, IWebHostEnvironment Environment);
+        static abstract void ConfigureServices(IServiceCollection services, IConfigurationManager configurationManager, IWebHostEnvironment environment);
     }
 }

@@ -27,3 +27,8 @@ locals {
 locals {
   frontend_dev_redirect_uris = var.is_dev ? var.dev_redirect_url : []
 }
+
+# Static variables
+locals {
+  verified_id_create_presentation_request_uri                   = "https://verifiedid.did.msidentity.com/v1.0/verifiableCredentials/createPresentationRequest"
+}

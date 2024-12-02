@@ -88,6 +88,7 @@ resource "azurerm_linux_web_app" "backend" {
     VerifiedId__TargetSecurityAttributeSet     = local.verified_id_verify_security_attribute_set
     VerifiedId__TargetSecurityAttribute        = local.verified_id_verify_security_attribute
     VerifiedId__BackendUrl                     = "https://${local.api_name}.azurewebsites.net"
+    VerifiedId__CreatePresentationRequestUri   = local.verified_id_create_presentation_request_uri
   }
 
   lifecycle {

@@ -1,4 +1,5 @@
 ﻿using c4a8.MyWorkID.Server.Common;
+using c4a8.MyWorkID.Server.Features.VerifiedId.Exceptions;
 using c4a8.MyWorkID.Server.Filters;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Identity.Web;
@@ -22,7 +23,7 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId.Commands
         {
             var userId = user.GetObjectId();
             var response = await verifiedIdService.CreatePresentationRequest(userId!);
-            return TypedResults.Created(string.Empty, response);
+            return response == null ? throw new CreatePresentationException() : (IResult)TypedResults.Created(string.Empty, response);
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using c4a8.MyWorkID.Server.Common;
 using FluentAssertions;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using System.Net;
@@ -16,7 +15,6 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.PasswordReset
         public CheckClaimTests(TestApplicationFactory testApplicationFactory)
         {
             _testApplicationFactory = testApplicationFactory;
-            var configuration = testApplicationFactory.Services.GetRequiredService<IConfiguration>();
             _appFunctionsOptions = testApplicationFactory.Services.GetRequiredService<IOptions<AppFunctionsOptions>>().Value;
         }
 

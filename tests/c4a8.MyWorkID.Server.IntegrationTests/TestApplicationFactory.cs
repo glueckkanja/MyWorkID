@@ -2,7 +2,6 @@
 using c4a8.MyWorkID.Server.Features.VerifiedId.SignalR;
 using c4a8.MyWorkID.Server.IntegrationTests.Authentication;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.TestHost;
@@ -19,11 +18,6 @@ namespace c4a8.MyWorkID.Server.IntegrationTests
         public Task InitializeAsync()
         {
             return Task.FromResult(0);
-        }
-
-        protected override void ConfigureWebHost(IWebHostBuilder builder)
-        {
-            base.ConfigureWebHost(builder);
         }
 
         Task IAsyncLifetime.DisposeAsync()

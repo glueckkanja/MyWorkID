@@ -1,6 +1,5 @@
 ﻿using c4a8.MyWorkID.Server.Features.Configuration;
 using FluentAssertions;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using System.Net;
@@ -20,7 +19,6 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.Configuration
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             var frontendOptions = await response.Content.ReadFromJsonAsync<FrontendOptions>();
             frontendOptions.Should().NotBeNull();
-            var configuration = _testApplicationFactory.Services.GetRequiredService<IConfiguration>();
             var frontendAppSettings = _testApplicationFactory.Services.GetRequiredService<IOptions<FrontendOptions>>().Value;
             frontendAppSettings.BackendClientId.Should().Be(frontendOptions!.BackendClientId);
             frontendAppSettings.FrontendClientId.Should().Be(frontendOptions.FrontendClientId);

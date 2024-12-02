@@ -3,7 +3,7 @@ using Microsoft.Kiota.Abstractions;
 
 namespace c4a8.MyWorkID.Server.IntegrationTests
 {
-    public class TestHelper
+    public static class TestHelper
     {
         public static HttpClient CreateClientWithRole(TestApplicationFactory testApplicationFactory,
             Action<TestClaimsProvider> configureProvider, IRequestAdapter? requestAdapter = null)

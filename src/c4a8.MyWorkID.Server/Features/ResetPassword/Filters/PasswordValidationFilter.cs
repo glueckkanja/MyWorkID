@@ -34,14 +34,7 @@ namespace c4a8.MyWorkID.Server.Features.ResetPassword.Filters
                     @"[0-9]",
                     @"[@#%\^&\*\-_\!\+=\[\]{}\|\\:',\.\?\/`~""\(\);<> ]"
                 };
-            foreach (string p in patterns)
-            {
-                if (Regex.IsMatch(pwRequest.NewPassword, p))
-                {
-                    counter++;
-                }
-            }
-
+            counter += patterns.Count(p => Regex.IsMatch(pwRequest.NewPassword, p));
             if (counter < 3)
             {
                 validationProblemDetails.Errors.Add(nameof(pwRequest.NewPassword), [Strings.PASSWORD_VALIDATION_SYMBOLS_ERROR]);

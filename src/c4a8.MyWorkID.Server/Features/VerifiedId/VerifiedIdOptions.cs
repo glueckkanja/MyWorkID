@@ -8,5 +8,6 @@
         public bool DisableQrCodeHide { get; set; } = false;
         public string? TargetSecurityAttributeSet { get; set; }
         public string? TargetSecurityAttribute { get; set; }
+        public string? CreatePresentationRequestUri { get; set; }
     }
 }

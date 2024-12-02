@@ -57,7 +57,7 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.VerifiedId
             createPresentationResponse.Url.Should().MatchRegex(pattern);
         }
 
-        private DateTime ConvertUnixEpochToDateTime(long unixTime)
+        private static DateTime ConvertUnixEpochToDateTime(long unixTime)
         {
             DateTimeOffset dateTimeOffset = DateTimeOffset.FromUnixTimeSeconds(unixTime);
             DateTime dateTime = dateTimeOffset.UtcDateTime;
