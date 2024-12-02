@@ -47,7 +47,7 @@ namespace c4a8.MyWorkID.Server.Features.UserRiskState.Queries
             }
 
             RiskLevel? riskLevel = null;
-            RiskState riskState = RiskState.None;
+            RiskState riskState = riskyUser.RiskState ?? RiskState.None;
 
             if (riskyUser.RiskState == RiskState.AtRisk || riskyUser.RiskState == RiskState.ConfirmedCompromised)
             {
