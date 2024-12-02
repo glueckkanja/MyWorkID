@@ -8,7 +8,7 @@ namespace c4a8.MyWorkID.Server.Filters
         private readonly AppFunctions _appFunction;
         private readonly IAuthContextService _authContextService;
 
-        public AuthContextEndpointFilter(AppFunctions appFunction, IAuthContextService authContextService)
+        protected AuthContextEndpointFilter(AppFunctions appFunction, IAuthContextService authContextService)
         {
             _appFunction = appFunction;
             _authContextService = authContextService;
@@ -17,6 +17,14 @@ namespace c4a8.MyWorkID.Server.Filters
         public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
         {
             var httpContext = context.HttpContext;
+            if (httpContext == null || httpContext.User == null || httpContext.User.Claims == null || !httpContext.User.Claims.Any())
+            {
+                return Results.Problem(new ProblemDetails
+                {
+                    Detail = "No user or claims provided.",
+                    Status = StatusCodes.Status401Unauthorized,
+                });
+            }
             string? claimsChallenge = _authContextService.CheckForRequiredAuthContext(httpContext, _appFunction);
             if (!string.IsNullOrWhiteSpace(claimsChallenge))
             {

@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Options;
-using System.Globalization;
 using System.Security.Claims;
 using System.Text;
 
@@ -34,11 +33,6 @@ namespace c4a8.MyWorkID.Server.Common
 
             if (!string.IsNullOrEmpty(authContextId))
             {
-                if (context == null || context.User == null || context.User.Claims == null || !context.User.Claims.Any())
-                {
-                    throw new ArgumentNullException("No user context is available to pick claims from");
-                }
-
                 Claim? acrsClaim = context.User.FindAll("acrs").FirstOrDefault(x => x.Value == authContextId);
 
                 if (acrsClaim?.Value != authContextId)
@@ -72,7 +66,7 @@ namespace c4a8.MyWorkID.Server.Common
 
         public string GetClaimsChallengeMessage()
         {
-            return string.Format(CultureInfo.InvariantCulture, Strings.ERROR_INSUFFICIENT_CLAIMS);
+            return Strings.ERROR_INSUFFICIENT_CLAIMS;
         }
     }
 }
