@@ -30,5 +30,5 @@ locals {
 
 # Static variables
 locals {
-  verified_id_create_presentation_request_uri                   = "https://verifiedid.did.msidentity.com/v1.0/verifiableCredentials/createPresentationRequest"
+  verified_id_create_presentation_request_uri = "https://verifiedid.did.msidentity.com/v1.0/verifiableCredentials/createPresentationRequest"
 }
