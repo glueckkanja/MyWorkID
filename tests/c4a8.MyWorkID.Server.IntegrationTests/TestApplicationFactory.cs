@@ -127,6 +127,45 @@ namespace c4a8.MyWorkID.Server.IntegrationTests
                 requestAdapter).CreateClient();
             return client;
         }
+
+        public static WebApplicationFactory<T> WithHttpMock<T>(
+            this WebApplicationFactory<T> factory,
+            MockHttpMessageHandler mockHttpMessageHandler) where T : class
+        {
+            return factory.WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureTestServices(services =>
+                {
+                    RemoveRegisteredHttpFactoryAndClient(services);
+                    AddNewFactoryWithMockedClient(mockHttpMessageHandler, services);
+                });
+            });
+        }
+
+        private static void AddNewFactoryWithMockedClient(MockHttpMessageHandler mockHttpMessageHandler, IServiceCollection services)
+        {
+            var client = new HttpClient(mockHttpMessageHandler);
+            var clientFactoryMock = Substitute.For<IHttpClientFactory>();
+            clientFactoryMock
+                .CreateClient(Arg.Any<string>())
+                .Returns(client);
+            services.AddSingleton(clientFactoryMock);
+        }
+
+        private static void RemoveRegisteredHttpFactoryAndClient(IServiceCollection services)
+        {
+            var httpClientFactoryDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IHttpClientFactory));
+            if (httpClientFactoryDescriptor != null)
+            {
+                services.Remove(httpClientFactoryDescriptor);
+            }
+
+            var httpClientDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(HttpClient));
+            if (httpClientDescriptor != null)
+            {
+                services.Remove(httpClientDescriptor);
+            }
+        }
     }
 
 }
