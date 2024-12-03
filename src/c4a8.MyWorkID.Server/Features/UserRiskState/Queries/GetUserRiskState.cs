@@ -20,7 +20,7 @@ namespace c4a8.MyWorkID.Server.Features.UserRiskState.Queries
             endpoints.MapGetWithOpenApi<GetRiskStateResponse>("/api/me/riskstate", HandleAsync)
             .WithTags(Strings.USERRISKSTATE_OPENAPI_TAG)
                 .RequireAuthorization()
-                .AddEndpointFilter<CheckForUserIdEndpointFilter>();
+                .AddEndpointFilter<CheckForObjectIdEndpointFilter>();
         }
 
         public static async Task<IResult> HandleAsync(ClaimsPrincipal user,

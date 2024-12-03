@@ -14,7 +14,7 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId.Commands
             endpoints.MapPostWithCreatedOpenApi("api/me/verifiedId/verify", HandleAsync)
                 .WithTags(Strings.VERIFIEDID_OPENAPI_TAG)
                 .RequireAuthorization()
-                .AddEndpointFilter<CheckForUserIdEndpointFilter>();
+                .AddEndpointFilter<CheckForObjectIdEndpointFilter>();
         }
 
         [Authorize(Roles = Strings.VALIDATE_IDENTITY_ROLE)]
@@ -22,8 +22,15 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId.Commands
             CancellationToken cancellationToken)
         {
             var userId = user.GetObjectId();
-            var response = await verifiedIdService.CreatePresentationRequest(userId!);
-            return response == null ? throw new CreatePresentationException() : (IResult)TypedResults.Created(string.Empty, response);
+            try
+            {
+                var response = await verifiedIdService.CreatePresentationRequest(userId!);
+                return TypedResults.Created(string.Empty, response);
+            }
+            catch (CreatePresentationException)
+            {
+                return TypedResults.BadRequest();
+            }
         }
     }
 }

@@ -15,7 +15,7 @@ namespace c4a8.MyWorkID.Server.Features.UserRiskState.Commands
                 .WithTags(Strings.USERRISKSTATE_OPENAPI_TAG)
                 .RequireAuthorization()
                 .AddEndpointFilter<DismissUserRiskAuthContextEndpointFilter>()
-                .AddEndpointFilter<CheckForUserIdEndpointFilter>();
+                .AddEndpointFilter<CheckForObjectIdEndpointFilter>();
         }
 
         [Authorize(Roles = Strings.DISMISS_USER_RISK_ROLE)]

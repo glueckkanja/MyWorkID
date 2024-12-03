@@ -1,11 +1,9 @@
 ﻿using c4a8.MyWorkID.Server.Common;
 using c4a8.MyWorkID.Server.Features.VerifiedId.Entities;
-using c4a8.MyWorkID.Server.Features.VerifiedId.SignalR;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Options;
-using Microsoft.Graph;
+using c4a8.MyWorkID.Server.Features.VerifiedId.Exceptions;
+using c4a8.MyWorkID.Server.Features.VerifiedId.Extensions;
+using c4a8.MyWorkID.Server.Filters;
 using System.Security.Claims;
-using System.Text.Json;
 
 namespace c4a8.MyWorkID.Server.Features.VerifiedId.Commands
 {
@@ -14,61 +12,29 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId.Commands
         public static void MapEndpoint(IEndpointRouteBuilder endpoints)
         {
             endpoints.MapPostWithUpdatedOpenApi("api/me/verifiedid/callback", HandleAsync)
+                .WithTags(Strings.VERIFIEDID_OPENAPI_TAG)
                 .RequireAuthorization(Strings.VERIFIED_ID_CALLBACK_SCHEMA)
-                .WithTags(Strings.VERIFIEDID_OPENAPI_TAG);
+                .AddEndpointFilter<CheckForUserIdEndpointFilter>();
         }
 
         public static async Task<IResult> HandleAsync(
-            IVerifiedIdSignalRRepository verifiedIdSignalRRepository,
             VerifiedIdService verifiedIdService,
-            IHubContext<VerifiedIdHub, IVerifiedIdHub> hubContext,
-            IOptions<VerifiedIdOptions> verifiedIdIOptions,
             ClaimsPrincipal user,
             HttpContext context,
-            GraphServiceClient graphClient,
-            IAuthContextService authContextService,
             CancellationToken cancellationToken)
         {
-            var userIdClaim = user.Claims.FirstOrDefault(claim => claim.Type == "userId");
-            string? userId = userIdClaim?.Value;
-            if (string.IsNullOrWhiteSpace(userId))
-            {
-                return TypedResults.StatusCode(StatusCodes.Status401Unauthorized);
-            }
-            var verifiedIdOptions = verifiedIdIOptions.Value;
-            if (!verifiedIdOptions.DisableQrCodeHide && verifiedIdSignalRRepository.TryGetConnections(userId, out var connections))
-            {
-                await hubContext.Clients.Clients(connections).HideQrCode();
-            }
-
-            using StreamReader streamReader = new StreamReader(context.Request.Body);
-            var callbackBody = await streamReader.ReadToEndAsync();
-
+            var userId = user.GetUserId();
+            await verifiedIdService.HideQrCodeForUser(userId!);
             CreatePresentationRequestCallback? parsedBody = null;
-
             try
             {
-                parsedBody = JsonSerializer.Deserialize<CreatePresentationRequestCallback>(callbackBody);
+                parsedBody = await verifiedIdService.ParseCreatePresentationRequestCallback(context);
             }
-            catch (Exception e)
+            catch (CreatePresentationException)
             {
-                if (e is JsonException || e is ArgumentNullException)
-                {
-                    return TypedResults.BadRequest(Strings.ERROR_INVALID_BODY);
-                }
-                else
-                {
-                    throw;
-                }
+                return TypedResults.BadRequest();
             }
-
-            if (parsedBody == null)
-            {
-                return TypedResults.BadRequest(Strings.ERROR_INVALID_BODY);
-            }
-
-            await verifiedIdService.HandlePresentationCallback(userId, parsedBody);
-
+            await verifiedIdService.HandlePresentationCallback(userId!, parsedBody);
             return TypedResults.NoContent();
         }
     }

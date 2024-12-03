@@ -1,8 +1,11 @@
 ﻿using c4a8.MyWorkID.Server.Features.VerifiedId.Entities;
 using c4a8.MyWorkID.Server.Features.VerifiedId.Exceptions;
+using c4a8.MyWorkID.Server.Features.VerifiedId.SignalR;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Options;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
+using System.Text.Json;
 
 namespace c4a8.MyWorkID.Server.Features.VerifiedId
 {
@@ -11,17 +14,23 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId
         private readonly HttpClient _verifiedIdClient;
         private readonly VerifiedIdOptions _verifiedIdOptions;
         private readonly GraphServiceClient _graphClient;
+        private readonly IVerifiedIdSignalRRepository _verifiedIdSignalRRepository;
+        private readonly IHubContext<VerifiedIdHub, IVerifiedIdHub> _hubContext;
         private readonly ILogger _logger;
 
         public VerifiedIdService(
             HttpClient verifiedIdClient,
             IOptions<VerifiedIdOptions> verifiedIdOptions,
             GraphServiceClient graphClient,
+            IVerifiedIdSignalRRepository verifiedIdSignalRRepository,
+            IHubContext<VerifiedIdHub, IVerifiedIdHub> hubContext,
             ILogger<VerifiedIdService> logger)
         {
             _verifiedIdClient = verifiedIdClient;
             _verifiedIdOptions = verifiedIdOptions.Value;
             _graphClient = graphClient;
+            _verifiedIdSignalRRepository = verifiedIdSignalRRepository;
+            _hubContext = hubContext;
             _logger = logger;
         }
 
@@ -59,7 +68,6 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId
             {
                 response = await _verifiedIdClient.PostAsJsonAsync(_verifiedIdOptions.CreatePresentationRequestUri, request);
                 response.EnsureSuccessStatusCode();
-                return await response.Content.ReadFromJsonAsync<CreatePresentationResponse>();
             }
             catch (HttpRequestException e)
             {
@@ -72,8 +80,48 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId
                 {
                     _logger.LogError(e, "Failed to create presentation request. No response received.");
                 }
-                return null;
+                throw new CreatePresentationException();
             }
+            var createPresentationResponse = await response.Content.ReadFromJsonAsync<CreatePresentationResponse>();
+            if (createPresentationResponse == null)
+            {
+                _logger.LogError("Failed to create presentation request. Parsed response is null.");
+                throw new CreatePresentationException();
+            }
+            return createPresentationResponse;
+        }
+        public async Task HideQrCodeForUser(string userId)
+        {
+            if (!_verifiedIdOptions.DisableQrCodeHide && _verifiedIdSignalRRepository.TryGetConnections(userId, out var connections))
+            {
+                await _hubContext.Clients.Clients(connections).HideQrCode();
+            }
+        }
+
+        public async Task<CreatePresentationRequestCallback> ParseCreatePresentationRequestCallback(HttpContext context)
+        {
+            using StreamReader streamReader = new StreamReader(context.Request.Body);
+            var callbackBody = await streamReader.ReadToEndAsync();
+
+            CreatePresentationRequestCallback? parsedBody = null;
+
+            try
+            {
+                parsedBody = JsonSerializer.Deserialize<CreatePresentationRequestCallback>(callbackBody);
+            }
+            catch (Exception e) when (e is JsonException || e is ArgumentNullException)
+            {
+                _logger.LogError(e, "CallbackBody: {0}", callbackBody);
+                throw new CreatePresentationException();
+            }
+
+            if (parsedBody == null)
+            {
+                _logger.LogWarning("Parsed presentation callback is null. CallbackBody: {0}", callbackBody);
+                throw new CreatePresentationException();
+            }
+
+            return parsedBody;
         }
 
         /// <summary>

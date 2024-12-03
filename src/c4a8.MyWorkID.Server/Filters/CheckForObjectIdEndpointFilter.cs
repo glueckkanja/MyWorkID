@@ -1,11 +1,13 @@
-﻿namespace c4a8.MyWorkID.Server.Filters
+﻿using Microsoft.Identity.Web;
+
+namespace c4a8.MyWorkID.Server.Filters
 {
-    public class CheckForUserIdEndpointFilter : IEndpointFilter
+    public class CheckForObjectIdEndpointFilter : IEndpointFilter
     {
         public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
         {
-            var userId = context.HttpContext.User.FindFirst("userId");
-            if (string.IsNullOrWhiteSpace(userId?.Value))
+            var userId = context.HttpContext.User.GetObjectId();
+            if (userId == null)
             {
                 return Results.Unauthorized();
             }

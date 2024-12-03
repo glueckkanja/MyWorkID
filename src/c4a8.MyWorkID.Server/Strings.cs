@@ -18,6 +18,6 @@
         public const string PASSWORD_VALIDATION_LENGTH_ERROR = "Password must be between 8 and 255 characters.";
         public const string PASSWORD_VALIDATION_SYMBOLS_ERROR = "Please use characters from at least 3 of these groups: lowercase, uppercase, digits, special symbols.";
         public const string JWT_SIGNING_KEY_DEFAULT = "GodDamnitYouForgottToSpecifyASigningKey";
-        public const string ERROR_INVALID_BODY = "Invalid body.";
+        public const string ERROR_INVALID_BODY = "Parsed response resulted in error or null object.";
     }
 }

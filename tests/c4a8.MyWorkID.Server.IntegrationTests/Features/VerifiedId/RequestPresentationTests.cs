@@ -53,8 +53,6 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.VerifiedId
             var response = await client.PostAsync(_baseUrl, null);
 
             response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-            var responseString = await response.Content.ReadAsStringAsync();
-            responseString.Should().Be($"\"{Strings.ERROR_INVALID_BODY}\"");
         }
 
         [Fact]

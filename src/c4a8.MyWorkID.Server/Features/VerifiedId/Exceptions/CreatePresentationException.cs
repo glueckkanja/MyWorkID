@@ -2,7 +2,7 @@
 {
     public class CreatePresentationException : Exception
     {
-        private const string DefaultMessage = "Parsed create presentation response resulted in null object.";
+        private const string DefaultMessage = Strings.ERROR_INVALID_BODY;
 
         public CreatePresentationException()
         : base(DefaultMessage)

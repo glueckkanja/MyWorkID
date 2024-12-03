@@ -19,7 +19,7 @@ namespace c4a8.MyWorkID.Server.Features.ResetPassword.Commands
                 .WithTags(Strings.RESET_PASSWORD_OPENAPI_TAG)
                 .RequireAuthorization()
                 .AddEndpointFilter<ResetPasswordAuthContextEndpointFilter>()
-                .AddEndpointFilter<CheckForUserIdEndpointFilter>()
+                .AddEndpointFilter<CheckForObjectIdEndpointFilter>()
                 .AddEndpointFilter<PasswordValidationFilter>();
         }
 

@@ -17,7 +17,7 @@ namespace c4a8.MyWorkID.Server.Features.GenerateTap.Commands
                 .WithTags(nameof(GenerateTap))
                 .RequireAuthorization()
                 .AddEndpointFilter<GenerateTapAuthContextEndpointFilter>()
-                .AddEndpointFilter<CheckForUserIdEndpointFilter>();
+                .AddEndpointFilter<CheckForObjectIdEndpointFilter>();
         }
 
         [Authorize(Roles = Strings.CREATE_TAP_ROLE)]

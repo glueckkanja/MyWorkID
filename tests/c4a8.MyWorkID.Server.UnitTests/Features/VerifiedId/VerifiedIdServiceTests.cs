@@ -1,5 +1,7 @@
 ﻿using c4a8.MyWorkID.Server.Features.VerifiedId;
+using c4a8.MyWorkID.Server.Features.VerifiedId.SignalR;
 using FluentAssertions;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Graph;
@@ -22,8 +24,10 @@ namespace c4a8.MyWorkID.Server.UnitTests.Features.VerifiedId
             var verifiedIdClient = Substitute.For<HttpClient>();
             var requestAdapter = Substitute.For<IRequestAdapter>();
             var graphClient = new GraphServiceClient(requestAdapter);
+            var verifiedIdSignalRRepository = Substitute.For<IVerifiedIdSignalRRepository>();
+            var hubContext = Substitute.For<IHubContext<VerifiedIdHub, IVerifiedIdHub>>();
             var logger = Substitute.For<ILogger<VerifiedIdService>>();
-            var sut = new VerifiedIdService(verifiedIdClient, options, graphClient, logger);
+            var sut = new VerifiedIdService(verifiedIdClient, options, graphClient, verifiedIdSignalRRepository, hubContext, logger);
 
             var user = sut.CreateSetTargetSecurityAttributeRequestBody(targetSecurityAttributeValue);
 
