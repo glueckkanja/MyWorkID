@@ -5,7 +5,7 @@ namespace c4a8.MyWorkID.Server.Kernel
 {
     public static class EndpointDiscovery
     {
-        private static readonly Type EndpointType = typeof(IEndpoint);
+        private static readonly Type _endpointType = typeof(IEndpoint);
 
         public static void RegisterEndpoints(this IEndpointRouteBuilder endpoints, params Assembly[] assemblies)
         {
@@ -26,7 +26,7 @@ namespace c4a8.MyWorkID.Server.Kernel
         private static IEnumerable<Type> GetEndpointTypes(params Assembly[] assemblies)
         {
             return assemblies.SelectMany(x => x.GetTypes())
-                .Where(x => EndpointType.IsAssignableFrom(x) &&
+                .Where(x => _endpointType.IsAssignableFrom(x) &&
                             x is { IsInterface: false, IsAbstract: false });
         }
 

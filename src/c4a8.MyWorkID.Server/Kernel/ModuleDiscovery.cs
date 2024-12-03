@@ -5,7 +5,7 @@ namespace c4a8.MyWorkID.Server.Kernel
 {
     public static class ModuleDiscovery
     {
-        private static readonly Type ModuleType = typeof(IModule);
+        private static readonly Type _moduleType = typeof(IModule);
 
         public static void ConfigureModules(this IServiceCollection services, IConfigurationManager configurationManager, IWebHostEnvironment environment, params Assembly[] assemblies)
         {
@@ -26,7 +26,7 @@ namespace c4a8.MyWorkID.Server.Kernel
         private static IEnumerable<Type> GetModuleTypes(params Assembly[] assemblies)
         {
             return assemblies.SelectMany(x => x.GetTypes())
-                .Where(x => ModuleType.IsAssignableFrom(x) &&
+                .Where(x => _moduleType.IsAssignableFrom(x) &&
                             x is { IsInterface: false, IsAbstract: false });
         }
 

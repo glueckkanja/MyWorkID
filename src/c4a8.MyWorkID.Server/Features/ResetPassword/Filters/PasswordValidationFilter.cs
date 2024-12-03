@@ -28,12 +28,12 @@ namespace c4a8.MyWorkID.Server.Features.ResetPassword.Filters
 
             int counter = 0;
             // taken from https://learn.microsoft.com/en-us/entra/identity/authentication/concept-sspr-policy#microsoft-entra-password-policies
-            List<string> patterns = new List<string> {
+            List<string> patterns = [
                     @"[a-z]",
                     @"[A-Z]",
                     @"[0-9]",
                     @"[@#%\^&\*\-_\!\+=\[\]{}\|\\:',\.\?\/`~""\(\);<> ]"
-                };
+                ];
             counter += patterns.Count(p => Regex.IsMatch(pwRequest.NewPassword, p));
             if (counter < 3)
             {

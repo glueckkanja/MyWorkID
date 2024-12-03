@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using System.Net;
 
-namespace c4a8.MyWorkID.Server.IntegrationTests.Features.PasswordReset
+namespace c4a8.MyWorkID.Server.IntegrationTests.Features.ResetPassword
 {
     public class CheckClaimTests : IClassFixture<TestApplicationFactory>
     {

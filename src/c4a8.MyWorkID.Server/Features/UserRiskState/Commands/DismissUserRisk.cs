@@ -26,7 +26,7 @@ namespace c4a8.MyWorkID.Server.Features.UserRiskState.Commands
             await graphClient.IdentityProtection.RiskyUsers.Dismiss.PostAsync(
                 new Microsoft.Graph.IdentityProtection.RiskyUsers.Dismiss.DismissPostRequestBody()
                 {
-                    UserIds = new List<string> { userId! }
+                    UserIds = [userId!]
                 },
                 cancellationToken: cancellationToken);
             return TypedResults.Ok();

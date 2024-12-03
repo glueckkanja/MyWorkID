@@ -17,9 +17,11 @@ namespace c4a8.MyWorkID.Server.UnitTests.Features.VerifiedId
         public void CreateSetTargetSecurityAttributeRequestBody_ReturnsCorrectBody()
         {
             var targetSecurityAttributeValue = Guid.NewGuid().ToString();
-            VerifiedIdOptions verifiedIdOptions = new VerifiedIdOptions();
-            verifiedIdOptions.TargetSecurityAttribute = "targetSecurityAttribute";
-            verifiedIdOptions.TargetSecurityAttributeSet = "targetSecurityAttributeSet";
+            VerifiedIdOptions verifiedIdOptions = new VerifiedIdOptions
+            {
+                TargetSecurityAttribute = "targetSecurityAttribute",
+                TargetSecurityAttributeSet = "targetSecurityAttributeSet"
+            };
             var options = Options.Create(verifiedIdOptions);
             var verifiedIdClient = Substitute.For<HttpClient>();
             var requestAdapter = Substitute.For<IRequestAdapter>();

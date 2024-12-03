@@ -47,13 +47,13 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId
 
             Validation validation = new(allowRevoked: false, validateLinkedDomain: true, faceCheck: faceCheck);
 
-            List<RequestCredential> credentialList = new() {
+            List<RequestCredential> credentialList = [
                 new RequestCredential(
                     type: "VerifiedEmployee",
                     purpose: "Verify users identity",
                     acceptedIssuers: null,
                     configuration: new Entities.Configuration(validation))
-            };
+            ];
 
             var request = new CreatePresentationRequest(
                 authority: _verifiedIdOptions.DecentralizedIdentifier!,
@@ -74,7 +74,7 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId
                 if (response != null)
                 {
                     var responseContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogError(e, "Failed to create presentation request. Response: {0}", responseContent);
+                    _logger.LogError(e, "Failed to create presentation request. Response: {ResponseContent}", responseContent);
                 }
                 else
                 {
@@ -111,13 +111,13 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId
             }
             catch (Exception e) when (e is JsonException || e is ArgumentNullException)
             {
-                _logger.LogError(e, "CallbackBody: {0}", callbackBody);
+                _logger.LogError(e, "{CallbackBody}", callbackBody);
                 throw new CreatePresentationException();
             }
 
             if (parsedBody == null)
             {
-                _logger.LogWarning("Parsed presentation callback is null. CallbackBody: {0}", callbackBody);
+                _logger.LogWarning("Parsed presentation callback is null. {CallbackBody}", callbackBody);
                 throw new CreatePresentationException();
             }
 

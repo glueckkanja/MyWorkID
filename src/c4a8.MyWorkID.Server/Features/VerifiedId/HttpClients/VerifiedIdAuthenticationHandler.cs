@@ -14,7 +14,7 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId.HttpClients
         {
             if (!request.Headers.Contains(HttpRequestHeader.Authorization.ToString()))
             {
-                var token = await _verifiedIdAccessTokenService.GetAccessTokenAsync();
+                var token = await _verifiedIdAccessTokenService.GetAccessTokenAsync(cancellationToken);
                 request.Headers.Add(HttpRequestHeader.Authorization.ToString(), $"Bearer {token.Token}");
             }
 

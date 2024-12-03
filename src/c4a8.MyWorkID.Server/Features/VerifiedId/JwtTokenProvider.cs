@@ -14,7 +14,7 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId
             var key = Encoding.UTF8.GetBytes(jwtSigningKey);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new[] { new Claim("userId", userId) }),
+                Subject = new ClaimsIdentity([new Claim("userId", userId)]),
                 Expires = DateTime.UtcNow.AddMinutes(30),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };

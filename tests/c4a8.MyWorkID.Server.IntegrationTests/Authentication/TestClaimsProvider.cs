@@ -13,7 +13,7 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Authentication
 
         public TestClaimsProvider()
         {
-            Claims = new List<Claim>();
+            Claims = [];
         }
 
         public TestClaimsProvider WithRandomSubAndOid()

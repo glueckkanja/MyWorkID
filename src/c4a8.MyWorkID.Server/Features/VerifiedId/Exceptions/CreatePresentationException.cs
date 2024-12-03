@@ -2,15 +2,15 @@
 {
     public class CreatePresentationException : Exception
     {
-        private const string DefaultMessage = Strings.ERROR_INVALID_BODY;
+        private const string DEFAULT_MESSAGE = Strings.ERROR_INVALID_BODY;
 
         public CreatePresentationException()
-        : base(DefaultMessage)
+        : base(DEFAULT_MESSAGE)
         {
         }
 
         public CreatePresentationException(string message)
-         : base(string.IsNullOrEmpty(message) ? DefaultMessage : message)
+         : base(string.IsNullOrEmpty(message) ? DEFAULT_MESSAGE : message)
         {
         }
     }

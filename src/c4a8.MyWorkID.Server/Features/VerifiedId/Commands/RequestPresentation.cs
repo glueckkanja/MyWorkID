@@ -1,5 +1,4 @@
 ﻿using c4a8.MyWorkID.Server.Common;
-using c4a8.MyWorkID.Server.Features.VerifiedId.Entities;
 using c4a8.MyWorkID.Server.Features.VerifiedId.Exceptions;
 using c4a8.MyWorkID.Server.Features.VerifiedId.Extensions;
 using c4a8.MyWorkID.Server.Filters;
@@ -25,17 +24,16 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId.Commands
         {
             var userId = user.GetUserId();
             await verifiedIdService.HideQrCodeForUser(userId!);
-            CreatePresentationRequestCallback? parsedBody = null;
             try
             {
-                parsedBody = await verifiedIdService.ParseCreatePresentationRequestCallback(context);
+                var parsedBody = await verifiedIdService.ParseCreatePresentationRequestCallback(context);
+                await verifiedIdService.HandlePresentationCallback(userId!, parsedBody);
+                return TypedResults.NoContent();
             }
             catch (CreatePresentationException)
             {
                 return TypedResults.BadRequest();
             }
-            await verifiedIdService.HandlePresentationCallback(userId!, parsedBody);
-            return TypedResults.NoContent();
         }
     }
 }

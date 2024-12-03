@@ -13,9 +13,9 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId.Entities
     public class VerifiedCredentialsData
     {
         [JsonPropertyName("issuer")]
-        public string? issuer { get; set; }
+        public string? Issuer { get; set; }
         [JsonPropertyName("type")]
-        public IEnumerable<string>? type { get; set; }
+        public IEnumerable<string>? Type { get; set; }
         [JsonPropertyName("claims")]
         public Dictionary<string, string>? Claims { get; set; }
         [JsonPropertyName("credentialState")]

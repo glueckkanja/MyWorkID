@@ -50,7 +50,7 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.UserRiskState
         [Fact]
         public async Task GetUserRisk_GraphReturnsRiskyUserWithoutRisk_ReturnsRiskLevelNone()
         {
-            RiskyUser riskyUser = new RiskyUser();
+            RiskyUser riskyUser = new();
             IRequestAdapter requestAdapter = GetGraphRequestAdapterForRiskyUser(riskyUser);
             var client = TestHelper.CreateClientWithRole(_testApplicationFactory,
                 provider => provider.WithRandomSubAndOid(), requestAdapter);
@@ -64,7 +64,7 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.UserRiskState
         [Fact]
         public async Task GetUserRisk_GraphReturnsRiskyUserAtRisk_ReturnsRiskLevelMedium()
         {
-            RiskyUser riskyUser = new RiskyUser
+            RiskyUser riskyUser = new()
             {
                 RiskState = RiskState.AtRisk,
                 RiskLevel = RiskLevel.Medium
@@ -81,7 +81,7 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.UserRiskState
         [Fact]
         public async Task GetUserRisk_GraphReturnsRiskyUserRiskStateConfirmedCompromised_ReturnsRiskLevelHigh()
         {
-            RiskyUser riskyUser = new RiskyUser
+            RiskyUser riskyUser = new()
             {
                 RiskState = RiskState.ConfirmedCompromised,
                 RiskLevel = RiskLevel.High
@@ -98,7 +98,7 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.UserRiskState
         [Fact]
         public async Task GetUserRisk_GraphReturnsNotFoundError_Returns404()
         {
-            ODataError oDataError = new ODataError
+            ODataError oDataError = new()
             {
                 ResponseStatusCode = StatusCodes.Status404NotFound
             };

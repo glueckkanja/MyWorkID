@@ -1,11 +1,10 @@
-﻿using c4a8.MyWorkID.Server;
-using c4a8.MyWorkID.Server.Features.VerifiedId;
+﻿using c4a8.MyWorkID.Server.Features.VerifiedId;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
-namespace c4a8.MyWorkID.API
+namespace c4a8.MyWorkID.Server
 {
     public static class ServicesExtensions
     {

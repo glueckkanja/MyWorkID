@@ -11,13 +11,13 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId.SignalR
 
     public class VerifiedIdSignalRRepository : IVerifiedIdSignalRRepository
     {
-        private readonly Dictionary<string, HashSet<string>> _connections = new();
+        private readonly Dictionary<string, HashSet<string>> _connections = [];
 
         public void AddUser(string userId, string connectionId)
         {
             if (!_connections.TryGetValue(userId, out var connectionsOfUser))
             {
-                connectionsOfUser = new HashSet<string>();
+                connectionsOfUser = [];
                 _connections.Add(userId, connectionsOfUser);
             }
 

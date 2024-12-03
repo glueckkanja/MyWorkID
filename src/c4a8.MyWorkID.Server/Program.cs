@@ -1,4 +1,4 @@
-using c4a8.MyWorkID.API;
+using c4a8.MyWorkID.Server;
 using c4a8.MyWorkID.Server.Features.VerifiedId.SignalR;
 using c4a8.MyWorkID.Server.Kernel;
 using Microsoft.AspNetCore.Http.Json;
