@@ -35,14 +35,12 @@ namespace c4a8.MyWorkID.Server
                 })
                 .AddMicrosoftIdentityWebApi(configuration.GetSection("AzureAd"));
 
-            services.AddAuthorization(options =>
-            {
-                options.AddPolicy(Strings.VERIFIED_ID_CALLBACK_POLICY, policy =>
-                {
-                    policy.RequireAuthenticatedUser();
-                    policy.AuthenticationSchemes.Add(Strings.VERIFIED_ID_CALLBACK_SCHEMA);
-                });
-            });
+            services.AddAuthorizationBuilder()
+               .AddPolicy(Strings.VERIFIED_ID_CALLBACK_POLICY, policy =>
+               {
+                   policy.RequireAuthenticatedUser();
+                   policy.AuthenticationSchemes.Add(Strings.VERIFIED_ID_CALLBACK_SCHEMA);
+               });
         }
     }
 }
