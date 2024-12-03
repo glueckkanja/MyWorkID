@@ -2,14 +2,26 @@
 
 namespace c4a8.MyWorkID.Server.Features.VerifiedId.SignalR
 {
+    /// <summary>
+    /// SignalR hub for managing Verified ID operations and user connections.
+    /// </summary>
     public class VerifiedIdHub : Hub<IVerifiedIdHub>
     {
         private readonly VerifiedIdSignalRRepository _verifiedIdSignalRRepository;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="VerifiedIdHub"/> class with the specified repository.
+        /// </summary>
+        /// <param name="verifiedIdSignalRRepository">The repository used to manage user connections.</param>
         public VerifiedIdHub(VerifiedIdSignalRRepository verifiedIdSignalRRepository)
         {
             _verifiedIdSignalRRepository = verifiedIdSignalRRepository;
         }
 
+        /// <summary>
+        /// Called when a new connection is established with the hub.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         public override Task OnConnectedAsync()
         {
             var httpContext = Context.GetHttpContext();
@@ -22,6 +34,11 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId.SignalR
             return base.OnConnectedAsync();
         }
 
+        /// <summary>
+        /// Called when a connection with the hub is terminated.
+        /// </summary>
+        /// <param name="exception">The exception that occurred, if any.</param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         public override Task OnDisconnectedAsync(Exception? exception)
         {
             var httpContext = Context.GetHttpContext();

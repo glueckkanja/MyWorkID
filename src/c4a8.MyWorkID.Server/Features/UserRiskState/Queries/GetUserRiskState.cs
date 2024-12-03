@@ -10,11 +10,15 @@ using System.Security.Claims;
 namespace c4a8.MyWorkID.Server.Features.UserRiskState.Queries
 {
     /// <summary>
-    /// This Endpoint returns the risk state of the user.
-    /// The RiskLevel is only returned if the RiskState is atRisk
+    /// This Endpoint returns the risk state and level of the user.
+    /// Risk state and level are only returned if the RiskState is atRisk or ConfirmedCompromised.
     /// </summary>
     public class GetUserRiskState : IEndpoint
     {
+        /// <summary>
+        /// Maps the endpoint for getting the user's risk state.
+        /// </summary>
+        /// <param name="endpoints">The endpoint route builder.</param>
         public static void MapEndpoint(IEndpointRouteBuilder endpoints)
         {
             endpoints.MapGetWithOpenApi<GetRiskStateResponse>("/api/me/riskstate", HandleAsync)
@@ -23,6 +27,13 @@ namespace c4a8.MyWorkID.Server.Features.UserRiskState.Queries
                 .AddEndpointFilter<CheckForObjectIdEndpointFilter>();
         }
 
+        /// <summary>
+        /// Handles the request to get the user's risk state.
+        /// </summary>
+        /// <param name="user">The claims principal representing the user.</param>
+        /// <param name="graphClient">The Graph service client.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A result containing the user's risk state and risk level.</returns>
         public static async Task<IResult> HandleAsync(ClaimsPrincipal user,
             GraphServiceClient graphClient, CancellationToken cancellationToken)
         {

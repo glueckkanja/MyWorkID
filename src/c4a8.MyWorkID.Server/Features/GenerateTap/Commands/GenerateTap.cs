@@ -9,8 +9,15 @@ using System.Security.Claims;
 
 namespace c4a8.MyWorkID.Server.Features.GenerateTap.Commands
 {
+    /// <summary>
+    /// Handles the generation of a Temporary Access Pass (TAP) for a user.
+    /// </summary>
     public class GenerateTap : IEndpoint
     {
+        /// <summary>
+        /// Maps the endpoint for generating a TAP.
+        /// </summary>
+        /// <param name="endpoints">The endpoint route builder.</param>
         public static void MapEndpoint(IEndpointRouteBuilder endpoints)
         {
             endpoints.MapPutWithOpenApi("api/me/generatetap", HandleAsync)
@@ -20,6 +27,13 @@ namespace c4a8.MyWorkID.Server.Features.GenerateTap.Commands
                 .AddEndpointFilter<CheckForObjectIdEndpointFilter>();
         }
 
+        /// <summary>
+        /// Handles the request to generate a TAP.
+        /// </summary>
+        /// <param name="user">The claims principal representing the user.</param>
+        /// <param name="graphClient">The Graph service client.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The generated TAP or an error response.</returns>
         [Authorize(Roles = Strings.CREATE_TAP_ROLE)]
         public static async Task<IResult> HandleAsync(ClaimsPrincipal user, GraphServiceClient graphClient,
             CancellationToken cancellationToken)

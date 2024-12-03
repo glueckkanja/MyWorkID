@@ -6,8 +6,16 @@ using System.Text;
 
 namespace c4a8.MyWorkID.Server
 {
+    /// <summary>
+    /// Provides extension methods for configuring services.
+    /// </summary>
     public static class ServicesExtensions
     {
+        /// <summary>
+        /// Adds custom authentication services to the service collection.
+        /// </summary>
+        /// <param name="services">The service collection.</param>
+        /// <param name="configuration">The configuration.</param>
         public static void AddCustomAuthentication(this IServiceCollection services, IConfiguration configuration)
         {
             VerifiedIdOptions verifiedIdConfig = new();

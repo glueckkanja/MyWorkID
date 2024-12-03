@@ -11,8 +11,15 @@ using System.Security.Claims;
 
 namespace c4a8.MyWorkID.Server.Features.ResetPassword.Commands
 {
+    /// <summary>
+    /// Handles password reset requests for a user.
+    /// </summary>
     public class ResetPassword : IEndpoint
     {
+        /// <summary>
+        /// Maps the endpoint for resetting a user's password.
+        /// </summary>
+        /// <param name="endpoints">The endpoint route builder.</param>
         public static void MapEndpoint(IEndpointRouteBuilder endpoints)
         {
             endpoints.MapPutWithOpenApi("api/me/resetPassword", HandleAsync)
@@ -23,6 +30,14 @@ namespace c4a8.MyWorkID.Server.Features.ResetPassword.Commands
                 .AddEndpointFilter<PasswordValidationFilter>();
         }
 
+        /// <summary>
+        /// Handles the request to reset a user's password.
+        /// </summary>
+        /// <param name="passwordResetRequest">The password reset request containing the new password.</param>
+        /// <param name="user">The claims principal representing the user.</param>
+        /// <param name="graphClient">The Graph service client.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A result indicating the success of the password reset operation.</returns>
         [Authorize(Roles = Strings.RESET_PASSWORD_ROLE)]
         public static async Task<IResult> HandleAsync([FromBody] PasswordResetRequest passwordResetRequest,
             ClaimsPrincipal user, GraphServiceClient graphClient, CancellationToken cancellationToken)
