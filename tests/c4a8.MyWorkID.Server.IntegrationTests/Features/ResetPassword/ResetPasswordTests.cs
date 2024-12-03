@@ -66,14 +66,14 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.PasswordReset
             var response = await client.PutAsJsonAsync(_baseUrl, request);
             response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
             var problemDetails = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
-            Assert.Collection(problemDetails!.Errors, validator);
+            var error = Assert.Single(problemDetails!.Errors);
+            validator(error);
         }
 
-        public static IEnumerable<object[]> GetInvalidPasswordInputsAndProblemDetailsErrorValidator()
+        public static TheoryData<PasswordResetRequest, Action<KeyValuePair<string, string[]>>> GetInvalidPasswordInputsAndProblemDetailsErrorValidator()
         {
-            var testData = new List<object[]>
+            return new TheoryData<PasswordResetRequest, Action<KeyValuePair<string, string[]>>>
             {
-                new object[]
                 {
                     new PasswordResetRequest(),
                     new Action<KeyValuePair<string, string[]>>(kvp =>
@@ -82,7 +82,6 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.PasswordReset
                         kvp.Value.Should().ContainSingle().Which.Should().Be(Strings.PASSWORD_VALIDATION_MISSING_ERROR);
                     })
                 },
-                new object[]
                 {
                     new PasswordResetRequest { NewPassword = "skj" },
                     new Action<KeyValuePair<string, string[]>>(kvp =>
@@ -91,7 +90,6 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.PasswordReset
                         kvp.Value.Should().ContainSingle().Which.Should().Be(Strings.PASSWORD_VALIDATION_LENGTH_ERROR);
                     })
                 },
-                new object[]
                 {
                     new PasswordResetRequest { NewPassword = "password" },
                     new Action<KeyValuePair<string, string[]>>(kvp =>
@@ -100,7 +98,6 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.PasswordReset
                         kvp.Value.Should().ContainSingle().Which.Should().Be(Strings.PASSWORD_VALIDATION_SYMBOLS_ERROR);
                     })
                 },
-                new object[]
                 {
                     new PasswordResetRequest { NewPassword = "passwordA" },
                     new Action<KeyValuePair<string, string[]>>(kvp =>
@@ -109,7 +106,6 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.PasswordReset
                         kvp.Value.Should().ContainSingle().Which.Should().Be(Strings.PASSWORD_VALIDATION_SYMBOLS_ERROR);
                     })
                 },
-                new object[]
                 {
                     new PasswordResetRequest { NewPassword = "password0" },
                     new Action<KeyValuePair<string, string[]>>(kvp =>
@@ -118,7 +114,6 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.PasswordReset
                         kvp.Value.Should().ContainSingle().Which.Should().Be(Strings.PASSWORD_VALIDATION_SYMBOLS_ERROR);
                     })
                 },
-                new object[]
                 {
                     new PasswordResetRequest { NewPassword = "password#" },
                     new Action<KeyValuePair<string, string[]>>(kvp =>
@@ -128,8 +123,6 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.PasswordReset
                     })
                 },
             };
-
-            return testData;
         }
 
         [Theory]
@@ -142,25 +135,14 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.PasswordReset
             response.StatusCode.Should().Be(HttpStatusCode.OK);
         }
 
-        public static IEnumerable<object[]> GetValidPasswordInputs()
+        public static TheoryData<PasswordResetRequest> GetValidPasswordInputs()
         {
-            var testData = new List<object[]>
+            return new TheoryData<PasswordResetRequest>
             {
-                new object[]
-                {
-                    new PasswordResetRequest { NewPassword = "passwordA0" }
-                },
-                new object[]
-                {
-                    new PasswordResetRequest { NewPassword = "passwordA#" }
-                },
-                new object[]
-                {
+                    new PasswordResetRequest { NewPassword = "passwordA0" },
+                    new PasswordResetRequest { NewPassword = "passwordA#" },
                     new PasswordResetRequest { NewPassword = "PASSWORD#1" }
-                },
             };
-
-            return testData;
         }
     }
 }
