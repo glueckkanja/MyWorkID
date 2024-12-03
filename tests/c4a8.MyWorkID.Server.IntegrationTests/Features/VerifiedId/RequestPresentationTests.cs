@@ -95,11 +95,7 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.VerifiedId
             var createPresentationRequestCallback = new CreatePresentationRequestCallback
             {
                 RequestStatus = "presentation_error",
-                Error = new CreatePresentationRequestError
-                {
-                    Code = "error_code",
-                    Message = "error_message"
-                }
+
             };
             var response = await client.PostAsJsonAsync(_baseUrl, createPresentationRequestCallback);
 

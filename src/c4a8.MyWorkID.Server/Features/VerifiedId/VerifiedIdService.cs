@@ -9,6 +9,9 @@ using System.Text.Json;
 
 namespace c4a8.MyWorkID.Server.Features.VerifiedId
 {
+    /// <summary>
+    /// Service for handling Verified ID operations.
+    /// </summary>
     public class VerifiedIdService
     {
         private readonly HttpClient _verifiedIdClient;
@@ -18,6 +21,15 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId
         private readonly IHubContext<VerifiedIdHub, IVerifiedIdHub> _hubContext;
         private readonly ILogger _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="VerifiedIdService"/> class.
+        /// </summary>
+        /// <param name="verifiedIdClient">The HTTP client for Verified ID operations.</param>
+        /// <param name="verifiedIdOptions">The options for Verified ID operations.</param>
+        /// <param name="graphClient">The Graph service client.</param>
+        /// <param name="verifiedIdSignalRRepository">The SignalR repository for Verified ID operations.</param>
+        /// <param name="hubContext">The SignalR hub context.</param>
+        /// <param name="logger">The logger instance.</param>
         public VerifiedIdService(
             HttpClient verifiedIdClient,
             IOptions<VerifiedIdOptions> verifiedIdOptions,
@@ -34,6 +46,12 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId
             _logger = logger;
         }
 
+        /// <summary>
+        /// Creates a presentation request for the specified user.
+        /// </summary>
+        /// <param name="userId">The ID of the user.</param>
+        /// <returns>The response of the create presentation request.</returns>
+        /// <exception cref="CreatePresentationException">Thrown when the presentation request fails.</exception>
         public async Task<CreatePresentationResponse?> CreatePresentationRequest(string userId)
         {
             RequestRegistration requestRegistration = new(clientName: "MyWorkID", purpose: "Verify your identity");
@@ -47,13 +65,14 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId
 
             Validation validation = new(allowRevoked: false, validateLinkedDomain: true, faceCheck: faceCheck);
 
-            List<RequestCredential> credentialList = [
-                new RequestCredential(
-                    type: "VerifiedEmployee",
-                    purpose: "Verify users identity",
-                    acceptedIssuers: null,
-                    configuration: new Entities.Configuration(validation))
-            ];
+            List<RequestCredential> credentialList = new()
+                {
+                    new RequestCredential(
+                        type: "VerifiedEmployee",
+                        purpose: "Verify users identity",
+                        acceptedIssuers: null,
+                        configuration: new Entities.Configuration(validation))
+                };
 
             var request = new CreatePresentationRequest(
                 authority: _verifiedIdOptions.DecentralizedIdentifier!,
@@ -90,6 +109,11 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId
             }
             return createPresentationResponse;
         }
+
+        /// <summary>
+        /// Hides the QR code for the specified user.
+        /// </summary>
+        /// <param name="userId">The ID of the user.</param>
         public async Task HideQrCodeForUser(string userId)
         {
             if (!_verifiedIdOptions.DisableQrCodeHide && _verifiedIdSignalRRepository.TryGetConnections(userId, out var connections))
@@ -98,6 +122,12 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId
             }
         }
 
+        /// <summary>
+        /// Parses the create presentation request callback from the HTTP context.
+        /// </summary>
+        /// <param name="context">The HTTP context.</param>
+        /// <returns>The parsed create presentation request callback.</returns>
+        /// <exception cref="CreatePresentationException">Thrown when the callback parsing fails.</exception>
         public async Task<CreatePresentationRequestCallback> ParseCreatePresentationRequestCallback(HttpContext context)
         {
             using StreamReader streamReader = new StreamReader(context.Request.Body);
@@ -125,11 +155,12 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId
         }
 
         /// <summary>
-        /// 
+        /// Handles the presentation callback for the specified user.
         /// </summary>
-        /// <param name="userId"></param>
-        /// <param name="callbackBody"></param>
-        /// <returns>Indicates success</returns>
+        /// <param name="userId">The ID of the user.</param>
+        /// <param name="callbackBody">The callback body.</param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
+        /// <exception cref="PresentationCallbackException">Thrown when the callback handling fails.</exception>
         public async Task HandlePresentationCallback(string userId, CreatePresentationRequestCallback callbackBody)
         {
             if (callbackBody.RequestStatus == "request_retrieved")
@@ -158,9 +189,13 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId
 
                 await _graphClient.Users[userId].PatchAsync(requestBody);
             }
-
         }
 
+        /// <summary>
+        /// Creates the request body for setting the target security attribute.
+        /// </summary>
+        /// <param name="targetSecurityAttributeValue">The value of the target security attribute.</param>
+        /// <returns>The user object with the target security attribute set.</returns>
         public User CreateSetTargetSecurityAttributeRequestBody(string targetSecurityAttributeValue)
         {
             return new User
@@ -170,7 +205,7 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId
                     AdditionalData = new Dictionary<string, object>
                         {
                             {
-                                _verifiedIdOptions.TargetSecurityAttributeSet! , new CustomSecurityAttributeValue()
+                                _verifiedIdOptions.TargetSecurityAttributeSet!, new CustomSecurityAttributeValue()
                                 {
                                     OdataType = "#Microsoft.DirectoryServices.CustomSecurityAttributeValue",
                                     AdditionalData = new Dictionary<string, object>

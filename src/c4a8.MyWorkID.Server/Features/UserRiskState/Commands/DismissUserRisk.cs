@@ -7,8 +7,15 @@ using System.Security.Claims;
 
 namespace c4a8.MyWorkID.Server.Features.UserRiskState.Commands
 {
+    /// <summary>
+    /// Handles the dismissal of user risk state.
+    /// </summary>
     public class DismissUserRisk : IEndpoint
     {
+        /// <summary>
+        /// Maps the endpoint for dismissing the user risk state.
+        /// </summary>
+        /// <param name="endpoints">The endpoint route builder.</param>
         public static void MapEndpoint(IEndpointRouteBuilder endpoints)
         {
             endpoints.MapPutWithOpenApi("api/me/riskstate/dismiss", HandleAsync)
@@ -18,6 +25,13 @@ namespace c4a8.MyWorkID.Server.Features.UserRiskState.Commands
                 .AddEndpointFilter<CheckForObjectIdEndpointFilter>();
         }
 
+        /// <summary>
+        /// Handles the request to dismiss the user risk state.
+        /// </summary>
+        /// <param name="user">The claims principal representing the user.</param>
+        /// <param name="graphClient">The Graph service client.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A result indicating the success of the dismissal operation.</returns>
         [Authorize(Roles = Strings.DISMISS_USER_RISK_ROLE)]
         public static async Task<IResult> HandleAsync(ClaimsPrincipal user,
             GraphServiceClient graphClient, CancellationToken cancellationToken)
