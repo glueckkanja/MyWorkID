@@ -46,7 +46,7 @@ namespace c4a8.MyWorkID.Server.Features.ResetPassword.Filters
                         @"[@#%\^&\*\-_\!\+=\[\]{}\|\\:',\.\?\/`~""\(\);<> ]"
                 ];
             // Count the number of patterns matched in the new password
-            counter += patterns.Count(p => Regex.IsMatch(pwRequest.NewPassword, p));
+            counter += patterns.Count(p => Regex.IsMatch(pwRequest.NewPassword, p, RegexOptions.None, TimeSpan.FromMilliseconds(500)));
             // Check if at least 3 different character types are present
             if (counter < 3)
             {
