@@ -109,7 +109,7 @@ resource "azuread_app_role_assignment" "backend_managed_identity" {
 resource "azuread_directory_role" "authentication_administrator" {
   count = local.skip_actions_requiring_global_admin ? 0 : 1
   display_name = "Authentication Administrator"
-  # display_name = "Privileged Authentication Administrator" #Necessary if privilaged users should also be able to use all functions (createTAP & changePassword) via myAccountVNext
+  # display_name = "Privileged Authentication Administrator" #Necessary if privilaged users should also be able to use all functions (createTAP & changePassword) via myWorkID
 }
 
 resource "azuread_directory_role_assignment" "backend_managed_identity_authentication_administrator" {
@@ -141,39 +141,39 @@ resource "azuread_application" "backend" {
   app_role {
     allowed_member_types = ["User"]
     description          = "Allows user to Dismiss its User Risk"
-    display_name         = "MyAccount.VNext.DismissUserRisk"
+    display_name         = "MyWorkID.DismissUserRisk"
     enabled              = true
     id                   = "9262ab98-6c08-4e32-bae3-4c12d4ce2463"
-    value                = "MyAccount.VNext.DismissUserRisk"
+    value                = "MyWorkID.DismissUserRisk"
   }
   app_role {
     allowed_member_types = ["User"]
     description          = "Allows user to Create a temporary access token"
-    display_name         = "MyAccount.VNext.CreateTAP"
+    display_name         = "MyWorkID.CreateTAP"
     enabled              = true
     id                   = "16f5de80-8ee7-46e3-8bfe-7de7af6164ed"
-    value                = "MyAccount.VNext.CreateTAP"
+    value                = "MyWorkID.CreateTAP"
   }
   app_role {
     allowed_member_types = ["User"]
     description          = "Allows user to Reset its password"
-    display_name         = "MyAccount.VNext.PasswordReset"
+    display_name         = "MyWorkID.PasswordReset"
     enabled              = true
     id                   = "13c4693c-84f1-43b4-85a2-5e51d41753ed"
-    value                = "MyAccount.VNext.PasswordReset"
+    value                = "MyWorkID.PasswordReset"
   }
   app_role {
     allowed_member_types = ["User"]
     description          = "Allows user to Validate its Identity by VerifiedId"
-    display_name         = "MyAccount.VNext.ValidateIdentity"
+    display_name         = "MyWorkID.ValidateIdentity"
     enabled              = true
     id                   = "eeacf7de-5c05-4e21-a2be-a4d8e3435237"
-    value                = "MyAccount.VNext.ValidateIdentity"
+    value                = "MyWorkID.ValidateIdentity"
   }
 
   api {
     oauth2_permission_scope {
-      admin_consent_description  = "Access To MyAccount.VNext backend"
+      admin_consent_description  = "Access To MyWorkID backend"
       admin_consent_display_name = "Access"
       enabled                    = true
       id                         = "7e119516-7dd5-4cc0-a906-5f1a9cfd5801"
