@@ -145,7 +145,7 @@ body {
   padding-left: 30px;
 }
 .header__title {
-  font-family: Miriam Libre;
+  font-family: Miriam Libre, sans-serif;
   font-feature-settings: "liga" off, "clig" off;
   font-size: 25.287px;
   font-style: normal;
@@ -185,7 +185,7 @@ body {
 }
 
 .userdisplay__username {
-  font-family: "Lato";
+  font-family: var(--font-family);
   font-size: "24px";
   font-size: "normal";
   font-weight: "700";
@@ -280,7 +280,7 @@ body {
   margin-left: 29px;
 }
 .userdisplay__risk-state {
-  font-family: "Lato";
+  font-family: vcar(--font-family);
   font-size: 16px;
   font-style: normal;
   font-weight: 400;

@@ -319,7 +319,7 @@ export const PasswordReset = (props: TFunctionProps) => {
                         }
                         value={passwordDisplay.value}
                       />
-                      <div
+                      <button
                         role="button"
                         tabIndex={0}
                         className="action-card__pasword-reset__input-container__icon"
@@ -333,7 +333,7 @@ export const PasswordReset = (props: TFunctionProps) => {
                         }}
                       >
                         {passwordDisplay.showValue ? closeEyeIcon : eyeIcon}
-                      </div>
+                      </button>
                     </div>
                   </FormControl>
                 </FormItem>
@@ -356,7 +356,7 @@ export const PasswordReset = (props: TFunctionProps) => {
                         }
                         value={passwordDisplay.valueConfirm}
                       />
-                      <div
+                      <button
                         className="action-card__pasword-reset__input-container__icon"
                         role="button"
                         tabIndex={0}
@@ -370,7 +370,7 @@ export const PasswordReset = (props: TFunctionProps) => {
                         }}
                       >
                         {passwordDisplay.showValue ? closeEyeIcon : eyeIcon}
-                      </div>
+                      </button>
                     </div>
                   </FormControl>
                 </FormItem>
