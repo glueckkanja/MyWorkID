@@ -83,7 +83,7 @@ export const Header = () => {
         <span className="header__title__text-myWork">myWork</span>
         <span className="header__title__text-ID">ID</span>
       </div>
-      <div
+      <button
         className="header__dark-mode-toggle"
         role="button"
         tabIndex={0}
@@ -95,7 +95,7 @@ export const Header = () => {
         }}
       >
         {darkModeIcon}
-      </div>
+      </button>
     </div>
   );
 };
