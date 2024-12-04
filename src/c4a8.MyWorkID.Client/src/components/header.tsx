@@ -85,7 +85,6 @@ export const Header = () => {
       </div>
       <button
         className="header__dark-mode-toggle"
-        role="button"
         tabIndex={0}
         onMouseDown={() => setColorTheme()}
         onKeyDown={(e) => {

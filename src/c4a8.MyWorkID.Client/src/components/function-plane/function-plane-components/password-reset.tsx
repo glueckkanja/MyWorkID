@@ -320,7 +320,6 @@ export const PasswordReset = (props: TFunctionProps) => {
                         value={passwordDisplay.value}
                       />
                       <button
-                        role="button"
                         tabIndex={0}
                         className="action-card__pasword-reset__input-container__icon"
                         onClick={() =>
@@ -358,7 +357,6 @@ export const PasswordReset = (props: TFunctionProps) => {
                       />
                       <button
                         className="action-card__pasword-reset__input-container__icon"
-                        role="button"
                         tabIndex={0}
                         onClick={() =>
                           handleClickShowPassword(PasswordInputType.MAIN)
