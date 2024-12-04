@@ -115,12 +115,10 @@ export const UserDisplay = () => {
               style={{ color: getRiskStateColor(riskUserState.displayValue) }}
             >
               {riskUserState.loading && (
-                <>
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-[200px]" />
-                    <Skeleton className="h-4 w-[200px]" />
-                  </div>
-                </>
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-[200px]" />
+                  <Skeleton className="h-4 w-[200px]" />
+                </div>
               )}
               {riskUserState.displayValue}
             </div>

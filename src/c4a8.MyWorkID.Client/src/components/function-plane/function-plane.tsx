@@ -59,10 +59,9 @@ const FunctionPlane = () => {
         {FUNCTION_PLANE_COMPONENTS.map((functionComponent) => {
           if (
             !functionComponent.permissionRoleRequired ||
-            (signedInUserInfo &&
-              signedInUserInfo.roles.includes(
-                functionComponent.permissionRoleRequired
-              ))
+            signedInUserInfo?.roles?.includes(
+              functionComponent.permissionRoleRequired
+            )
           ) {
             return (
               <functionComponent.element

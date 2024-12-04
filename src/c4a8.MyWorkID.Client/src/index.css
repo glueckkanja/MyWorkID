@@ -41,6 +41,7 @@
     --brand-svg-bottom-path: "M47.011 7.08752H39.8901V10.6312H47.011V7.08752Z";
     --password-reset-button: #5cbbff;
     --header-title-text-ID: #0072c6;
+    --font-family: "Lato", sans-serif;
   }
   .dark {
     --background: 0 0% 3.9%;
@@ -102,7 +103,7 @@ body {
   cursor: pointer;
 }
 .action-card__footer {
-  font-family: Lato;
+  font-family: var(--font-family);
   font-size: 14px;
   font-style: normal;
   font-weight: 700;
@@ -120,7 +121,7 @@ body {
 }
 .footer__text {
   color: var(--footer-text-color);
-  font-family: Lato;
+  font-family: var(--font-family);
   font-size: 12px;
   font-style: normal;
   font-weight: 400;
@@ -176,7 +177,7 @@ body {
 }
 .action-card__footer__validate-id-success {
   font-feature-settings: "liga" off, "clig" off;
-  font-family: Lato;
+  font-family: var(--font-family);
   font-size: 14px;
   font-style: normal;
   font-weight: 700;
@@ -219,7 +220,7 @@ body {
   color: var(--user-displayname);
   text-align: center;
   font-feature-settings: "liga" off, "clig" off;
-  font-family: Lato;
+  font-family: var(--font-family);
   font-size: 32px;
   font-style: normal;
   font-weight: 700;
@@ -240,7 +241,7 @@ body {
   background: var(--password-reset-button);
   color: #fff;
   font-feature-settings: "liga" off, "clig" off;
-  font-family: Lato;
+  font-family: var(--font-family);
   font-size: 14px;
   font-style: normal;
   font-weight: 700;
@@ -259,7 +260,7 @@ body {
   color: #7f7f7f;
   font-feature-settings: "liga" off, "clig" off;
   text-overflow: ellipsis;
-  font-family: Lato;
+  font-family: var(--font-family);
   font-size: 14px;
   font-style: normal;
   font-weight: 400;
@@ -305,7 +306,7 @@ body {
 }
 
 
-.action-card__pasword-reser__input-container .action-card__pasword-reser__input-container__icon {
+.action-card__pasword-reser__input-container .action-card__pasword-reset__input-container__icon {
   position: absolute;
   right: 24px; /* Adjust based on icon size */
   cursor: pointer;
