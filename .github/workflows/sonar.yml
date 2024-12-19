@@ -9,8 +9,8 @@ on:
 
 env:
   CONFIGURATION: Release
-  DOTNET_CORE_VERSION: 6.0.x
-  WORKING_DIRECTORY: ./backend/src/c4a8.MyAccountVNext.API
+  DOTNET_CORE_VERSION: 8.0.x
+  WORKING_DIRECTORY: ./
   PROJECT_ID: c4a8-devstudio_c4a8-myaccount-vnext_0a004fed-f31e-478b-af81-485540ebb81b
 
 jobs:

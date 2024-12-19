@@ -9,13 +9,13 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - 'backend/**'
+      - 'src/**'
     branches:
       - 'main'
 
 env:
-  AZURE_WEBAPP_PACKAGE_PATH: './backend/src/c4a8.MyAccountVNext.API'      # set this to the path to your web app project, defaults to the repository root
-  DOTNET_VERSION: '6.0.x'
+  AZURE_WEBAPP_PACKAGE_PATH: './'      # set this to the path to your web app project, defaults to the repository root
+  DOTNET_VERSION: '8.0.x'
 
 jobs:
   build:
@@ -46,7 +46,7 @@ jobs:
         run: dotnet publish --configuration Release --no-build --output ${{env.DOTNET_ROOT}}/publish
 
       - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: binaries_${{github.sha}}
           path: ${{env.DOTNET_ROOT}}/publish

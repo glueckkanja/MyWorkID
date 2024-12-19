@@ -8,7 +8,7 @@ variable "subscription_id" {
 
 variable "resource_group_name" {
   type = string
-  default = "rg-myAccountVNext"
+  default = "rg-myWorkID"
 }
 
 variable "resource_location" {
@@ -23,12 +23,12 @@ variable "api_name" {
 
 variable "backed_appreg_name" {
   type = string
-  default = "ar-myAccountVNext-backend"
+  default = "ar-myWorkID-backend"
 }
 
 variable "frontend_appreg_name" {
   type = string
-  default = "ar-myAccountVNext-frontend"
+  default = "ar-myWorkID-frontend"
 }
 
 variable "dismiss_user_risk_auth_context_id"{
@@ -74,7 +74,7 @@ variable "verified_id_decentralized_identifier_secret_name" {
 variable "verified_id_verify_security_attribute_set" {
   type = string
   description = "The name of the custom security attribute set where the last verified date should be stored."
-  default = "myAccountVNext"
+  default = "myWorkID"
 }
 variable "verified_id_verify_security_attribute" {
   type = string
