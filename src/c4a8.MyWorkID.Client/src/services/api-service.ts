@@ -15,11 +15,11 @@ import {
 import axios from "axios";
 
 const convertTFunctionResult = async <T>(
-  promise: T,
+  functionResult: T,
   dataType: EApiFunctionTypes
 ): Promise<TFunctionResult<T>> => {
   try {
-    const result = await promise;
+    const result = functionResult;
     return {
       status: "success",
       data: result,
