@@ -15,11 +15,11 @@ import {
 import axios from "axios";
 
 const convertTFunctionResult = async <T>(
-  functionResult: T,
+  axiosRequestPromise: Promise<T>,
   dataType: EApiFunctionTypes
 ): Promise<TFunctionResult<T>> => {
   try {
-    const result = functionResult;
+    const result = await axiosRequestPromise;
     return {
       status: "success",
       data: result,
@@ -61,7 +61,7 @@ export const getUserImage = async (): Promise<Blob> => {
 
 export const dismissUserRisk = async (): Promise<TFunctionResult<unknown>> => {
   return convertTFunctionResult(
-    await authenticateRequest(
+    authenticateRequest(
       `${backendApiUrl}/me/riskstate/dismiss`,
       REQUEST_TYPE.PUT,
       EApiFunctionTypes.DISMISS_USER_RISK
@@ -72,8 +72,8 @@ export const dismissUserRisk = async (): Promise<TFunctionResult<unknown>> => {
 export const generateTAP = async (): Promise<
   TFunctionResult<TGenerateTapResponse>
 > => {
-  return convertTFunctionResult(
-    await authenticateRequest<TGenerateTapResponse>(
+  return convertTFunctionResult<TGenerateTapResponse>(
+    authenticateRequest<TGenerateTapResponse>(
       `${backendApiUrl}/me/generatetap`,
       REQUEST_TYPE.PUT,
       EApiFunctionTypes.CREATE_TAP
@@ -86,7 +86,7 @@ export const verifyIdentity = async (): Promise<
   TFunctionResult<TVerifyIdentityReponse>
 > => {
   return convertTFunctionResult(
-    await authenticateRequest<TVerifyIdentityReponse>(
+    authenticateRequest<TVerifyIdentityReponse>(
       `${backendApiUrl}/me/verifiedId/verify`,
       REQUEST_TYPE.POST,
       EApiFunctionTypes.VALIDATE_IDENTITY
@@ -99,7 +99,7 @@ export const callResetPassword = async (
   newPassword: string
 ): Promise<TFunctionResult<TGenerateTapResponse>> => {
   return convertTFunctionResult(
-    await authenticateRequest(
+    authenticateRequest(
       `${backendApiUrl}/me/resetPassword`,
       REQUEST_TYPE.PUT,
       EApiFunctionTypes.PASSWORD_RESET,
@@ -115,7 +115,7 @@ export const checkResetPasswordClaim = async (): Promise<
   TFunctionResult<TGenerateTapResponse>
 > => {
   return convertTFunctionResult(
-    await authenticateRequest(
+    authenticateRequest(
       `${backendApiUrl}/api/resetpasswordcontroller/checkClaim`,
       REQUEST_TYPE.GET,
       EApiFunctionTypes.PASSWORD_RESET
