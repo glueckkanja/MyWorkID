@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
 
-namespace c4a8.MyWorkID.Server.IntegrationTests
+namespace MyWorkID.Server.IntegrationTests
 {
     public class MockHttpMessageHandler : DelegatingHandler
     {

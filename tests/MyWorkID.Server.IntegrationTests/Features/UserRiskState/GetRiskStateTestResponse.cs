@@ -1,4 +1,4 @@
-﻿namespace c4a8.MyWorkID.Server.IntegrationTests.Features.UserRiskState
+﻿namespace MyWorkID.Server.IntegrationTests.Features.UserRiskState
 {
     public class GetRiskStateTestResponse
     {

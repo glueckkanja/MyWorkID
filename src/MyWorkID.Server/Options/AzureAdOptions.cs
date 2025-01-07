@@ -1,7 +1,7 @@
-﻿using c4a8.MyWorkID.Server.Validation;
+﻿using MyWorkID.Server.Validation;
 using System.ComponentModel.DataAnnotations;
 
-namespace c4a8.MyWorkID.Server.Options
+namespace MyWorkID.Server.Options
 {
     public class AzureAdOptions : BaseOptions
     {

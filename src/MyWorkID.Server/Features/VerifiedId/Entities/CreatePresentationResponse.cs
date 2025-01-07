@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace c4a8.MyWorkID.Server.Features.VerifiedId.Entities
+namespace MyWorkID.Server.Features.VerifiedId.Entities
 {
     /// <summary>
     /// Represents the response received after creating a presentation request.

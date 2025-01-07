@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-namespace c4a8.MyWorkID.Server.Features.VerifiedId.SignalR
+namespace MyWorkID.Server.Features.VerifiedId.SignalR
 {
     /// <summary>
     /// Defines the repository interface for managing SignalR connections for Verified ID operations.

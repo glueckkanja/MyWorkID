@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 
-namespace c4a8.MyWorkID.Server.Features.VerifiedId.SignalR
+namespace MyWorkID.Server.Features.VerifiedId.SignalR
 {
     /// <summary>
     /// SignalR hub for managing Verified ID operations and user connections.

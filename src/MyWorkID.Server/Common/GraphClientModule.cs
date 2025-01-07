@@ -1,7 +1,7 @@
 ﻿using Azure.Identity;
 using Microsoft.Graph;
 
-namespace c4a8.MyWorkID.Server.Common
+namespace MyWorkID.Server.Common
 {
     /// <summary>
     /// Module for configuring the Microsoft Graph client services.

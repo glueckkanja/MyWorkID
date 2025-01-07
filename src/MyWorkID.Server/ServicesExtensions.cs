@@ -1,10 +1,10 @@
-﻿using c4a8.MyWorkID.Server.Options;
+﻿using MyWorkID.Server.Options;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
-namespace c4a8.MyWorkID.Server
+namespace MyWorkID.Server
 {
     /// <summary>
     /// Provides extension methods for configuring services.

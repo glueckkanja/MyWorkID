@@ -1,10 +1,10 @@
-﻿using c4a8.MyWorkID.Server.Common;
+﻿using MyWorkID.Server.Common;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Net.Http.Json;
 
-namespace c4a8.MyWorkID.Server.IntegrationTests.Features.ResetPassword
+namespace MyWorkID.Server.IntegrationTests.Features.ResetPassword
 {
     public class CheckClaimTests : IClassFixture<TestApplicationFactory>
     {

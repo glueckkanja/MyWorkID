@@ -4,7 +4,7 @@ using Microsoft.Extensions.Options;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 
-namespace c4a8.MyWorkID.Server.IntegrationTests.Authentication
+namespace MyWorkID.Server.IntegrationTests.Authentication
 {
     public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
     {

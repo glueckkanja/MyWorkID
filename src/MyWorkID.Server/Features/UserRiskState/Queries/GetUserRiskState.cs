@@ -1,13 +1,13 @@
-﻿using c4a8.MyWorkID.Server.Common;
-using c4a8.MyWorkID.Server.Features.UserRiskState.Entities;
-using c4a8.MyWorkID.Server.Filters;
+﻿using MyWorkID.Server.Common;
+using MyWorkID.Server.Features.UserRiskState.Entities;
+using MyWorkID.Server.Filters;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
 using Microsoft.Graph.Models.ODataErrors;
 using Microsoft.Identity.Web;
 using System.Security.Claims;
 
-namespace c4a8.MyWorkID.Server.Features.UserRiskState.Queries
+namespace MyWorkID.Server.Features.UserRiskState.Queries
 {
     /// <summary>
     /// This Endpoint returns the risk state and level of the user.

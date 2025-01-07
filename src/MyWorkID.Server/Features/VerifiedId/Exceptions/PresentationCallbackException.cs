@@ -1,4 +1,4 @@
-﻿namespace c4a8.MyWorkID.Server.Features.VerifiedId.Exceptions
+﻿namespace MyWorkID.Server.Features.VerifiedId.Exceptions
 {
     /// <summary>
     /// Represents an exception that occurs during the check of the callback of a presentation request.

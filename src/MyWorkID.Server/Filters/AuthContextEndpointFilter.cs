@@ -1,7 +1,7 @@
-﻿using c4a8.MyWorkID.Server.Common;
+﻿using MyWorkID.Server.Common;
 using Microsoft.AspNetCore.Mvc;
 
-namespace c4a8.MyWorkID.Server.Filters
+namespace MyWorkID.Server.Filters
 {
     /// <summary>
     /// Abstract base class for endpoint filters that require authentication context.

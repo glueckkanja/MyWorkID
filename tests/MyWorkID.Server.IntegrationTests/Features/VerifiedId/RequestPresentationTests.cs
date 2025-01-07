@@ -1,6 +1,6 @@
-﻿using c4a8.MyWorkID.Server.Features.VerifiedId.Entities;
-using c4a8.MyWorkID.Server.Features.VerifiedId.SignalR;
-using c4a8.MyWorkID.Server.IntegrationTests.Authentication;
+﻿using MyWorkID.Server.Features.VerifiedId.Entities;
+using MyWorkID.Server.Features.VerifiedId.SignalR;
+using MyWorkID.Server.IntegrationTests.Authentication;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -12,7 +12,7 @@ using NSubstitute;
 using System.Net;
 using System.Net.Http.Json;
 
-namespace c4a8.MyWorkID.Server.IntegrationTests.Features.VerifiedId
+namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
 {
     public class RequestPresentationTests : IClassFixture<TestApplicationFactory>
     {

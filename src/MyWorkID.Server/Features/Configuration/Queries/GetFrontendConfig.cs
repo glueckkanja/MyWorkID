@@ -1,9 +1,9 @@
-﻿using c4a8.MyWorkID.Server.Common;
-using c4a8.MyWorkID.Server.Options;
+﻿using MyWorkID.Server.Common;
+using MyWorkID.Server.Options;
 using Microsoft.Extensions.Options;
 using System.Security.Claims;
 
-namespace c4a8.MyWorkID.Server.Features.Configuration.Queries
+namespace MyWorkID.Server.Features.Configuration.Queries
 {
     /// <summary>
     /// Handles the retrieval of frontend configuration settings.

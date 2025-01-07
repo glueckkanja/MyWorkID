@@ -1,7 +1,7 @@
-﻿using c4a8.MyWorkID.Server.Common;
-using c4a8.MyWorkID.Server.Options;
+﻿using MyWorkID.Server.Common;
+using MyWorkID.Server.Options;
 
-namespace c4a8.MyWorkID.Server.Features.Configuration
+namespace MyWorkID.Server.Features.Configuration
 {
     /// <summary>
     /// Configures services related to the application's configuration.

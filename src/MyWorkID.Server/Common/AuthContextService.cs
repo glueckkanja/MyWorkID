@@ -1,9 +1,9 @@
-﻿using c4a8.MyWorkID.Server.Options;
+﻿using MyWorkID.Server.Options;
 using Microsoft.Extensions.Options;
 using System.Security.Claims;
 using System.Text;
 
-namespace c4a8.MyWorkID.Server.Common
+namespace MyWorkID.Server.Common
 {
     /// <summary>
     /// Service for handling authentication context.

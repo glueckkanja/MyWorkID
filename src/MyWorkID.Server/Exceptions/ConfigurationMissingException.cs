@@ -1,6 +1,6 @@
 using System.Runtime.Serialization;
 
-namespace c4a8.MyWorkID.Server.Exceptions
+namespace MyWorkID.Server.Exceptions
 {
     public class ConfigurationMissingException : Exception
     {

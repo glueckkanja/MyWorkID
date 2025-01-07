@@ -1,10 +1,10 @@
-﻿using c4a8.MyWorkID.Server.Common;
-using c4a8.MyWorkID.Server.Features.VerifiedId.Exceptions;
-using c4a8.MyWorkID.Server.Features.VerifiedId.Extensions;
-using c4a8.MyWorkID.Server.Filters;
+﻿using MyWorkID.Server.Common;
+using MyWorkID.Server.Features.VerifiedId.Exceptions;
+using MyWorkID.Server.Features.VerifiedId.Extensions;
+using MyWorkID.Server.Filters;
 using System.Security.Claims;
 
-namespace c4a8.MyWorkID.Server.Features.VerifiedId.Commands
+namespace MyWorkID.Server.Features.VerifiedId.Commands
 {
     /// <summary>
     /// Handles the request for presenting a verified ID.

@@ -1,6 +1,6 @@
-﻿using c4a8.MyWorkID.Server.Validation;
+﻿using MyWorkID.Server.Validation;
 
-namespace c4a8.MyWorkID.Server.Options
+namespace MyWorkID.Server.Options
 {
     public class FrontendOptions : BaseOptions
     {

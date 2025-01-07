@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Http.Json;
 
-namespace c4a8.MyWorkID.Server.IntegrationTests.Features
+namespace MyWorkID.Server.IntegrationTests.Features
 {
     public static class CheckResponseHelper
     {

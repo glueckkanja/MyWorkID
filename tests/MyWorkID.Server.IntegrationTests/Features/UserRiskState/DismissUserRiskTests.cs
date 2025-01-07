@@ -1,11 +1,11 @@
-﻿using c4a8.MyWorkID.Server.Common;
-using c4a8.MyWorkID.Server.Features.ResetPassword.Entities;
+﻿using MyWorkID.Server.Common;
+using MyWorkID.Server.Features.ResetPassword.Entities;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Net.Http.Json;
 
-namespace c4a8.MyWorkID.Server.IntegrationTests.Features.UserRiskState
+namespace MyWorkID.Server.IntegrationTests.Features.UserRiskState
 {
     public class DismissUserRiskTests : IClassFixture<TestApplicationFactory>
     {

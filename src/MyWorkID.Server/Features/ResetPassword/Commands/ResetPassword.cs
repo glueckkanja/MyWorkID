@@ -1,7 +1,7 @@
-﻿using c4a8.MyWorkID.Server.Common;
-using c4a8.MyWorkID.Server.Features.ResetPassword.Entities;
-using c4a8.MyWorkID.Server.Features.ResetPassword.Filters;
-using c4a8.MyWorkID.Server.Filters;
+﻿using MyWorkID.Server.Common;
+using MyWorkID.Server.Features.ResetPassword.Entities;
+using MyWorkID.Server.Features.ResetPassword.Filters;
+using MyWorkID.Server.Filters;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Graph;
@@ -9,7 +9,7 @@ using Microsoft.Graph.Models;
 using Microsoft.Identity.Web;
 using System.Security.Claims;
 
-namespace c4a8.MyWorkID.Server.Features.ResetPassword.Commands
+namespace MyWorkID.Server.Features.ResetPassword.Commands
 {
     /// <summary>
     /// Handles password reset requests for a user.

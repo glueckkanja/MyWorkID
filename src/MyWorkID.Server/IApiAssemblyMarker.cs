@@ -1,4 +1,4 @@
-﻿namespace c4a8.MyWorkID.Server
+﻿namespace MyWorkID.Server
 {
     /// <summary>
     /// Used for test projects.

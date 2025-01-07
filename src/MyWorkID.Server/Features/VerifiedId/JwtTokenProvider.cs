@@ -3,7 +3,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace c4a8.MyWorkID.Server.Features.VerifiedId
+namespace MyWorkID.Server.Features.VerifiedId
 {
     /// <summary>
     /// Provides methods for generating JWT tokens.

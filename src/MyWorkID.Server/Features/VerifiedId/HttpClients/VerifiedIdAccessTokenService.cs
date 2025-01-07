@@ -1,6 +1,6 @@
 ﻿using Azure.Core;
 
-namespace c4a8.MyWorkID.Server.Features.VerifiedId.HttpClients
+namespace MyWorkID.Server.Features.VerifiedId.HttpClients
 {
     /// <summary>
     /// Service for managing and retrieving access tokens for Verified ID operations.

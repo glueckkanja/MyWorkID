@@ -1,8 +1,8 @@
-﻿using c4a8.MyWorkID.Server.Common;
-using c4a8.MyWorkID.Server.Filters;
+﻿using MyWorkID.Server.Common;
+using MyWorkID.Server.Filters;
 using Microsoft.AspNetCore.Authorization;
 
-namespace c4a8.MyWorkID.Server.Features.ResetPassword.Queries
+namespace MyWorkID.Server.Features.ResetPassword.Queries
 {
     /// <summary>
     /// Handles the check for the reset password auth context.

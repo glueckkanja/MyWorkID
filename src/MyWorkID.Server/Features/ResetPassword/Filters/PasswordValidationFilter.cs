@@ -1,8 +1,8 @@
-﻿using c4a8.MyWorkID.Server.Features.ResetPassword.Entities;
+﻿using MyWorkID.Server.Features.ResetPassword.Entities;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.RegularExpressions;
 
-namespace c4a8.MyWorkID.Server.Features.ResetPassword.Filters
+namespace MyWorkID.Server.Features.ResetPassword.Filters
 {
     /// <summary>
     /// Validates the password in a password reset request.

@@ -1,11 +1,11 @@
-﻿using c4a8.MyWorkID.Server.Options;
+﻿using MyWorkID.Server.Options;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using System.Net;
 using System.Net.Http.Json;
 
-namespace c4a8.MyWorkID.Server.IntegrationTests.Features.Configuration
+namespace MyWorkID.Server.IntegrationTests.Features.Configuration
 {
     public class FrontendConfigTests(TestApplicationFactory _testApplicationFactory) : IClassFixture<TestApplicationFactory>
     {

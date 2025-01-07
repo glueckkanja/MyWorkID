@@ -1,4 +1,4 @@
-﻿namespace c4a8.MyWorkID.Server.Features.ResetPassword.Entities
+﻿namespace MyWorkID.Server.Features.ResetPassword.Entities
 {
     /// <summary>
     /// Represents a request to reset a user's password.

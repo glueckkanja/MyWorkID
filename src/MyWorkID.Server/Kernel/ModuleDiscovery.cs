@@ -1,7 +1,7 @@
-﻿using c4a8.MyWorkID.Server.Common;
+﻿using MyWorkID.Server.Common;
 using System.Reflection;
 
-namespace c4a8.MyWorkID.Server.Kernel
+namespace MyWorkID.Server.Kernel
 {
     /// <summary>
     /// Provides methods for discovering and configuring modules.

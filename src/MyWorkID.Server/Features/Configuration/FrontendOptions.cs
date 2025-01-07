@@ -1,4 +1,4 @@
-﻿namespace c4a8.MyWorkID.Server.Features.Configuration
+﻿namespace MyWorkID.Server.Features.Configuration
 {
     /// <summary>
     /// Represents the configuration options for the frontend application.

@@ -1,4 +1,4 @@
-﻿namespace c4a8.MyWorkID.Server.Filters
+﻿namespace MyWorkID.Server.Filters
 {
     /// <summary>
     /// Endpoint filter that checks for the presence of a user ID in the user's claims.

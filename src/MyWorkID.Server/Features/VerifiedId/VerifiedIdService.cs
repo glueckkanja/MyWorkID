@@ -1,14 +1,14 @@
-﻿using c4a8.MyWorkID.Server.Features.VerifiedId.Entities;
-using c4a8.MyWorkID.Server.Features.VerifiedId.Exceptions;
-using c4a8.MyWorkID.Server.Features.VerifiedId.SignalR;
-using c4a8.MyWorkID.Server.Options;
+﻿using MyWorkID.Server.Features.VerifiedId.Entities;
+using MyWorkID.Server.Features.VerifiedId.Exceptions;
+using MyWorkID.Server.Features.VerifiedId.SignalR;
+using MyWorkID.Server.Options;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Options;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
 using System.Text.Json;
 
-namespace c4a8.MyWorkID.Server.Features.VerifiedId
+namespace MyWorkID.Server.Features.VerifiedId
 {
     /// <summary>
     /// Service for handling Verified ID operations.

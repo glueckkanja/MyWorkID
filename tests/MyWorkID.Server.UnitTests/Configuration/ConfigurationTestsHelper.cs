@@ -1,8 +1,8 @@
-﻿using c4a8.MyWorkID.Server.Options;
+﻿using MyWorkID.Server.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace c4a8.MyWorkID.Server.UnitTests.Configuration
+namespace MyWorkID.Server.UnitTests.Configuration
 {
     public static class ConfigurationTestsHelper
     {

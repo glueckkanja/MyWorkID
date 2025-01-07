@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace c4a8.MyWorkID.Server.Validation
+namespace MyWorkID.Server.Validation
 {
     public static class DataAnnotationsValidator
     {

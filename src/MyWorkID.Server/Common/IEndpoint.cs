@@ -1,4 +1,4 @@
-﻿namespace c4a8.MyWorkID.Server.Common
+﻿namespace MyWorkID.Server.Common
 {
     /// <summary>
     /// Defines a contract for mapping endpoints in the application.

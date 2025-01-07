@@ -1,4 +1,4 @@
-﻿namespace c4a8.MyWorkID.Server.Features.VerifiedId.Extensions
+﻿namespace MyWorkID.Server.Features.VerifiedId.Extensions
 {
     /// <summary>
     /// Provides extension methods for user-related operations.

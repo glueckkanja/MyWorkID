@@ -1,11 +1,11 @@
 ﻿using Azure.Core;
 using Azure.Identity;
-using c4a8.MyWorkID.Server.Common;
-using c4a8.MyWorkID.Server.Features.VerifiedId.HttpClients;
-using c4a8.MyWorkID.Server.Features.VerifiedId.SignalR;
-using c4a8.MyWorkID.Server.Options;
+using MyWorkID.Server.Common;
+using MyWorkID.Server.Features.VerifiedId.HttpClients;
+using MyWorkID.Server.Features.VerifiedId.SignalR;
+using MyWorkID.Server.Options;
 
-namespace c4a8.MyWorkID.Server.Features.VerifiedId
+namespace MyWorkID.Server.Features.VerifiedId
 {
     /// <summary>
     /// Module for configuring services related to Verified ID operations.

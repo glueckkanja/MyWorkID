@@ -1,4 +1,4 @@
-﻿namespace c4a8.MyWorkID.Server.Common
+﻿namespace MyWorkID.Server.Common
 {
     /// <summary>
     /// Provides extension methods for configuring OpenAPI documentation for various HTTP endpoints.

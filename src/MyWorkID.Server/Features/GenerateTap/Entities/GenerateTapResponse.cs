@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace c4a8.MyWorkID.Server.Features.GenerateTap.Entities
+namespace MyWorkID.Server.Features.GenerateTap.Entities
 {
     /// <summary>
     /// Represents the response containing the generated Temporary Access Pass (TAP).

@@ -1,13 +1,13 @@
 ﻿using AutoFixture;
-using c4a8.MyWorkID.Server.Features.VerifiedId.Entities;
-using c4a8.MyWorkID.Server.IntegrationTests.Authentication;
+using MyWorkID.Server.Features.VerifiedId.Entities;
+using MyWorkID.Server.IntegrationTests.Authentication;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using System.Net;
 using System.Net.Http.Json;
 
-namespace c4a8.MyWorkID.Server.IntegrationTests.Features.VerifiedId
+namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
 {
     public class ValidateIdentityTests : IClassFixture<TestApplicationFactory>
     {

@@ -1,6 +1,6 @@
-﻿using c4a8.MyWorkID.Server.Common;
-using c4a8.MyWorkID.Server.Features.VerifiedId.SignalR;
-using c4a8.MyWorkID.Server.IntegrationTests.Authentication;
+﻿using MyWorkID.Server.Common;
+using MyWorkID.Server.Features.VerifiedId.SignalR;
+using MyWorkID.Server.IntegrationTests.Authentication;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -13,7 +13,7 @@ using Microsoft.Graph;
 using Microsoft.Kiota.Abstractions;
 using NSubstitute;
 
-namespace c4a8.MyWorkID.Server.IntegrationTests
+namespace MyWorkID.Server.IntegrationTests
 {
     public class TestApplicationFactory : WebApplicationFactory<IApiAssemblyMarker>
     {

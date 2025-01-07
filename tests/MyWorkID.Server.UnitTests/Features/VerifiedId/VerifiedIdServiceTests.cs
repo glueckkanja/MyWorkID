@@ -1,6 +1,6 @@
-﻿using c4a8.MyWorkID.Server.Features.VerifiedId;
-using c4a8.MyWorkID.Server.Features.VerifiedId.SignalR;
-using c4a8.MyWorkID.Server.Options;
+﻿using MyWorkID.Server.Features.VerifiedId;
+using MyWorkID.Server.Features.VerifiedId.SignalR;
+using MyWorkID.Server.Options;
 using FluentAssertions;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -9,7 +9,7 @@ using Microsoft.Graph.Models;
 using Microsoft.Kiota.Abstractions;
 using NSubstitute;
 
-namespace c4a8.MyWorkID.Server.UnitTests.Features.VerifiedId
+namespace MyWorkID.Server.UnitTests.Features.VerifiedId
 {
     public class VerifiedIdServiceTests
     {

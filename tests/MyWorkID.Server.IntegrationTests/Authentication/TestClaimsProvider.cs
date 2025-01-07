@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
 
-namespace c4a8.MyWorkID.Server.IntegrationTests.Authentication
+namespace MyWorkID.Server.IntegrationTests.Authentication
 {
     public class TestClaimsProvider
     {

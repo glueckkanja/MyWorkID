@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace c4a8.MyWorkID.Server.Validation
+namespace MyWorkID.Server.Validation
 {
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
     public class GuidAttribute : ValidationAttribute

@@ -1,4 +1,4 @@
-﻿namespace c4a8.MyWorkID.Server.Features.VerifiedId.SignalR
+﻿namespace MyWorkID.Server.Features.VerifiedId.SignalR
 {
     /// <summary>
     /// Defines the SignalR hub interface for Verified ID operations.

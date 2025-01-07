@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace c4a8.MyWorkID.Server.Features.VerifiedId.HttpClients
+namespace MyWorkID.Server.Features.VerifiedId.HttpClients
 {
     /// <summary>
     /// A message handler that adds authentication headers to HTTP requests for Verified ID operations.

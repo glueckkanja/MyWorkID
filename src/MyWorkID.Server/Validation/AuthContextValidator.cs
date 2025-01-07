@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace c4a8.MyWorkID.Server.Validation
+namespace MyWorkID.Server.Validation
 {
     public static partial class AuthContextValidator
     {

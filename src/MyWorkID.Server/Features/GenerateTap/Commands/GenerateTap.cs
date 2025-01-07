@@ -1,13 +1,13 @@
-﻿using c4a8.MyWorkID.Server.Common;
-using c4a8.MyWorkID.Server.Features.GenerateTap.Entities;
-using c4a8.MyWorkID.Server.Filters;
+﻿using MyWorkID.Server.Common;
+using MyWorkID.Server.Features.GenerateTap.Entities;
+using MyWorkID.Server.Filters;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
 using Microsoft.Identity.Web;
 using System.Security.Claims;
 
-namespace c4a8.MyWorkID.Server.Features.GenerateTap.Commands
+namespace MyWorkID.Server.Features.GenerateTap.Commands
 {
     /// <summary>
     /// Handles the generation of a Temporary Access Pass (TAP) for a user.

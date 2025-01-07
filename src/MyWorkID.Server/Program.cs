@@ -1,7 +1,7 @@
-using c4a8.MyWorkID.Server;
-using c4a8.MyWorkID.Server.Common;
-using c4a8.MyWorkID.Server.Features.VerifiedId.SignalR;
-using c4a8.MyWorkID.Server.Kernel;
+using MyWorkID.Server;
+using MyWorkID.Server.Common;
+using MyWorkID.Server.Features.VerifiedId.SignalR;
+using MyWorkID.Server.Kernel;
 using Microsoft.AspNetCore.Http.Json;
 using System.Reflection;
 using System.Text.Json;

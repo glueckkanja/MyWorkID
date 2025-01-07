@@ -1,4 +1,4 @@
-﻿namespace c4a8.MyWorkID.Server.Common
+﻿namespace MyWorkID.Server.Common
 {
     public static class TestConfiguration
     {

@@ -1,9 +1,9 @@
-﻿using c4a8.MyWorkID.Server.Options;
-using c4a8.MyWorkID.Server.Validation;
+﻿using MyWorkID.Server.Options;
+using MyWorkID.Server.Validation;
 using Microsoft.Extensions.Options;
 using System.ComponentModel.DataAnnotations;
 
-namespace c4a8.MyWorkID.Server.Filters
+namespace MyWorkID.Server.Filters
 {
     /// <summary>
     /// Endpoint filter to check if app is configured with for VerifiedId function.

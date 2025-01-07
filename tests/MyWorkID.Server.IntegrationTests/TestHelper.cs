@@ -1,10 +1,10 @@
-﻿using c4a8.MyWorkID.Server.Features.VerifiedId.SignalR;
-using c4a8.MyWorkID.Server.IntegrationTests.Authentication;
+﻿using MyWorkID.Server.Features.VerifiedId.SignalR;
+using MyWorkID.Server.IntegrationTests.Authentication;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Kiota.Abstractions;
 
-namespace c4a8.MyWorkID.Server.IntegrationTests
+namespace MyWorkID.Server.IntegrationTests
 {
     public static class TestHelper
     {

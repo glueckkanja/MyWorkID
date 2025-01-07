@@ -1,4 +1,4 @@
-﻿using c4a8.MyWorkID.Server.IntegrationTests.Authentication;
+﻿using MyWorkID.Server.IntegrationTests.Authentication;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Graph.Models;
@@ -10,7 +10,7 @@ using NSubstitute.ExceptionExtensions;
 using System.Net;
 using System.Net.Http.Json;
 
-namespace c4a8.MyWorkID.Server.IntegrationTests.Features.UserRiskState
+namespace MyWorkID.Server.IntegrationTests.Features.UserRiskState
 {
     public class GetUserRiskStateTests : IClassFixture<TestApplicationFactory>
     {

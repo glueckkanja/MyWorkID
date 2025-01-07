@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace c4a8.MyWorkID.Server.Options
+namespace MyWorkID.Server.Options
 {
     /// <summary>
     /// Configuration options for Verified ID operations.

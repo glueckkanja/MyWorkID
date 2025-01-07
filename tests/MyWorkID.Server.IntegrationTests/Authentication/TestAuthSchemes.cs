@@ -1,4 +1,4 @@
-﻿namespace c4a8.MyWorkID.Server.IntegrationTests.Authentication
+﻿namespace MyWorkID.Server.IntegrationTests.Authentication
 {
     public static class TestAuthSchemes
     {

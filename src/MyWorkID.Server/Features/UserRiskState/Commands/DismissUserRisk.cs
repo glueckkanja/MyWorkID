@@ -1,11 +1,11 @@
-﻿using c4a8.MyWorkID.Server.Common;
-using c4a8.MyWorkID.Server.Filters;
+﻿using MyWorkID.Server.Common;
+using MyWorkID.Server.Filters;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Graph;
 using Microsoft.Identity.Web;
 using System.Security.Claims;
 
-namespace c4a8.MyWorkID.Server.Features.UserRiskState.Commands
+namespace MyWorkID.Server.Features.UserRiskState.Commands
 {
     /// <summary>
     /// Handles the dismissal of user risk state.

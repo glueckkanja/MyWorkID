@@ -1,6 +1,6 @@
 ﻿using Microsoft.Graph.Models;
 
-namespace c4a8.MyWorkID.Server.Features.UserRiskState.Entities
+namespace MyWorkID.Server.Features.UserRiskState.Entities
 {
     /// <summary>
     /// Represents the response containing the user's risk state and risk level.

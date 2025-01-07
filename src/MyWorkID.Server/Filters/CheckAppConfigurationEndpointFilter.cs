@@ -1,9 +1,9 @@
-﻿using c4a8.MyWorkID.Server.Common;
-using c4a8.MyWorkID.Server.Options;
-using c4a8.MyWorkID.Server.Validation;
+﻿using MyWorkID.Server.Common;
+using MyWorkID.Server.Options;
+using MyWorkID.Server.Validation;
 using Microsoft.Extensions.Options;
 
-namespace c4a8.MyWorkID.Server.Filters
+namespace MyWorkID.Server.Filters
 {
     public class CheckAppConfigurationEndpointFilter : IEndpointFilter
     {
