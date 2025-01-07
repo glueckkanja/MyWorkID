@@ -8,7 +8,7 @@ namespace c4a8.MyWorkID.Server.UnitTests.Configuration
     {
         [Theory]
         [MemberData(nameof(GetTestConfigurations))]
-        public void ValidateFrontendConfigOptions(KeyValuePair<string, string?>[] testConfiguration, Type expectedExceptionType, string expectedErrorMessage)
+        public void ValidateFrontendConfigOptions(KeyValuePair<string, string?>[] testConfiguration, Type? expectedExceptionType, string? expectedErrorMessage)
         {
             ServiceProvider serviceProvider = ConfigurationTestsHelper
                 .ConfigureOptions<FrontendOptions>(testConfiguration, FrontendOptions.SectionName);
@@ -21,7 +21,7 @@ namespace c4a8.MyWorkID.Server.UnitTests.Configuration
                 });
 
                 Assert.Contains("DataAnnotation validation failed", exception.Message);
-                Assert.Contains(expectedErrorMessage, exception.Message);
+                Assert.Contains(expectedErrorMessage!, exception.Message);
             }
             else
             {
@@ -30,87 +30,77 @@ namespace c4a8.MyWorkID.Server.UnitTests.Configuration
             }
         }
 
-        public static IEnumerable<object[]> GetTestConfigurations()
+        public static TheoryData<KeyValuePair<string, string?>[], Type, string> GetTestConfigurations()
         {
-            yield return new object[]
+            return new TheoryData<KeyValuePair<string, string?>[], Type, string>
             {
-            new KeyValuePair<string, string?>[]
-            {
-                new KeyValuePair<string, string?>("Frontend:TenantId", Guid.NewGuid().ToString()),
-                new KeyValuePair<string, string?>("Frontend:BackendClientId", Guid.NewGuid().ToString())
-            },
-            typeof(OptionsValidationException),
-            "The field 'FrontendClientId' must be a valid GUID."
-            };
-
-            yield return new object[]
-            {
-            new KeyValuePair<string, string?>[]
-            {
-                new KeyValuePair<string, string?>("Frontend:FrontendClientId", "InvalidValue"),
-                new KeyValuePair<string, string?>("Frontend:TenantId", Guid.NewGuid().ToString()),
-                new KeyValuePair<string, string?>("Frontend:BackendClientId", Guid.NewGuid().ToString())
-            },
-            typeof(OptionsValidationException),
-            "The field 'FrontendClientId' must be a valid GUID."
-            };
-
-            yield return new object[]
-            {
-            new KeyValuePair<string, string?>[]
-            {
-                new KeyValuePair<string, string?>("Frontend:FrontendClientId", Guid.NewGuid().ToString()),
-                new KeyValuePair<string, string?>("Frontend:BackendClientId", Guid.NewGuid().ToString())
-            },
-            typeof(OptionsValidationException),
-            "The field 'TenantId' must be a valid GUID."
-            };
-
-            yield return new object[]
-            {
-            new KeyValuePair<string, string?>[]
-            {
-                new KeyValuePair<string, string?>("Frontend:FrontendClientId", Guid.NewGuid().ToString()),
-                new KeyValuePair<string, string?>("Frontend:TenantId", "InvalidValue"),
-                new KeyValuePair<string, string?>("Frontend:BackendClientId", Guid.NewGuid().ToString())
-            },
-            typeof(OptionsValidationException),
-            "The field 'TenantId' must be a valid GUID."
-            };
-
-            yield return new object[]
-            {
-            new KeyValuePair<string, string?>[]
-            {
-                new KeyValuePair<string, string?>("Frontend:TenantId", Guid.NewGuid().ToString()),
-                new KeyValuePair<string, string?>("Frontend:FrontendClientId", Guid.NewGuid().ToString())
-            },
-            typeof(OptionsValidationException),
-            "The field 'BackendClientId' must be a valid GUID."
-            };
-
-            yield return new object[]
-            {
-            new KeyValuePair<string, string?>[]
-            {
-                new KeyValuePair<string, string?>("Frontend:FrontendClientId", Guid.NewGuid().ToString()),
-                new KeyValuePair<string, string?>("Frontend:TenantId", Guid.NewGuid().ToString()),
-                new KeyValuePair<string, string?>("Frontend:BackendClientId", "InvalidValue")
-            },
-            typeof(OptionsValidationException),
-            "The field 'BackendClientId' must be a valid GUID."
-            };
-
-            yield return new object[]
-            {
-            new KeyValuePair<string, string?>[]
-            {
-                new KeyValuePair<string, string?>("Frontend:FrontendClientId", Guid.NewGuid().ToString()),
-                new KeyValuePair<string, string?>("Frontend:TenantId", Guid.NewGuid().ToString()),
-                new KeyValuePair<string, string?>("Frontend:BackendClientId", Guid.NewGuid().ToString())
-            },
-            null,
-            null
+                {
+                    new KeyValuePair<string, string?>[]
+                    {
+                        new KeyValuePair<string, string?>("Frontend:TenantId", Guid.NewGuid().ToString()),
+                        new KeyValuePair<string, string?>("Frontend:BackendClientId", Guid.NewGuid().ToString())
+                    },
+                            typeof(OptionsValidationException),
+                            "The field 'FrontendClientId' must be a valid GUID."
+                        },
+                        {
+                            new KeyValuePair<string, string?>[]
+                    {
+                        new KeyValuePair<string, string?>("Frontend:FrontendClientId", "InvalidValue"),
+                        new KeyValuePair<string, string?>("Frontend:TenantId", Guid.NewGuid().ToString()),
+                        new KeyValuePair<string, string?>("Frontend:BackendClientId", Guid.NewGuid().ToString())
+                    },
+                            typeof(OptionsValidationException),
+                            "The field 'FrontendClientId' must be a valid GUID."
+                        },
+                        {
+                            new KeyValuePair<string, string?>[]
+                    {
+                        new KeyValuePair<string, string?>("Frontend:FrontendClientId", Guid.NewGuid().ToString()),
+                        new KeyValuePair<string, string?>("Frontend:BackendClientId", Guid.NewGuid().ToString())
+                    },
+                            typeof(OptionsValidationException),
+                            "The field 'TenantId' must be a valid GUID."
+                        },
+                        {
+                            new KeyValuePair<string, string?>[]
+                    {
+                        new KeyValuePair<string, string?>("Frontend:FrontendClientId", Guid.NewGuid().ToString()),
+                        new KeyValuePair<string, string?>("Frontend:TenantId", "InvalidValue"),
+                        new KeyValuePair<string, string?>("Frontend:BackendClientId", Guid.NewGuid().ToString())
+                    },
+                            typeof(OptionsValidationException),
+                            "The field 'TenantId' must be a valid GUID."
+                        },
+                        {
+                            new KeyValuePair<string, string?>[]
+                    {
+                        new KeyValuePair<string, string?>("Frontend:TenantId", Guid.NewGuid().ToString()),
+                        new KeyValuePair<string, string?>("Frontend:FrontendClientId", Guid.NewGuid().ToString())
+                    },
+                            typeof(OptionsValidationException),
+                            "The field 'BackendClientId' must be a valid GUID."
+                        },
+                        {
+                            new KeyValuePair<string, string?>[]
+                    {
+                        new KeyValuePair<string, string?>("Frontend:FrontendClientId", Guid.NewGuid().ToString()),
+                        new KeyValuePair<string, string?>("Frontend:TenantId", Guid.NewGuid().ToString()),
+                        new KeyValuePair<string, string?>("Frontend:BackendClientId", "InvalidValue")
+                    },
+                            typeof(OptionsValidationException),
+                            "The field 'BackendClientId' must be a valid GUID."
+                        },
+                        {
+                            new KeyValuePair<string, string?>[]
+                    {
+                        new KeyValuePair<string, string?>("Frontend:FrontendClientId", Guid.NewGuid().ToString()),
+                        new KeyValuePair<string, string?>("Frontend:TenantId", Guid.NewGuid().ToString()),
+                        new KeyValuePair<string, string?>("Frontend:BackendClientId", Guid.NewGuid().ToString())
+                    },
+                    null,
+                    null
+                }
             };
         }
     }

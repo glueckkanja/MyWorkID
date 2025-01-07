@@ -8,7 +8,7 @@ namespace c4a8.MyWorkID.Server.UnitTests.Configuration
     {
         [Theory]
         [MemberData(nameof(GetTestConfigurations))]
-        public void ValidateAzureAdOptions(KeyValuePair<string, string?>[] testConfiguration, Type expectedExceptionType, string expectedErrorMessage)
+        public void ValidateAzureAdOptions(KeyValuePair<string, string?>[] testConfiguration, Type? expectedExceptionType, string? expectedErrorMessage)
         {
             ServiceProvider serviceProvider = ConfigurationTestsHelper
                 .ConfigureOptions<AzureAdOptions>(testConfiguration, AzureAdOptions.SectionName);
@@ -21,7 +21,7 @@ namespace c4a8.MyWorkID.Server.UnitTests.Configuration
                 });
 
                 Assert.Contains("DataAnnotation validation failed", exception.Message);
-                Assert.Contains(expectedErrorMessage, exception.Message);
+                Assert.Contains(expectedErrorMessage!, exception.Message);
             }
             else
             {
@@ -30,75 +30,67 @@ namespace c4a8.MyWorkID.Server.UnitTests.Configuration
             }
         }
 
-        public static IEnumerable<object[]> GetTestConfigurations()
+        public static TheoryData<KeyValuePair<string, string?>[], Type, string> GetTestConfigurations()
         {
-            yield return new object[]
+            return new TheoryData<KeyValuePair<string, string?>[], Type, string>
             {
-            new KeyValuePair<string, string?>[]
-            {
-                new KeyValuePair<string, string?>("AzureAd:TenantId", Guid.NewGuid().ToString()),
-                new KeyValuePair<string, string?>("AzureAd:ClientId", Guid.NewGuid().ToString())
-            },
-            typeof(OptionsValidationException),
-            "The Instance field is required."
-            };
-
-            yield return new object[]
-            {
-            new KeyValuePair<string, string?>[]
-            {
-                new KeyValuePair<string, string?>("AzureAd:Instance", "SomeValue"),
-                new KeyValuePair<string, string?>("AzureAd:ClientId", Guid.NewGuid().ToString())
-            },
-            typeof(OptionsValidationException),
-            "The field 'TenantId' must be a valid GUID."
-            };
-
-            yield return new object[]
-            {
-            new KeyValuePair<string, string?>[]
-            {
-                new KeyValuePair<string, string?>("AzureAd:Instance", "SomeValue"),
-                new KeyValuePair<string, string?>("AzureAd:TenantId", "InvalidValue"),
-                new KeyValuePair<string, string?>("AzureAd:ClientId", Guid.NewGuid().ToString())
-            },
-            typeof(OptionsValidationException),
-            "The field 'TenantId' must be a valid GUID."
-            };
-
-            yield return new object[]
-            {
-            new KeyValuePair<string, string?>[]
-            {
-                new KeyValuePair<string, string?>("AzureAd:Instance", "SomeValue"),
-                new KeyValuePair<string, string?>("AzureAd:TenantId", Guid.NewGuid().ToString())
-            },
-            typeof(OptionsValidationException),
-            "The field 'ClientId' must be a valid GUID."
-            };
-
-            yield return new object[]
-            {
-            new KeyValuePair<string, string?>[]
-            {
-                new KeyValuePair<string, string?>("AzureAd:Instance", "SomeValue"),
-                new KeyValuePair<string, string?>("AzureAd:TenantId", Guid.NewGuid().ToString()),
-                new KeyValuePair<string, string?>("AzureAd:ClientId", "InvalidValue")
-            },
-            typeof(OptionsValidationException),
-            "The field 'ClientId' must be a valid GUID."
-            };
-
-            yield return new object[]
-            {
-            new KeyValuePair<string, string?>[]
-            {
-                new KeyValuePair<string, string?>("AzureAd:Instance", "SomeValue"),
-                new KeyValuePair<string, string?>("AzureAd:TenantId", Guid.NewGuid().ToString()),
-                new KeyValuePair<string, string?>("AzureAd:ClientId", Guid.NewGuid().ToString())
-            },
-            null,
-            null
+                {
+                new KeyValuePair<string, string?>[]
+                {
+                    new KeyValuePair<string, string?>("AzureAd:TenantId", Guid.NewGuid().ToString()),
+                    new KeyValuePair<string, string?>("AzureAd:ClientId", Guid.NewGuid().ToString())
+                },
+                typeof(OptionsValidationException),
+                "The Instance field is required."
+                },
+                {
+                new KeyValuePair<string, string?>[]
+                {
+                    new KeyValuePair<string, string?>("AzureAd:Instance", "SomeValue"),
+                    new KeyValuePair<string, string?>("AzureAd:ClientId", Guid.NewGuid().ToString())
+                },
+                typeof(OptionsValidationException),
+                "The field 'TenantId' must be a valid GUID."
+                },
+                {
+                new KeyValuePair<string, string?>[]
+                {
+                    new KeyValuePair<string, string?>("AzureAd:Instance", "SomeValue"),
+                    new KeyValuePair<string, string?>("AzureAd:TenantId", "InvalidValue"),
+                    new KeyValuePair<string, string?>("AzureAd:ClientId", Guid.NewGuid().ToString())
+                },
+                typeof(OptionsValidationException),
+                "The field 'TenantId' must be a valid GUID."
+                },
+                {
+                new KeyValuePair<string, string?>[]
+                {
+                    new KeyValuePair<string, string?>("AzureAd:Instance", "SomeValue"),
+                    new KeyValuePair<string, string?>("AzureAd:TenantId", Guid.NewGuid().ToString())
+                },
+                typeof(OptionsValidationException),
+                "The field 'ClientId' must be a valid GUID."
+                },
+                {
+                new KeyValuePair<string, string?>[]
+                {
+                    new KeyValuePair<string, string?>("AzureAd:Instance", "SomeValue"),
+                    new KeyValuePair<string, string?>("AzureAd:TenantId", Guid.NewGuid().ToString()),
+                    new KeyValuePair<string, string?>("AzureAd:ClientId", "InvalidValue")
+                },
+                typeof(OptionsValidationException),
+                "The field 'ClientId' must be a valid GUID."
+                },
+                {
+                new KeyValuePair<string, string?>[]
+                {
+                    new KeyValuePair<string, string?>("AzureAd:Instance", "SomeValue"),
+                    new KeyValuePair<string, string?>("AzureAd:TenantId", Guid.NewGuid().ToString()),
+                    new KeyValuePair<string, string?>("AzureAd:ClientId", Guid.NewGuid().ToString())
+                },
+                null,
+                null
+                }
             };
         }
     }
