@@ -1,7 +1,7 @@
-﻿using c4a8.MyWorkID.Server.Exceptions;
-using c4a8.MyWorkID.Server.Features.VerifiedId.Entities;
+﻿using c4a8.MyWorkID.Server.Features.VerifiedId.Entities;
 using c4a8.MyWorkID.Server.Features.VerifiedId.Exceptions;
 using c4a8.MyWorkID.Server.Features.VerifiedId.SignalR;
+using c4a8.MyWorkID.Server.Options;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Options;
 using Microsoft.Graph;
@@ -56,7 +56,7 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId
         public async Task<CreatePresentationResponse?> CreatePresentationRequest(string userId)
         {
             RequestRegistration requestRegistration = new(clientName: "MyWorkID", purpose: "Verify your identity");
-            string jwtSigningKey = _verifiedIdOptions.JwtSigningKey ?? throw new ConfigurationMissingException(nameof(_verifiedIdOptions.JwtSigningKey), "JwtSigningKey is missing in configuration.");
+            var jwtSigningKey = _verifiedIdOptions.JwtSigningKey!;
             Callback callback = new(
                 url: $"{_verifiedIdOptions.BackendUrl}/api/me/verifiedid/callback",
                 state: userId,
@@ -64,7 +64,7 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId
 
             FaceCheck faceCheck = new(sourcePhotoClaimName: "photo", matchConfidenceThreshold: 50);
 
-            Validation validation = new(allowRevoked: false, validateLinkedDomain: true, faceCheck: faceCheck);
+            Entities.Validation validation = new(allowRevoked: false, validateLinkedDomain: true, faceCheck: faceCheck);
 
             List<RequestCredential> credentialList = new()
                 {
@@ -75,7 +75,7 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId
                         configuration: new Entities.Configuration(validation))
                 };
 
-            CreatePresentationRequest request = new CreatePresentationRequest(
+            var request = new CreatePresentationRequest(
                 authority: _verifiedIdOptions.DecentralizedIdentifier!,
                 registration: requestRegistration,
                 callback: callback,
@@ -93,7 +93,7 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId
             {
                 if (response != null)
                 {
-                    string responseContent = await response.Content.ReadAsStringAsync();
+                    var responseContent = await response.Content.ReadAsStringAsync();
                     _logger.LogError(e, "Failed to create presentation request. Response: {ResponseContent}", responseContent);
                 }
                 else
@@ -102,7 +102,7 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId
                 }
                 throw new CreatePresentationException();
             }
-            CreatePresentationResponse? createPresentationResponse = await response.Content.ReadFromJsonAsync<CreatePresentationResponse>();
+            var createPresentationResponse = await response.Content.ReadFromJsonAsync<CreatePresentationResponse>();
             if (createPresentationResponse == null)
             {
                 _logger.LogError("Failed to create presentation request. Parsed response is null.");
@@ -117,7 +117,7 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId
         /// <param name="userId">The ID of the user.</param>
         public async Task HideQrCodeForUser(string userId)
         {
-            if (!_verifiedIdOptions.DisableQrCodeHide && _verifiedIdSignalRRepository.TryGetConnections(userId, out HashSet<string>? connections))
+            if (!_verifiedIdOptions.DisableQrCodeHide && _verifiedIdSignalRRepository.TryGetConnections(userId, out var connections))
             {
                 await _hubContext.Clients.Clients(connections).HideQrCode();
             }
@@ -132,7 +132,7 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId
         public async Task<CreatePresentationRequestCallback> ParseCreatePresentationRequestCallback(HttpContext context)
         {
             using StreamReader streamReader = new StreamReader(context.Request.Body);
-            string callbackBody = await streamReader.ReadToEndAsync();
+            var callbackBody = await streamReader.ReadToEndAsync();
 
             CreatePresentationRequestCallback? parsedBody = null;
 
@@ -179,11 +179,6 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId
                 if (!string.Equals(callbackBody.State, userId, StringComparison.OrdinalIgnoreCase))
                 {
                     throw new PresentationCallbackException($"Invalid state. Expected {userId} but state is {callbackBody.State}.");
-                }
-
-                if (string.IsNullOrWhiteSpace(_verifiedIdOptions.TargetSecurityAttributeSet) || string.IsNullOrWhiteSpace(_verifiedIdOptions.TargetSecurityAttribute))
-                {
-                    return;
                 }
 
                 User requestBody = CreateSetTargetSecurityAttributeRequestBody(DateTime.UtcNow.ToString("O"));

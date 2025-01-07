@@ -1,4 +1,4 @@
-﻿using c4a8.MyWorkID.Server.Features.Configuration;
+﻿using c4a8.MyWorkID.Server.Options;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;

@@ -19,10 +19,11 @@ namespace c4a8.MyWorkID.Server.Features.UserRiskState.Commands
         public static void MapEndpoint(IEndpointRouteBuilder endpoints)
         {
             endpoints.MapPutWithOpenApi("api/me/riskstate/dismiss", HandleAsync)
-                .WithTags(Strings.USERRISKSTATE_OPENAPI_TAG)
                 .RequireAuthorization()
+                .AddEndpointFilter<CheckDismissUserRiskAppConfigurationEndpointFilter>()
                 .AddEndpointFilter<DismissUserRiskAuthContextEndpointFilter>()
-                .AddEndpointFilter<CheckForObjectIdEndpointFilter>();
+                .AddEndpointFilter<CheckForObjectIdEndpointFilter>()
+                .WithTags(Strings.USERRISKSTATE_OPENAPI_TAG);
         }
 
         /// <summary>
