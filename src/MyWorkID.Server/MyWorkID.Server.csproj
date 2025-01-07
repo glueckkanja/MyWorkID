@@ -4,7 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <SpaRoot>..\c4a8.MyWorkID.client</SpaRoot>
+    <SpaRoot>..\MyWorkID.Client</SpaRoot>
     <SpaProxyLaunchCommand>npm run dev</SpaProxyLaunchCommand>
     <SpaProxyServerUrl>https://localhost:5173</SpaProxyServerUrl>
     <UserSecretsId>60089614-5a26-4ab6-949f-e09ab4ba5986</UserSecretsId>
@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\c4a8.MyWorkID.client\c4a8.MyWorkID.client.esproj">
+    <ProjectReference Include="..\MyWorkID.Client\MyWorkID.Client.esproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>
