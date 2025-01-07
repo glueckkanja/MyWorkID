@@ -20,7 +20,7 @@ namespace c4a8.MyWorkID.Server
         {
             VerifiedIdOptions verifiedIdConfig = new();
             configuration.GetSection("VerifiedId").Bind(verifiedIdConfig);
-            var signingByte = Encoding.UTF8.GetBytes(verifiedIdConfig.JwtSigningKey ?? Strings.JWT_SIGNING_KEY_DEFAULT);
+            var signingByte = Encoding.UTF8.GetBytes(verifiedIdConfig.JwtSigningKey!);
 
             // Add services to the container.
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

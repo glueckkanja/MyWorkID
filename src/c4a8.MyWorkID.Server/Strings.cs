@@ -17,7 +17,6 @@
         public const string PASSWORD_VALIDATION_MISSING_ERROR = "Password is required.";
         public const string PASSWORD_VALIDATION_LENGTH_ERROR = "Password must be between 8 and 255 characters.";
         public const string PASSWORD_VALIDATION_SYMBOLS_ERROR = "Please use characters from at least 3 of these groups: lowercase, uppercase, digits, special symbols.";
-        public const string JWT_SIGNING_KEY_DEFAULT = "GodDamnitYouForgottToSpecifyASigningKey";
         public const string ERROR_INVALID_BODY = "Parsed response resulted in error or null object.";
         public const string ERROR_MISSING_OR_INVALID_SETTINGS_GENERATE_TAP = "Missing or invalid AppFunctions:GenerateTap auth context setting.";
         public const string ERROR_MISSING_OR_INVALID_SETTINGS_DISMISS_USER_RISK = "Missing or invalid AppFunctions:DismissUserRisk auth context setting.";

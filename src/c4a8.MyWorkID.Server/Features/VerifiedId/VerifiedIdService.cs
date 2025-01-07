@@ -56,7 +56,7 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId
         public async Task<CreatePresentationResponse?> CreatePresentationRequest(string userId)
         {
             RequestRegistration requestRegistration = new(clientName: "MyWorkID", purpose: "Verify your identity");
-            var jwtSigningKey = _verifiedIdOptions.JwtSigningKey ?? Strings.JWT_SIGNING_KEY_DEFAULT;
+            var jwtSigningKey = _verifiedIdOptions.JwtSigningKey!;
             Callback callback = new(
                 url: $"{_verifiedIdOptions.BackendUrl}/api/me/verifiedid/callback",
                 state: userId,
