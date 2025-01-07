@@ -1,0 +1,52 @@
+name: Build myWorkId Binaries
+run-name: Build myWorkId Binaries
+
+concurrency:
+  group: "Build myWorkId Binaries"
+  cancel-in-progress: true
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "src/**"
+    branches:
+      - "main"
+
+env:
+  PROJECT_ROOT_DIRECTORY: "./"
+  DOTNET_VERSION: "8.0.x"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{env.PROJECT_ROOT_DIRECTORY}}
+    steps:
+      - uses: actions/checkout@v4
+
+      # Load NuGetCache
+      - name: Restore NuGet Cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles(env.PROJECT_ROOT_DIRECTORY) }}
+
+      # Setup .NET Core SDK
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Build with dotnet
+        run: dotnet build --configuration Release
+
+      - name: dotnet publish
+        run: dotnet publish --configuration Release --no-build --output ${{env.PROJECT_ROOT_DIRECTORY}}/publish
+
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v4
+        with:
+          name: binaries_${{github.sha}}
+          path: ${{env.PROJECT_ROOT_DIRECTORY}}/publish

@@ -10,10 +10,10 @@
         public const string USERRISKSTATE_OPENAPI_TAG = "Risk State";
         public const string VERIFIEDID_OPENAPI_TAG = "Verified Id";
         public const string RESET_PASSWORD_OPENAPI_TAG = "Reset Password";
-        public const string CREATE_TAP_ROLE = "MyAccount.VNext.CreateTAP";
-        public const string RESET_PASSWORD_ROLE = "MyAccount.VNext.PasswordReset";
-        public const string DISMISS_USER_RISK_ROLE = "MyAccount.VNext.DismissUserRisk";
-        public const string VALIDATE_IDENTITY_ROLE = "MyAccount.VNext.ValidateIdentity";
+        public const string CREATE_TAP_ROLE = "MyWorkID.CreateTAP";
+        public const string RESET_PASSWORD_ROLE = "MyWorkID.PasswordReset";
+        public const string DISMISS_USER_RISK_ROLE = "MyWorkID.DismissUserRisk";
+        public const string VALIDATE_IDENTITY_ROLE = "MyWorkID.ValidateIdentity";
         public const string PASSWORD_VALIDATION_MISSING_ERROR = "Password is required.";
         public const string PASSWORD_VALIDATION_LENGTH_ERROR = "Password must be between 8 and 255 characters.";
         public const string PASSWORD_VALIDATION_SYMBOLS_ERROR = "Please use characters from at least 3 of these groups: lowercase, uppercase, digits, special symbols.";

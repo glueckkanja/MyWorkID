@@ -9,7 +9,7 @@ const baseFolder =
   env.APPDATA !== undefined && env.APPDATA !== ""
     ? `${env.APPDATA}/ASP.NET/https`
     : `${env.HOME}/.aspnet/https`;
-    
+
 fs.mkdirSync(baseFolder, { recursive: true });
 
 const certificateName = "c4a8.MyWorkID.Client";
@@ -37,11 +37,15 @@ if (!fs.existsSync(certFilePath) || !fs.existsSync(keyFilePath)) {
   }
 }
 
-const target = env.ASPNETCORE_HTTPS_PORT
-  ? `https://localhost:${env.ASPNETCORE_HTTPS_PORT}`
-  : env.ASPNETCORE_URLS
-  ? env.ASPNETCORE_URLS.split(";")[0]
-  : "https://localhost:7266";
+let target: string;
+
+if (env.ASPNETCORE_HTTPS_PORT) {
+  target = `https://localhost:${env.ASPNETCORE_HTTPS_PORT}`;
+} else if (env.ASPNETCORE_URLS) {
+  target = env.ASPNETCORE_URLS.split(";")[0];
+} else {
+  target = "https://localhost:7266";
+}
 
 const targetWebSocket = target
   .replace("https://", "wss://")
