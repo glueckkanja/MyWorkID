@@ -1,7 +1,7 @@
 ﻿using c4a8.MyWorkID.Server.Common;
 using c4a8.MyWorkID.Server.Options;
+using c4a8.MyWorkID.Server.Validation;
 using Microsoft.Extensions.Options;
-using System.Text.RegularExpressions;
 
 namespace c4a8.MyWorkID.Server.Filters
 {
@@ -18,25 +18,24 @@ namespace c4a8.MyWorkID.Server.Filters
 
         public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
         {
-            var regex = new Regex(@"^c([1-9]|[1-9][0-9])$");
             switch (_appFunction)
             {
                 case AppFunctions.DismissUserRisk:
-                    if (string.IsNullOrEmpty(_appFunctionsOptions.DismissUserRisk) || !regex.IsMatch(_appFunctionsOptions.DismissUserRisk))
+                    if (string.IsNullOrEmpty(_appFunctionsOptions.DismissUserRisk) || !AuthContextValidator.IsValidAuthContext(_appFunctionsOptions.DismissUserRisk))
                     {
                         return Results.Problem(Strings.ERROR_MISSING_OR_INVALID_SETTINGS_DISMISS_USER_RISK, statusCode: StatusCodes.Status500InternalServerError);
                     }
                     break;
 
                 case AppFunctions.GenerateTap:
-                    if (string.IsNullOrEmpty(_appFunctionsOptions.GenerateTap) || !regex.IsMatch(_appFunctionsOptions.GenerateTap))
+                    if (string.IsNullOrEmpty(_appFunctionsOptions.GenerateTap) || !AuthContextValidator.IsValidAuthContext(_appFunctionsOptions.GenerateTap))
                     {
                         return Results.Problem(Strings.ERROR_MISSING_OR_INVALID_SETTINGS_GENERATE_TAP, statusCode: StatusCodes.Status500InternalServerError);
                     }
                     break;
 
                 case AppFunctions.ResetPassword:
-                    if (string.IsNullOrEmpty(_appFunctionsOptions.ResetPassword) || !regex.IsMatch(_appFunctionsOptions.ResetPassword))
+                    if (string.IsNullOrEmpty(_appFunctionsOptions.ResetPassword) || !AuthContextValidator.IsValidAuthContext(_appFunctionsOptions.ResetPassword))
                     {
                         return Results.Problem(Strings.ERROR_MISSING_OR_INVALID_SETTINGS_RESET_PASSWORD, statusCode: StatusCodes.Status500InternalServerError);
                     }
