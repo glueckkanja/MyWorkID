@@ -1,6 +1,0 @@
-@c4a8.MyWorkID.Server_HostAddress = http://localhost:5249
-
-GET {{c4a8.MyWorkID.Server_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
