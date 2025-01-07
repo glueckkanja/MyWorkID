@@ -1,5 +1,7 @@
 ﻿using c4a8.MyWorkID.Server.Options;
+using c4a8.MyWorkID.Server.Validation;
 using Microsoft.Extensions.Options;
+using System.ComponentModel.DataAnnotations;
 
 namespace c4a8.MyWorkID.Server.Filters
 {
@@ -17,15 +19,11 @@ namespace c4a8.MyWorkID.Server.Filters
 
         public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
         {
-            if (_verifiedIdOptions is null ||
-                string.IsNullOrWhiteSpace(_verifiedIdOptions.BackendUrl) ||
-                string.IsNullOrWhiteSpace(_verifiedIdOptions.CreatePresentationRequestUri) ||
-                string.IsNullOrWhiteSpace(_verifiedIdOptions.DecentralizedIdentifier) ||
-                string.IsNullOrWhiteSpace(_verifiedIdOptions.JwtSigningKey) ||
-                string.IsNullOrWhiteSpace(_verifiedIdOptions.TargetSecurityAttribute) ||
-                string.IsNullOrWhiteSpace(_verifiedIdOptions.TargetSecurityAttributeSet))
+            IList<ValidationResult> results = DataAnnotationsValidator.Validate(_verifiedIdOptions);
+            if (results.Count > 0)
             {
-                return Results.Problem(Strings.ERROR_MISSING_OR_INVALID_SETTINGS_VERIFIED_ID, statusCode: StatusCodes.Status500InternalServerError);
+                var errors = string.Join(" ", results.Select(x => x.ErrorMessage));
+                return Results.Problem($"{Strings.ERROR_MISSING_OR_INVALID_SETTINGS_VERIFIED_ID} - {errors}", statusCode: StatusCodes.Status500InternalServerError);
             }
 
             return await next(context);

@@ -35,7 +35,7 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.VerifiedId
             response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
             var problemDetails = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
             problemDetails.Should().NotBeNull();
-            problemDetails!.Detail.Should().Be(Strings.ERROR_MISSING_OR_INVALID_SETTINGS_VERIFIED_ID);
+            problemDetails!.Detail.Should().Contain(Strings.ERROR_MISSING_OR_INVALID_SETTINGS_VERIFIED_ID);
         }
 
         [Fact]
@@ -45,7 +45,8 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.VerifiedId
             var testApp = new TestApplicationFactory();
             var validSettings = TestHelper.GetValidVerifiedIdSettings();
             validSettings.Remove("VerifiedId:DecentralizedIdentifier");
-            await CheckForVerifiedIdOptionsErrorMessage(provider, testApp, validSettings);
+            var problemDetails = await GetVerifiedIdOptionsProblemDetails(provider, testApp, validSettings);
+            problemDetails.Detail.Should().Contain("The DecentralizedIdentifier field is required.");
         }
 
         [Fact]
@@ -55,7 +56,8 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.VerifiedId
             var testApp = new TestApplicationFactory();
             var validSettings = TestHelper.GetValidVerifiedIdSettings();
             validSettings.Remove("VerifiedId:BackendUrl");
-            await CheckForVerifiedIdOptionsErrorMessage(provider, testApp, validSettings);
+            var problemDetails = await GetVerifiedIdOptionsProblemDetails(provider, testApp, validSettings);
+            problemDetails.Detail.Should().Contain("The BackendUrl field is required.");
         }
 
         [Fact]
@@ -65,7 +67,8 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.VerifiedId
             var testApp = new TestApplicationFactory();
             var validSettings = TestHelper.GetValidVerifiedIdSettings();
             validSettings.Remove("VerifiedId:JwtSigningKey");
-            await CheckForVerifiedIdOptionsErrorMessage(provider, testApp, validSettings);
+            var problemDetails = await GetVerifiedIdOptionsProblemDetails(provider, testApp, validSettings);
+            problemDetails.Detail.Should().Contain("The JwtSigningKey field is required.");
         }
 
         [Fact]
@@ -75,7 +78,8 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.VerifiedId
             var testApp = new TestApplicationFactory();
             var validSettings = TestHelper.GetValidVerifiedIdSettings();
             validSettings.Remove("VerifiedId:TargetSecurityAttributeSet");
-            await CheckForVerifiedIdOptionsErrorMessage(provider, testApp, validSettings);
+            var problemDetails = await GetVerifiedIdOptionsProblemDetails(provider, testApp, validSettings);
+            problemDetails.Detail.Should().Contain("The TargetSecurityAttributeSet field is required.");
         }
 
         [Fact]
@@ -85,7 +89,8 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.VerifiedId
             var testApp = new TestApplicationFactory();
             var validSettings = TestHelper.GetValidVerifiedIdSettings();
             validSettings.Remove("VerifiedId:TargetSecurityAttribute");
-            await CheckForVerifiedIdOptionsErrorMessage(provider, testApp, validSettings);
+            var problemDetails = await GetVerifiedIdOptionsProblemDetails(provider, testApp, validSettings);
+            problemDetails.Detail.Should().Contain("The TargetSecurityAttribute field is required.");
         }
 
         [Fact]
@@ -95,10 +100,11 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.VerifiedId
             var testApp = new TestApplicationFactory();
             var validSettings = TestHelper.GetValidVerifiedIdSettings();
             validSettings.Remove("VerifiedId:CreatePresentationRequestUri");
-            await CheckForVerifiedIdOptionsErrorMessage(provider, testApp, validSettings);
+            var problemDetails = await GetVerifiedIdOptionsProblemDetails(provider, testApp, validSettings);
+            problemDetails.Detail.Should().Contain("The CreatePresentationRequestUri field is required.");
         }
 
-        private async Task CheckForVerifiedIdOptionsErrorMessage(TestClaimsProvider provider, TestApplicationFactory testApp, Dictionary<string, string?> validSettings)
+        private async Task<ValidationProblemDetails> GetVerifiedIdOptionsProblemDetails(TestClaimsProvider provider, TestApplicationFactory testApp, Dictionary<string, string?> validSettings)
         {
             testApp.ConfigureConfiguration(cb => cb.AddInMemoryCollection(validSettings));
             var client = testApp.WithAuthenticationVerifiedId(provider).CreateClient();
@@ -106,7 +112,7 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.VerifiedId
             response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
             var problemDetails = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
             problemDetails.Should().NotBeNull();
-            problemDetails!.Detail.Should().Be(Strings.ERROR_MISSING_OR_INVALID_SETTINGS_VERIFIED_ID);
+            return problemDetails!;
         }
 
         [Fact]
