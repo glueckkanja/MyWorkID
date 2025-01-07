@@ -19,5 +19,9 @@
         public const string PASSWORD_VALIDATION_SYMBOLS_ERROR = "Please use characters from at least 3 of these groups: lowercase, uppercase, digits, special symbols.";
         public const string JWT_SIGNING_KEY_DEFAULT = "GodDamnitYouForgottToSpecifyASigningKey";
         public const string ERROR_INVALID_BODY = "Parsed response resulted in error or null object.";
+        public const string ERROR_MISSING_OR_INVALID_SETTINGS_GENERATE_TAP = "Missing or invalid configuration for GenerateTap.";
+        public const string ERROR_MISSING_OR_INVALID_SETTINGS_DISMISS_USER_RISK = "Missing or invalid configuration for DismissUserRisk.";
+        public const string ERROR_MISSING_OR_INVALID_SETTINGS_RESET_PASSWORD = "Missing or invalid configuration for ResetPassword.";
+        public const string ERROR_MISSING_OR_INVALID_SETTINGS_VERIFIED_ID = "Missing or invalid configuration for VerifiedId.";
     }
 }

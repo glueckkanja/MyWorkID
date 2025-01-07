@@ -3,6 +3,7 @@ using Azure.Identity;
 using c4a8.MyWorkID.Server.Common;
 using c4a8.MyWorkID.Server.Features.VerifiedId.HttpClients;
 using c4a8.MyWorkID.Server.Features.VerifiedId.SignalR;
+using c4a8.MyWorkID.Server.Options;
 
 namespace c4a8.MyWorkID.Server.Features.VerifiedId
 {

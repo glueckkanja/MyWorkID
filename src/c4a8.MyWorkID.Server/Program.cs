@@ -1,4 +1,5 @@
 using c4a8.MyWorkID.Server;
+using c4a8.MyWorkID.Server.Common;
 using c4a8.MyWorkID.Server.Features.VerifiedId.SignalR;
 using c4a8.MyWorkID.Server.Kernel;
 using Microsoft.AspNetCore.Http.Json;
@@ -8,6 +9,11 @@ using System.Text.Json.Serialization;
 
 var appAssembly = Assembly.GetExecutingAssembly();
 var builder = WebApplication.CreateBuilder(args);
+
+// see https://github.com/dotnet/aspnetcore/issues/37680#issuecomment-1331559463
+builder.Configuration.AddTestConfiguration();
+
+builder.Services.ValidateOptionsOnStartup(builder.Configuration);
 
 builder.Services.AddSignalR();
 builder.Services.AddCustomAuthentication(builder.Configuration);
@@ -24,6 +30,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddCors();
 builder.Services.ConfigureModules(builder.Configuration, builder.Environment, appAssembly);
+
 var app = builder.Build();
 
 app.UseDefaultFiles();

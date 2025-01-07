@@ -1,4 +1,4 @@
-﻿using c4a8.MyWorkID.Server.Features.VerifiedId;
+﻿using c4a8.MyWorkID.Server.Options;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Tokens;
@@ -41,6 +41,19 @@ namespace c4a8.MyWorkID.Server
                    policy.RequireAuthenticatedUser();
                    policy.AuthenticationSchemes.Add(Strings.VERIFIED_ID_CALLBACK_SCHEMA);
                });
+        }
+
+        public static void ValidateOptionsOnStartup(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.AddOptions<AzureAdOptions>()
+                .Bind(configuration.GetRequiredSection(AzureAdOptions.SectionName))
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
+
+            services.AddOptions<FrontendOptions>()
+                .Bind(configuration.GetRequiredSection(FrontendOptions.SectionName))
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
         }
     }
 }

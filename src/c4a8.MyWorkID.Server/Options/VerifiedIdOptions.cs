@@ -1,4 +1,4 @@
-﻿namespace c4a8.MyWorkID.Server.Features.VerifiedId
+﻿namespace c4a8.MyWorkID.Server.Options
 {
     /// <summary>
     /// Configuration options for Verified ID operations.

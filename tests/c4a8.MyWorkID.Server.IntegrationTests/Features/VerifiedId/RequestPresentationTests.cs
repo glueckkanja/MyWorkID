@@ -1,11 +1,10 @@
-﻿using c4a8.MyWorkID.Server.Features.VerifiedId;
-using c4a8.MyWorkID.Server.Features.VerifiedId.Entities;
+﻿using c4a8.MyWorkID.Server.Features.VerifiedId.Entities;
 using c4a8.MyWorkID.Server.Features.VerifiedId.SignalR;
 using c4a8.MyWorkID.Server.IntegrationTests.Authentication;
 using FluentAssertions;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Graph.Models;
 using Microsoft.Kiota.Abstractions;
 using Microsoft.Kiota.Abstractions.Serialization;
@@ -19,12 +18,95 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.VerifiedId
     {
         private readonly string _baseUrl = "/api/me/verifiedid/callback";
         private readonly TestApplicationFactory _testApplicationFactory;
-        private readonly VerifiedIdOptions _verifiedIdOptions;
 
         public RequestPresentationTests(TestApplicationFactory testApplicationFactory)
         {
+            testApplicationFactory.ConfigureConfiguration(cb => cb.AddInMemoryCollection(TestHelper.GetValidVerifiedIdSettings()));
             _testApplicationFactory = testApplicationFactory;
-            _verifiedIdOptions = testApplicationFactory.Services.GetRequiredService<IOptions<VerifiedIdOptions>>().Value;
+        }
+
+        [Fact]
+        public async Task RequestPresentation_WithAuth_WithoutAppSetting_Returns500WithMessage()
+        {
+            var provider = new TestClaimsProvider();
+            var testApp = new TestApplicationFactory();
+            var client = testApp.WithAuthenticationVerifiedId(provider).CreateClient();
+            var response = await client.PostAsync(_baseUrl, null);
+            response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+            var problemDetails = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+            problemDetails.Should().NotBeNull();
+            problemDetails!.Detail.Should().Be(Strings.ERROR_MISSING_OR_INVALID_SETTINGS_VERIFIED_ID);
+        }
+
+        [Fact]
+        public async Task RequestPresentation_WithAuth_WithMissingDecentralizedIdentifier_Returns500WithMessage()
+        {
+            var provider = new TestClaimsProvider();
+            var testApp = new TestApplicationFactory();
+            var validSettings = TestHelper.GetValidVerifiedIdSettings();
+            validSettings.Remove("VerifiedId:DecentralizedIdentifier");
+            await CheckForVerifiedIdOptionsErrorMessage(provider, testApp, validSettings);
+        }
+
+        [Fact]
+        public async Task RequestPresentation_WithAuth_WithMissingBackendUrl_Returns500WithMessage()
+        {
+            var provider = new TestClaimsProvider();
+            var testApp = new TestApplicationFactory();
+            var validSettings = TestHelper.GetValidVerifiedIdSettings();
+            validSettings.Remove("VerifiedId:BackendUrl");
+            await CheckForVerifiedIdOptionsErrorMessage(provider, testApp, validSettings);
+        }
+
+        [Fact]
+        public async Task RequestPresentation_WithAuth_WithMissingJwtSigningKey_Returns500WithMessage()
+        {
+            var provider = new TestClaimsProvider();
+            var testApp = new TestApplicationFactory();
+            var validSettings = TestHelper.GetValidVerifiedIdSettings();
+            validSettings.Remove("VerifiedId:JwtSigningKey");
+            await CheckForVerifiedIdOptionsErrorMessage(provider, testApp, validSettings);
+        }
+
+        [Fact]
+        public async Task RequestPresentation_WithAuth_WithMissingTargetSecurityAttributeSet_Returns500WithMessage()
+        {
+            var provider = new TestClaimsProvider();
+            var testApp = new TestApplicationFactory();
+            var validSettings = TestHelper.GetValidVerifiedIdSettings();
+            validSettings.Remove("VerifiedId:TargetSecurityAttributeSet");
+            await CheckForVerifiedIdOptionsErrorMessage(provider, testApp, validSettings);
+        }
+
+        [Fact]
+        public async Task RequestPresentation_WithAuth_WithMissingTargetSecurityAttribute_Returns500WithMessage()
+        {
+            var provider = new TestClaimsProvider();
+            var testApp = new TestApplicationFactory();
+            var validSettings = TestHelper.GetValidVerifiedIdSettings();
+            validSettings.Remove("VerifiedId:TargetSecurityAttribute");
+            await CheckForVerifiedIdOptionsErrorMessage(provider, testApp, validSettings);
+        }
+
+        [Fact]
+        public async Task RequestPresentation_WithAuth_WithMissingCreatePresentationRequestUri_Returns500WithMessage()
+        {
+            var provider = new TestClaimsProvider();
+            var testApp = new TestApplicationFactory();
+            var validSettings = TestHelper.GetValidVerifiedIdSettings();
+            validSettings.Remove("VerifiedId:CreatePresentationRequestUri");
+            await CheckForVerifiedIdOptionsErrorMessage(provider, testApp, validSettings);
+        }
+
+        private async Task CheckForVerifiedIdOptionsErrorMessage(TestClaimsProvider provider, TestApplicationFactory testApp, Dictionary<string, string?> validSettings)
+        {
+            testApp.ConfigureConfiguration(cb => cb.AddInMemoryCollection(validSettings));
+            var client = testApp.WithAuthenticationVerifiedId(provider).CreateClient();
+            var response = await client.PostAsync(_baseUrl, null);
+            response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+            var problemDetails = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+            problemDetails.Should().NotBeNull();
+            problemDetails!.Detail.Should().Be(Strings.ERROR_MISSING_OR_INVALID_SETTINGS_VERIFIED_ID);
         }
 
         [Fact]
@@ -41,14 +123,12 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.VerifiedId
         {
             var provider = new TestClaimsProvider().WithRandomUserId();
             IVerifiedIdSignalRRepository verifiedIdSignalRRepository = GetVerifiedSignalRRepositoryWithConnections();
-            _verifiedIdOptions.DisableQrCodeHide = false;
 
             var hubContext = Substitute.For<IHubContext<VerifiedIdHub, IVerifiedIdHub>>();
 
             var client = _testApplicationFactory.WithAuthenticationVerifiedId(
                 provider,
                 verifiedIdSignalRRepository,
-                _verifiedIdOptions,
                 hubContext).CreateClient();
             var response = await client.PostAsync(_baseUrl, null);
 
@@ -60,14 +140,12 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.VerifiedId
         {
             var provider = new TestClaimsProvider().WithRandomUserId();
             IVerifiedIdSignalRRepository verifiedIdSignalRRepository = GetVerifiedSignalRRepositoryWithConnections();
-            _verifiedIdOptions.DisableQrCodeHide = false;
 
             var hubContext = Substitute.For<IHubContext<VerifiedIdHub, IVerifiedIdHub>>();
 
             var client = _testApplicationFactory.WithAuthenticationVerifiedId(
                 provider,
                 verifiedIdSignalRRepository,
-                _verifiedIdOptions,
                 hubContext).CreateClient();
             var createPresentationRequestCallback = new CreatePresentationRequestCallback
             {
@@ -83,14 +161,12 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.VerifiedId
         {
             var provider = new TestClaimsProvider().WithRandomUserId();
             IVerifiedIdSignalRRepository verifiedIdSignalRRepository = GetVerifiedSignalRRepositoryWithConnections();
-            _verifiedIdOptions.DisableQrCodeHide = false;
 
             var hubContext = Substitute.For<IHubContext<VerifiedIdHub, IVerifiedIdHub>>();
 
             var client = _testApplicationFactory.WithAuthenticationVerifiedId(
                 provider,
                 verifiedIdSignalRRepository,
-                _verifiedIdOptions,
                 hubContext).CreateClient();
             var createPresentationRequestCallback = new CreatePresentationRequestCallback
             {
@@ -108,14 +184,12 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.VerifiedId
             string userId = Guid.NewGuid().ToString();
             var provider = new TestClaimsProvider().WithUserId(userId);
             IVerifiedIdSignalRRepository verifiedIdSignalRRepository = GetVerifiedSignalRRepositoryWithConnections();
-            _verifiedIdOptions.DisableQrCodeHide = false;
 
             var hubContext = Substitute.For<IHubContext<VerifiedIdHub, IVerifiedIdHub>>();
 
             var client = _testApplicationFactory.WithAuthenticationVerifiedId(
                 provider,
                 verifiedIdSignalRRepository,
-                _verifiedIdOptions,
                 hubContext).CreateClient();
             var createPresentationRequestCallback = new CreatePresentationRequestCallback
             {
@@ -128,60 +202,11 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.VerifiedId
         }
 
         [Fact]
-        public async Task RequestPresentation_WithInvalidTargetSecurityAttribute_Returns204()
-        {
-            string userId = Guid.NewGuid().ToString();
-            var provider = new TestClaimsProvider().WithUserId(userId);
-            IVerifiedIdSignalRRepository verifiedIdSignalRRepository = GetVerifiedSignalRRepositoryWithConnections();
-            _verifiedIdOptions.DisableQrCodeHide = false;
-            _verifiedIdOptions.TargetSecurityAttributeSet = "TargetSecurityAttributeSet";
-            _verifiedIdOptions.TargetSecurityAttribute = string.Empty;
-
-            var hubContext = Substitute.For<IHubContext<VerifiedIdHub, IVerifiedIdHub>>();
-
-            var client = _testApplicationFactory.WithAuthenticationVerifiedId(
-                provider,
-                verifiedIdSignalRRepository,
-                _verifiedIdOptions,
-                hubContext).CreateClient();
-            CreatePresentationRequestCallback createPresentationRequestCallback = GetValidPresentationRequestCallback(userId);
-            var response = await client.PostAsJsonAsync(_baseUrl, createPresentationRequestCallback);
-
-            response.StatusCode.Should().Be(HttpStatusCode.NoContent);
-        }
-
-        [Fact]
-        public async Task RequestPresentation_WithInvalidTargetSecurityAttributeSet_Returns204()
-        {
-            string userId = Guid.NewGuid().ToString();
-            var provider = new TestClaimsProvider().WithUserId(userId);
-            IVerifiedIdSignalRRepository verifiedIdSignalRRepository = GetVerifiedSignalRRepositoryWithConnections();
-            _verifiedIdOptions.DisableQrCodeHide = false;
-            _verifiedIdOptions.TargetSecurityAttributeSet = string.Empty;
-            _verifiedIdOptions.TargetSecurityAttribute = "TargetSecurityAttribute";
-
-            var hubContext = Substitute.For<IHubContext<VerifiedIdHub, IVerifiedIdHub>>();
-
-            var client = _testApplicationFactory.WithAuthenticationVerifiedId(
-                provider,
-                verifiedIdSignalRRepository,
-                _verifiedIdOptions,
-                hubContext).CreateClient();
-            CreatePresentationRequestCallback createPresentationRequestCallback = GetValidPresentationRequestCallback(userId);
-            var response = await client.PostAsJsonAsync(_baseUrl, createPresentationRequestCallback);
-
-            response.StatusCode.Should().Be(HttpStatusCode.NoContent);
-        }
-
-        [Fact]
         public async Task RequestPresentation_WithValidBody_Returns204()
         {
             string userId = Guid.NewGuid().ToString();
             var provider = new TestClaimsProvider().WithUserId(userId);
             IVerifiedIdSignalRRepository verifiedIdSignalRRepository = GetVerifiedSignalRRepositoryWithConnections();
-            _verifiedIdOptions.DisableQrCodeHide = false;
-            _verifiedIdOptions.TargetSecurityAttributeSet = "TargetSecurityAttribute";
-            _verifiedIdOptions.TargetSecurityAttribute = "TargetSecurityAttribute";
             var requestAdapter = Substitute.For<IRequestAdapter>();
             requestAdapter.SendAsync(
                 Arg.Any<RequestInformation>(),
@@ -194,7 +219,6 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.VerifiedId
             var client = _testApplicationFactory.WithAuthenticationVerifiedId(
                 provider,
                 verifiedIdSignalRRepository,
-                _verifiedIdOptions,
                 hubContext,
                 requestAdapter).CreateClient();
 

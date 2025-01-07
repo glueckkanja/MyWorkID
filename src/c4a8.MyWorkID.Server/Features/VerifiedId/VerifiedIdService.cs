@@ -1,6 +1,7 @@
 ﻿using c4a8.MyWorkID.Server.Features.VerifiedId.Entities;
 using c4a8.MyWorkID.Server.Features.VerifiedId.Exceptions;
 using c4a8.MyWorkID.Server.Features.VerifiedId.SignalR;
+using c4a8.MyWorkID.Server.Options;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Options;
 using Microsoft.Graph;
@@ -63,7 +64,7 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId
 
             FaceCheck faceCheck = new(sourcePhotoClaimName: "photo", matchConfidenceThreshold: 50);
 
-            Validation validation = new(allowRevoked: false, validateLinkedDomain: true, faceCheck: faceCheck);
+            Entities.Validation validation = new(allowRevoked: false, validateLinkedDomain: true, faceCheck: faceCheck);
 
             List<RequestCredential> credentialList = new()
                 {
@@ -178,11 +179,6 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId
                 if (!string.Equals(callbackBody.State, userId, StringComparison.OrdinalIgnoreCase))
                 {
                     throw new PresentationCallbackException($"Invalid state. Expected {userId} but state is {callbackBody.State}.");
-                }
-
-                if (string.IsNullOrWhiteSpace(_verifiedIdOptions.TargetSecurityAttributeSet) || string.IsNullOrWhiteSpace(_verifiedIdOptions.TargetSecurityAttribute))
-                {
-                    return;
                 }
 
                 User requestBody = CreateSetTargetSecurityAttributeRequestBody(DateTime.UtcNow.ToString("O"));

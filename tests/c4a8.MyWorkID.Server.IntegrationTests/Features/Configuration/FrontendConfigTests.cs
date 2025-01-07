@@ -1,5 +1,6 @@
-﻿using c4a8.MyWorkID.Server.Features.Configuration;
+﻿using c4a8.MyWorkID.Server.Options;
 using FluentAssertions;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using System.Net;
@@ -23,6 +24,26 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.Configuration
             frontendAppSettings.BackendClientId.Should().Be(frontendOptions!.BackendClientId);
             frontendAppSettings.FrontendClientId.Should().Be(frontendOptions.FrontendClientId);
             frontendAppSettings.TenantId.Should().Be(frontendOptions.TenantId);
+        }
+
+        [Fact]
+        public void MissingBackendClientIdConfiguration_ThrowsValidationError()
+        {
+            var app = new TestApplicationFactory();
+            app.ConfigureConfiguration(cb => cb.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Frontend:BackendClientId"] = "Hello3"
+            }));
+
+            try
+            {
+                app.CreateClient();
+            }
+            catch (Exception e)
+            {
+                e.Should().BeOfType<OptionsValidationException>();
+                e.Message.Should().Contain("DataAnnotation validation failed for 'FrontendOptions' members: '' with the error: 'The field 'BackendClientId' must be a valid GUID.'.");
+            }
         }
     }
 }

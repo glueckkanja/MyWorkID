@@ -23,11 +23,12 @@ namespace c4a8.MyWorkID.Server.Features.ResetPassword.Commands
         public static void MapEndpoint(IEndpointRouteBuilder endpoints)
         {
             endpoints.MapPutWithOpenApi("api/me/resetPassword", HandleAsync)
-                .WithTags(Strings.RESET_PASSWORD_OPENAPI_TAG)
                 .RequireAuthorization()
+                .AddEndpointFilter<CheckResetPasswordAppConfigurationEndpointFilter>()
                 .AddEndpointFilter<ResetPasswordAuthContextEndpointFilter>()
                 .AddEndpointFilter<CheckForObjectIdEndpointFilter>()
-                .AddEndpointFilter<PasswordValidationFilter>();
+                .AddEndpointFilter<PasswordValidationFilter>()
+                .WithTags(Strings.RESET_PASSWORD_OPENAPI_TAG);
         }
 
         /// <summary>
