@@ -7,13 +7,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F6B0154E-E54
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{C1B5112D-9872-4805-97AC-A47150A93A20}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "c4a8.MyWorkID.Server", "src\c4a8.MyWorkID.Server\c4a8.MyWorkID.Server.csproj", "{87E59017-C107-4A77-AAEC-1C1057E75ED4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyWorkID.Server", "src\MyWorkID.Server\MyWorkID.Server.csproj", "{87E59017-C107-4A77-AAEC-1C1057E75ED4}"
 EndProject
-Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "c4a8.MyWorkID.Client", "src\c4a8.MyWorkID.Client\c4a8.MyWorkID.Client.esproj", "{9E7E8174-BEF9-4573-AE1F-ADBA8AF61CA7}"
+Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "MyWorkID.Client", "src\MyWorkID.Client\MyWorkID.Client.esproj", "{9E7E8174-BEF9-4573-AE1F-ADBA8AF61CA7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "c4a8.MyWorkID.Server.IntegrationTests", "tests\c4a8.MyWorkID.Server.IntegrationTests\c4a8.MyWorkID.Server.IntegrationTests.csproj", "{23E152E9-D4CA-4B34-9FFB-B93660D8A894}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyWorkID.Server.IntegrationTests", "tests\MyWorkID.Server.IntegrationTests\MyWorkID.Server.IntegrationTests.csproj", "{23E152E9-D4CA-4B34-9FFB-B93660D8A894}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "c4a8.MyWorkID.Server.UnitTests", "tests\c4a8.MyWorkID.Server.UnitTests\c4a8.MyWorkID.Server.UnitTests.csproj", "{4C38F385-8B19-4FC5-B1D7-1F82E8445A23}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyWorkID.Server.UnitTests", "tests\MyWorkID.Server.UnitTests\MyWorkID.Server.UnitTests.csproj", "{4C38F385-8B19-4FC5-B1D7-1F82E8445A23}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -12,7 +12,7 @@ const baseFolder =
 
 fs.mkdirSync(baseFolder, { recursive: true });
 
-const certificateName = "c4a8.MyWorkID.Client";
+const certificateName = "MyWorkID.Client";
 const certFilePath = path.join(baseFolder, `${certificateName}.pem`);
 const keyFilePath = path.join(baseFolder, `${certificateName}.key`);
 
