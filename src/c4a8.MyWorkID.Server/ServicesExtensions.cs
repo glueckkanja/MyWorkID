@@ -1,5 +1,4 @@
-﻿using c4a8.MyWorkID.Server.Exceptions;
-using c4a8.MyWorkID.Server.Features.VerifiedId;
+﻿using c4a8.MyWorkID.Server.Options;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Tokens;
@@ -21,7 +20,9 @@ namespace c4a8.MyWorkID.Server
         {
             VerifiedIdOptions verifiedIdConfig = new();
             configuration.GetSection("VerifiedId").Bind(verifiedIdConfig);
-            var signingByte = Encoding.UTF8.GetBytes(verifiedIdConfig.JwtSigningKey ?? throw new ConfigurationMissingException(nameof(verifiedIdConfig.JwtSigningKey), "JwtSigningKey is missing in configuration."));
+            // If the signing key is not set, generate a random one. For the Verified Id functionality we test if JwtSigningKey is set beforehand so the GUID will never be used.
+            // We need it as we need to add the VERIFIED_ID_CALLBACK_SCHEMA
+            var signingByte = Encoding.UTF8.GetBytes(verifiedIdConfig.JwtSigningKey ?? Guid.NewGuid().ToString());
 
             // Add services to the container.
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -42,6 +43,19 @@ namespace c4a8.MyWorkID.Server
                    policy.RequireAuthenticatedUser();
                    policy.AuthenticationSchemes.Add(Strings.VERIFIED_ID_CALLBACK_SCHEMA);
                });
+        }
+
+        public static void ValidateOptionsOnStartup(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.AddOptions<AzureAdOptions>()
+                .Bind(configuration.GetRequiredSection(AzureAdOptions.SectionName))
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
+
+            services.AddOptions<FrontendOptions>()
+                .Bind(configuration.GetRequiredSection(FrontendOptions.SectionName))
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
         }
     }
 }

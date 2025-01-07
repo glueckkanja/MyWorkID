@@ -21,10 +21,11 @@ namespace c4a8.MyWorkID.Server.Features.GenerateTap.Commands
         public static void MapEndpoint(IEndpointRouteBuilder endpoints)
         {
             endpoints.MapPutWithOpenApi("api/me/generatetap", HandleAsync)
-                .WithTags(nameof(GenerateTap))
                 .RequireAuthorization()
+                .AddEndpointFilter<CheckGenerateTapAppConfigurationEndpointFilter>()
                 .AddEndpointFilter<GenerateTapAuthContextEndpointFilter>()
-                .AddEndpointFilter<CheckForObjectIdEndpointFilter>();
+                .AddEndpointFilter<CheckForObjectIdEndpointFilter>()
+                .WithTags(nameof(GenerateTap));
         }
 
         /// <summary>

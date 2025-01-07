@@ -1,0 +1,12 @@
+{
+	"AzureAd": {
+		"Instance": "https://login.microsoftonline.com/",
+		"TenantId": "d2a8f8b2-3c4e-4b8e-9f2e-1a2b3c4d5e6f",
+		"ClientId": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d"
+	},
+	"Frontend": {
+		"FrontendClientId": "f1e2d3c4-b5a6-7c8d-9e0f-1a2b3c4d5e6f",
+		"TenantId": "d2a8f8b2-3c4e-4b8e-9f2e-1a2b3c4d5e6f",
+		"BackendClientId": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d"
+	}
+}

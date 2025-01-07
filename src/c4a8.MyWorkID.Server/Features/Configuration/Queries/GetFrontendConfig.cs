@@ -1,4 +1,5 @@
 ﻿using c4a8.MyWorkID.Server.Common;
+using c4a8.MyWorkID.Server.Options;
 using Microsoft.Extensions.Options;
 using System.Security.Claims;
 

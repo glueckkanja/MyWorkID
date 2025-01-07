@@ -2,6 +2,8 @@
 using c4a8.MyWorkID.Server.Features.VerifiedId.Entities;
 using c4a8.MyWorkID.Server.IntegrationTests.Authentication;
 using FluentAssertions;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using System.Net;
 using System.Net.Http.Json;
 
@@ -15,6 +17,7 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.VerifiedId
 
         public ValidateIdentityTests(TestApplicationFactory testApplicationFactory)
         {
+            testApplicationFactory.ConfigureConfiguration(cb => cb.AddInMemoryCollection(TestHelper.GetValidVerifiedIdSettings()));
             _testApplicationFactory = testApplicationFactory;
         }
 
@@ -33,6 +36,19 @@ namespace c4a8.MyWorkID.Server.IntegrationTests.Features.VerifiedId
             var client = _testApplicationFactory.CreateClientWithTestAuth(provider);
             var response = await client.PostAsync(_baseUrl, null);
             response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        }
+
+        [Fact]
+        public async Task ValidateIdentity_WithAuth_WithoutAppSetting_Returns500WithMessage()
+        {
+            var provider = new TestClaimsProvider().WithValidateIdentityRole();
+            var testApp = new TestApplicationFactory();
+            var client = testApp.WithAuthenticationVerifiedId(provider).CreateClient();
+            var response = await client.PostAsync(_baseUrl, null);
+            response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+            var problemDetails = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+            problemDetails.Should().NotBeNull();
+            problemDetails!.Detail.Should().Contain(Strings.ERROR_MISSING_OR_INVALID_SETTINGS_VERIFIED_ID);
         }
 
         [Fact]

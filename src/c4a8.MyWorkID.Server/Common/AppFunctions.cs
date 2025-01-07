@@ -7,6 +7,7 @@
     {
         DismissUserRisk,
         GenerateTap,
-        ResetPassword
+        ResetPassword,
+        VerifiedId
     }
 }

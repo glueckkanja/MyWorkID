@@ -1,9 +1,9 @@
 ﻿using c4a8.MyWorkID.Server.Features.VerifiedId;
 using c4a8.MyWorkID.Server.Features.VerifiedId.SignalR;
+using c4a8.MyWorkID.Server.Options;
 using FluentAssertions;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
 using Microsoft.Kiota.Abstractions;
@@ -22,7 +22,7 @@ namespace c4a8.MyWorkID.Server.UnitTests.Features.VerifiedId
                 TargetSecurityAttribute = "targetSecurityAttribute",
                 TargetSecurityAttributeSet = "targetSecurityAttributeSet"
             };
-            var options = Options.Create(verifiedIdOptions);
+            var options = Microsoft.Extensions.Options.Options.Create(verifiedIdOptions);
             var verifiedIdClient = Substitute.For<HttpClient>();
             var requestAdapter = Substitute.For<IRequestAdapter>();
             var graphClient = new GraphServiceClient(requestAdapter);

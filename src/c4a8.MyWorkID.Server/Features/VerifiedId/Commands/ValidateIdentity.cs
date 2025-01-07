@@ -19,9 +19,10 @@ namespace c4a8.MyWorkID.Server.Features.VerifiedId.Commands
         public static void MapEndpoint(IEndpointRouteBuilder endpoints)
         {
             endpoints.MapPostWithCreatedOpenApi("api/me/verifiedId/verify", HandleAsync)
-                .WithTags(Strings.VERIFIEDID_OPENAPI_TAG)
                 .RequireAuthorization()
-                .AddEndpointFilter<CheckForObjectIdEndpointFilter>();
+                .AddEndpointFilter<CheckVerifiedIdAppConfigurationEndpointFilter>()
+                .AddEndpointFilter<CheckForObjectIdEndpointFilter>()
+                .WithTags(Strings.VERIFIEDID_OPENAPI_TAG);
         }
 
         /// <summary>

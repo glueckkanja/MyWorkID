@@ -1,28 +1,49 @@
-﻿using c4a8.MyWorkID.Server.Features.VerifiedId;
+﻿using c4a8.MyWorkID.Server.Common;
 using c4a8.MyWorkID.Server.Features.VerifiedId.SignalR;
 using c4a8.MyWorkID.Server.IntegrationTests.Authentication;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Graph;
 using Microsoft.Kiota.Abstractions;
 using NSubstitute;
 
 namespace c4a8.MyWorkID.Server.IntegrationTests
 {
-    public class TestApplicationFactory : WebApplicationFactory<IApiAssemblyMarker>, IAsyncLifetime
+    public class TestApplicationFactory : WebApplicationFactory<IApiAssemblyMarker>
     {
-        public Task InitializeAsync()
+        private Action<IConfigurationBuilder>? _action;
+
+        public void ConfigureConfiguration(Action<IConfigurationBuilder> configure)
         {
-            return Task.FromResult(0);
+            _action += configure;
         }
 
-        Task IAsyncLifetime.DisposeAsync()
+        protected override IWebHostBuilder? CreateWebHostBuilder()
         {
-            return Task.FromResult(0);
+            if (_action is { } a)
+            {
+                TestConfiguration.Create(a);
+            }
+
+            return base.CreateWebHostBuilder();
+        }
+
+        protected override IHost CreateHost(IHostBuilder builder)
+        {
+            builder.UseEnvironment("Test");
+            builder.ConfigureHostConfiguration(config =>
+            {
+                config.SetBasePath(Directory.GetCurrentDirectory());
+                config.AddJsonFile($"TestSettings/validMinimalSettings.json", optional: false, reloadOnChange: false);
+            });
+
+            return base.CreateHost(builder);
         }
     }
 
@@ -50,20 +71,11 @@ namespace c4a8.MyWorkID.Server.IntegrationTests
             });
         }
 
-        public static HttpClient CreateClientWithTestAuth<T>(
-            this WebApplicationFactory<T> factory,
-            TestClaimsProvider claimsProvider,
-            IRequestAdapter? requestAdapter = null) where T : class
-        {
-            var client = factory.WithAuthentication(claimsProvider, requestAdapter).CreateClient();
-            return client;
-        }
 
         public static WebApplicationFactory<T> WithAuthenticationVerifiedId<T>(
             this WebApplicationFactory<T> factory,
             TestClaimsProvider claimsProvider,
             IVerifiedIdSignalRRepository? verifiedIdSignalRRepository = null,
-            VerifiedIdOptions? verifiedIdOptions = null,
             IHubContext<VerifiedIdHub, IVerifiedIdHub>? hubContext = null,
             IRequestAdapter? requestAdapter = null) where T : class
         {
@@ -99,33 +111,9 @@ namespace c4a8.MyWorkID.Server.IntegrationTests
                         services.AddSingleton(hubContext);
                     }
 
-                    if (verifiedIdOptions != null)
-                    {
-                        services.AddSingleton(verifiedIdOptions);
-                        var options = Options.Create(verifiedIdOptions);
-                        services.AddSingleton(options);
-                    }
-
                     services.AddScoped(_ => claimsProvider);
                 });
             });
-        }
-
-        public static HttpClient CreateClientWithTestAuthVerifiedId<T>(
-            this WebApplicationFactory<T> factory,
-            TestClaimsProvider claimsProvider,
-            IVerifiedIdSignalRRepository? verifiedIdSignalRRepository = null,
-            VerifiedIdOptions? verifiedIdOptions = null,
-            IHubContext<VerifiedIdHub, IVerifiedIdHub>? hubContext = null,
-            IRequestAdapter? requestAdapter = null) where T : class
-        {
-            var client = factory.WithAuthenticationVerifiedId(
-                claimsProvider,
-                verifiedIdSignalRRepository,
-                verifiedIdOptions,
-                hubContext,
-                requestAdapter).CreateClient();
-            return client;
         }
 
         public static WebApplicationFactory<T> WithHttpMock<T>(
@@ -165,6 +153,16 @@ namespace c4a8.MyWorkID.Server.IntegrationTests
             {
                 services.Remove(httpClientDescriptor);
             }
+        }
+
+
+        public static void AddAuthContextConfig(
+            this TestApplicationFactory factory, string appFunction, string? validAuthContextId = null)
+        {
+            factory.ConfigureConfiguration(cb => cb.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                [$"AppFunctions:{appFunction}"] = validAuthContextId ?? $"c{new Random().Next(1, 100)}"
+            }));
         }
     }
 
