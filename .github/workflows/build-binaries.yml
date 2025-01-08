@@ -49,4 +49,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: binaries_${{github.sha}}
-          path: ./publish
+          path: ${{env.PROJECT_ROOT_DIRECTORY}}/publish
