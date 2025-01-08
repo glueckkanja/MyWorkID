@@ -43,10 +43,10 @@ jobs:
         run: dotnet build --configuration Release
 
       - name: dotnet publish
-        run: dotnet publish --configuration Release --no-build --output ${{env.PROJECT_ROOT_DIRECTORY}}/publish
+        run: dotnet publish --configuration Release --no-build --output ./publish
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: binaries_${{github.sha}}
-          path: ${{env.PROJECT_ROOT_DIRECTORY}}/publish
+          path: ./publish
