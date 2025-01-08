@@ -14,7 +14,7 @@ on:
       - "main"
 
 env:
-  PROJECT_ROOT_DIRECTORY: "./"
+  PROJECT_ROOT_DIRECTORY: "./src/MyWorkID.Server/"
   DOTNET_VERSION: "8.0.x"
 
 jobs:
