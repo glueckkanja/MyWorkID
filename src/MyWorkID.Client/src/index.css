@@ -226,9 +226,7 @@ body {
   font-weight: 700;
   line-height: normal;
   align-self: center;
-  word-wrap: break-word;
-  width: 70px;
-  padding: 0;
+  padding: 1rem;
 }
 .action-card__pasword-reset__submit-button {
   display: flex;
