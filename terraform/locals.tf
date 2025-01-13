@@ -32,3 +32,26 @@ locals {
 locals {
   verified_id_create_presentation_request_uri = "https://verifiedid.did.msidentity.com/v1.0/verifiableCredentials/createPresentationRequest"
 }
+
+locals {
+  backend_access_groups_map = {
+    "CreateTAP" = {
+      group_name = "sec - MyWorkID - Create TAP"
+      app_role   = "MyWorkID.CreateTAP"
+    }
+    "DismissUserRisk" = {
+      group_name = "sec - MyWorkID - Dismiss User Risk"
+      app_role   = "MyWorkID.DismissUserRisk"
+    }
+    "PasswordReset" = {
+      group_name = "sec - MyWorkID - Password Reset"
+      app_role   = "MyWorkID.PasswordReset"
+    }
+    "ValidateIdentity" = {
+      group_name = "sec - MyWorkID - Validate Identity"
+      app_role   = "MyWorkID.ValidateIdentity"
+    }
+  }
+
+  base_access_groups_map = { for k, v in local.backend_access_groups_map : k => v if var.create_backend_access_groups && !var.skip_actions_requiring_global_admin }
+}

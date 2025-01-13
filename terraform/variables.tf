@@ -57,6 +57,12 @@ variable "skip_actions_requiring_global_admin" {
   type        = bool
   default     = false
 }
+
+variable "create_backend_access_groups" {
+  description = "Create access groups for the backend. Also requires Global Administrator privileges"
+  type        = bool
+  default     = true
+}
 variable "binaries_zip_path" {
   type        = string
   description = "Path where binaries are located"
