@@ -107,15 +107,15 @@ resource "azuread_app_role_assignment" "backend_managed_identity" {
 
 # Necessary for the backend to be able to create taps and change the password of users - The password cannot be changed for users with some privilaged permissions - if it is desired to change the password of users with these permissions, the backend must have higher roles - for more info see https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/privileged-roles-permissions?tabs=admin-center#who-can-reset-passwords and https://learn.microsoft.com/en-us/entra/identity/authentication/howto-authentication-temporary-access-pass#create-a-temporary-access-pass
 resource "azuread_directory_role" "authentication_administrator" {
-  count = local.skip_actions_requiring_global_admin ? 0 : 1
+  count        = local.skip_actions_requiring_global_admin ? 0 : 1
   display_name = "Authentication Administrator"
   # display_name = "Privileged Authentication Administrator" #Necessary if privilaged users should also be able to use all functions (createTAP & changePassword) via myWorkID
 }
 
 resource "azuread_directory_role_assignment" "backend_managed_identity_authentication_administrator" {
-  count = local.skip_actions_requiring_global_admin ? 0 : 1
-  role_id = azuread_directory_role.authentication_administrator[0].template_id
-  principal_object_id       = azurerm_linux_web_app.backend.identity[0].principal_id
+  count               = local.skip_actions_requiring_global_admin ? 0 : 1
+  role_id             = azuread_directory_role.authentication_administrator[0].template_id
+  principal_object_id = azurerm_linux_web_app.backend.identity[0].principal_id
 }
 
 resource "azuread_app_role_assignment" "verifiable_credentials" {
@@ -123,6 +123,13 @@ resource "azuread_app_role_assignment" "verifiable_credentials" {
   app_role_id         = "949ebb93-18f8-41b4-b677-c2bfea940027" // VerifiableCredential.Create.All
   principal_object_id = azurerm_linux_web_app.backend.identity[0].principal_id
   resource_object_id  = data.azuread_service_principal.verifiable_credentials_service_request.object_id
+}
+
+resource "azuread_service_principal_delegated_permission_grant" "frontend_backend_access" {
+  count                                = local.skip_actions_requiring_global_admin ? 0 : 1
+  service_principal_object_id          = azuread_service_principal.frontend.object_id
+  resource_service_principal_object_id = azuread_service_principal.backend.object_id
+  claim_values                         = ["openid", "Access"]
 }
 
 # Create Backed AppReg
