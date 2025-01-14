@@ -86,11 +86,24 @@ export const ValidateIdentity = (/*props: ActionResultProps<any>*/) => {
 
     verifyIdentity()
       .then((result) => {
-        setVerifiedIdDisplay({
-          visible: true,
-          qrCodeBase64: result.data?.qrCode,
-          loading: false,
-        });
+        if (result.data?.qrCode != null) {
+          setVerifiedIdDisplay({
+            visible: true,
+            qrCodeBase64: result.data?.qrCode,
+            loading: false,
+          });
+        } else {
+          setVerifiedIdDisplay({
+            visible: false,
+            qrCodeBase64: undefined,
+            loading: false,
+          });
+          toast({
+            variant: "destructive",
+            title: "Something went wrong during Identity validation.",
+            description: "No license for verified ID is assigned",
+          });
+        }
       })
       .catch((error) => {
         setVerifiedIdDisplay({
