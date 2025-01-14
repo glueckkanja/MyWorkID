@@ -4,6 +4,8 @@ using MyWorkID.Server.Filters;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Identity.Web;
 using System.Security.Claims;
+using Microsoft.Graph.Models.ODataErrors;
+using System.Linq;
 
 namespace MyWorkID.Server.Features.VerifiedId.Commands
 {
@@ -12,6 +14,9 @@ namespace MyWorkID.Server.Features.VerifiedId.Commands
     /// </summary>
     public class ValidateIdentity : IEndpoint
     {
+        private const string GRAPH_VERIFIED_ID_LICENSE_ERROR_MESSAGE = "Premium features cannot be used until billing is enabled by the admin.";
+        private const string LICENSE_MISSING_PROBLEM_DETAIL = "License missing.";
+
         /// <summary>
         /// Maps the endpoint for the creation of a QR code for verified ids.
         /// </summary>
@@ -45,6 +50,14 @@ namespace MyWorkID.Server.Features.VerifiedId.Commands
             catch (CreatePresentationException)
             {
                 return TypedResults.BadRequest();
+            }
+            catch (ODataError e)
+            {
+                if (e.Message.Contains(GRAPH_VERIFIED_ID_LICENSE_ERROR_MESSAGE, StringComparison.OrdinalIgnoreCase))
+                {
+                    return TypedResults.Problem(LICENSE_MISSING_PROBLEM_DETAIL);
+                }
+                throw;
             }
         }
     }
