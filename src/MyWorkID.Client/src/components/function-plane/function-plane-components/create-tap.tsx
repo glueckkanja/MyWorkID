@@ -79,11 +79,28 @@ export const CreateTAP = (props: TFunctionProps) => {
   const createTAP = async () => {
     generateTAP()
       .then((result) => {
-        setTapDisplay({
-          visible: true,
-          value: result.data?.temporaryAccessPassword ?? "ERROR",
-          loading: false,
-        });
+        if (
+          result.status === "success" &&
+          !!result.data?.temporaryAccessPassword &&
+          result.data?.temporaryAccessPassword.trim().length > 0
+        ) {
+          setTapDisplay({
+            visible: true,
+            value: result.data?.temporaryAccessPassword,
+            loading: false,
+          });
+        } else {
+          setTapDisplay({
+            visible: false,
+            value: "",
+            loading: false,
+          });
+          toast({
+            variant: "destructive",
+            title: "Something went wrong during TAP generation.",
+            description: result.errorMessage,
+          });
+        }
       })
       .catch((error) => {
         toast({
@@ -103,7 +120,7 @@ export const CreateTAP = (props: TFunctionProps) => {
     if (props.comingFromRedirect) {
       createTAP();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
