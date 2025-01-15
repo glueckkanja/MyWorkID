@@ -1,11 +1,11 @@
-﻿using MyWorkID.Server.Features.VerifiedId.Entities;
-using MyWorkID.Server.Features.VerifiedId.Exceptions;
-using MyWorkID.Server.Features.VerifiedId.SignalR;
-using MyWorkID.Server.Options;
-using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Options;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
+using MyWorkID.Server.Features.VerifiedId.Entities;
+using MyWorkID.Server.Features.VerifiedId.Exceptions;
+using MyWorkID.Server.Features.VerifiedId.SignalR;
+using MyWorkID.Server.Options;
 using System.Text.Json;
 
 namespace MyWorkID.Server.Features.VerifiedId
@@ -95,12 +95,16 @@ namespace MyWorkID.Server.Features.VerifiedId
                 {
                     var responseContent = await response.Content.ReadAsStringAsync();
                     _logger.LogError(e, "Failed to create presentation request. Response: {ResponseContent}", responseContent);
+                    if (responseContent.Contains(Strings.GRAPH_VERIFIED_ID_LICENSE_ERROR_MESSAGE, StringComparison.OrdinalIgnoreCase))
+                    {
+                        throw new PremiumFeatureBillingMissingException(responseContent, e);
+                    }
                 }
                 else
                 {
                     _logger.LogError(e, "Failed to create presentation request. No response received.");
                 }
-                throw new CreatePresentationException();
+                throw new CreatePresentationException(e.Message, e);
             }
             var createPresentationResponse = await response.Content.ReadFromJsonAsync<CreatePresentationResponse>();
             if (createPresentationResponse == null)

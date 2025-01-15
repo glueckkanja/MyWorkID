@@ -23,5 +23,9 @@
          : base(string.IsNullOrEmpty(message) ? DEFAULT_MESSAGE : message)
         {
         }
+
+        public CreatePresentationException(string? message, Exception? innerException) : base(message, innerException)
+        {
+        }
     }
 }

@@ -1,9 +1,9 @@
 ﻿using AutoFixture;
-using MyWorkID.Server.Features.VerifiedId.Entities;
-using MyWorkID.Server.IntegrationTests.Authentication;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using MyWorkID.Server.Features.VerifiedId.Entities;
+using MyWorkID.Server.IntegrationTests.Authentication;
 using System.Net;
 using System.Net.Http.Json;
 
@@ -82,7 +82,6 @@ namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
             createPresentationResponse.ExpiryDate.Should().Be(expectedPresentation.ExpiryDate);
         }
 
-
         [Fact]
         public async Task ValidateIdentity_Returns400_WithoutPresentation()
         {
@@ -91,6 +90,18 @@ namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
             var client = _testApplicationFactory.WithHttpMock(handler).CreateClientWithTestAuth(provider);
             var response = await client.PostAsync(_baseUrl, null);
             response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
+
+        [Fact]
+        public async Task ValidateIdentity_Returns500_IfLicenseMissingGraphApiError()
+        {
+            var handler = new MockHttpMessageHandler(HttpStatusCode.InternalServerError, Strings.GRAPH_VERIFIED_ID_LICENSE_ERROR_MESSAGE);
+            var provider = new TestClaimsProvider().WithValidateIdentityRole().WithRandomSubAndOid();
+            var client = _testApplicationFactory.WithHttpMock(handler).CreateClientWithTestAuth(provider);
+            var response = await client.PostAsync(_baseUrl, null);
+            response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+            ProblemDetails? validateIdentityResponse = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+            validateIdentityResponse!.Detail.Should().Be(Strings.PREIMUM_FEATURES_BILLING_MISSING_PROBLEM_DETAIL);
         }
 
         private static DateTime ConvertUnixEpochToDateTime(long unixTime)

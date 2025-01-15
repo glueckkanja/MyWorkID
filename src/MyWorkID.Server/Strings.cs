@@ -22,5 +22,8 @@
         public const string ERROR_MISSING_OR_INVALID_SETTINGS_DISMISS_USER_RISK = "Missing or invalid AppFunctions:DismissUserRisk auth context setting.";
         public const string ERROR_MISSING_OR_INVALID_SETTINGS_RESET_PASSWORD = "Missing or invalid AppFunctions:ResetPassword auth context setting.";
         public const string ERROR_MISSING_OR_INVALID_SETTINGS_VERIFIED_ID = "Missing or invalid configuration for VerifiedId.";
+        public const string GRAPH_VERIFIED_ID_LICENSE_ERROR_MESSAGE = "Premium features cannot be used until billing is enabled by the admin.";
+        public const string PREIMUM_FEATURES_BILLING_MISSING_PROBLEM_DETAIL = "Verfied Id premium features billing missing.";
+
     }
 }
