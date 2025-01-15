@@ -39,7 +39,7 @@ namespace MyWorkID.Server.Features.VerifiedId.Commands
             var userId = user.GetObjectId();
             try
             {
-                var response = await verifiedIdService.CreatePresentationRequest(userId!);
+                var response = await verifiedIdService.CreatePresentationRequest(userId!, cancellationToken);
                 return TypedResults.Created(string.Empty, response);
             }
             catch (CreatePresentationException)

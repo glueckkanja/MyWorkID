@@ -53,7 +53,7 @@ namespace MyWorkID.Server.Features.VerifiedId
         /// <param name="userId">The ID of the user.</param>
         /// <returns>The response of the create presentation request.</returns>
         /// <exception cref="CreatePresentationException">Thrown when the presentation request fails.</exception>
-        public async Task<CreatePresentationResponse?> CreatePresentationRequest(string userId)
+        public async Task<CreatePresentationResponse?> CreatePresentationRequest(string userId, CancellationToken cancellationToken)
         {
             RequestRegistration requestRegistration = new(clientName: "MyWorkID", purpose: "Verify your identity");
             var jwtSigningKey = _verifiedIdOptions.JwtSigningKey!;
@@ -86,27 +86,20 @@ namespace MyWorkID.Server.Features.VerifiedId
             HttpResponseMessage? response = null;
             try
             {
-                response = await _verifiedIdClient.PostAsJsonAsync(_verifiedIdOptions.CreatePresentationRequestUri, request);
+                response = await _verifiedIdClient.PostAsJsonAsync(_verifiedIdOptions.CreatePresentationRequestUri, request, cancellationToken);
                 response.EnsureSuccessStatusCode();
             }
             catch (HttpRequestException e)
             {
-                if (response != null)
+                var responseContent = await response!.Content.ReadAsStringAsync(cancellationToken);
+                _logger.LogError(e, "Failed to create presentation request. Response: {ResponseContent}", responseContent);
+                if (responseContent.Contains(Strings.GRAPH_VERIFIED_ID_LICENSE_ERROR_MESSAGE, StringComparison.OrdinalIgnoreCase))
                 {
-                    var responseContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogError(e, "Failed to create presentation request. Response: {ResponseContent}", responseContent);
-                    if (responseContent.Contains(Strings.GRAPH_VERIFIED_ID_LICENSE_ERROR_MESSAGE, StringComparison.OrdinalIgnoreCase))
-                    {
-                        throw new PremiumFeatureBillingMissingException(responseContent, e);
-                    }
-                }
-                else
-                {
-                    _logger.LogError(e, "Failed to create presentation request. No response received.");
+                    throw new PremiumFeatureBillingMissingException(responseContent, e);
                 }
                 throw new CreatePresentationException(e.Message, e);
             }
-            var createPresentationResponse = await response.Content.ReadFromJsonAsync<CreatePresentationResponse>();
+            var createPresentationResponse = await response.Content.ReadFromJsonAsync<CreatePresentationResponse>(cancellationToken);
             if (createPresentationResponse == null)
             {
                 _logger.LogError("Failed to create presentation request. Parsed response is null.");
