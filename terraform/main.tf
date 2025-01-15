@@ -269,3 +269,19 @@ resource "azurerm_role_assignment" "backend_key_vault_access" {
   role_definition_name = "Key Vault Secrets User"
   principal_id         = azurerm_linux_web_app.backend.identity[0].principal_id
 }
+
+resource "azuread_group" "backend_access" {
+  for_each = local.base_access_groups_map
+
+  display_name     = each.value.group_name
+  description      = "Access group for MyWorkID backend permission ${each.value.app_role}"
+  security_enabled = true
+}
+
+resource "azuread_app_role_assignment" "backend_access" {
+  for_each = local.base_access_groups_map
+
+  app_role_id         = azuread_service_principal.backend.app_role_ids[each.value.app_role]
+  principal_object_id = azuread_group.backend_access[each.key].object_id
+  resource_object_id  = azuread_service_principal.backend.object_id
+}
