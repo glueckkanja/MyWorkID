@@ -147,35 +147,35 @@ resource "azuread_application" "backend" {
 
   app_role {
     allowed_member_types = ["User"]
-    description          = "Allows user to Dismiss its User Risk"
-    display_name         = "MyWorkID.DismissUserRisk"
+    description          = "Allows user to Create a temporary access token"
+    display_name         = local.create_tap_app_role_name
     enabled              = true
-    id                   = "9262ab98-6c08-4e32-bae3-4c12d4ce2463"
-    value                = "MyWorkID.DismissUserRisk"
+    id                   = "16f5de80-8ee7-46e3-8bfe-7de7af6164ed"
+    value                = local.create_tap_app_role_name
   }
   app_role {
     allowed_member_types = ["User"]
-    description          = "Allows user to Create a temporary access token"
-    display_name         = "MyWorkID.CreateTAP"
+    description          = "Allows user to Dismiss its User Risk"
+    display_name         = local.dismiss_user_risk_app_role_name
     enabled              = true
-    id                   = "16f5de80-8ee7-46e3-8bfe-7de7af6164ed"
-    value                = "MyWorkID.CreateTAP"
+    id                   = "9262ab98-6c08-4e32-bae3-4c12d4ce2463"
+    value                = local.dismiss_user_risk_app_role_name
   }
   app_role {
     allowed_member_types = ["User"]
     description          = "Allows user to Reset its password"
-    display_name         = "MyWorkID.PasswordReset"
+    display_name         = local.password_reset_app_role_name
     enabled              = true
     id                   = "13c4693c-84f1-43b4-85a2-5e51d41753ed"
-    value                = "MyWorkID.PasswordReset"
+    value                = local.password_reset_app_role_name
   }
   app_role {
     allowed_member_types = ["User"]
     description          = "Allows user to Validate its Identity by VerifiedId"
-    display_name         = "MyWorkID.ValidateIdentity"
+    display_name         = local.validate_identity_app_role_name
     enabled              = true
     id                   = "eeacf7de-5c05-4e21-a2be-a4d8e3435237"
-    value                = "MyWorkID.ValidateIdentity"
+    value                = local.validate_identity_app_role_name
   }
 
   api {
