@@ -75,7 +75,7 @@ export const CreateTAP = (props: TFunctionProps) => {
     value: "",
     loading: false,
   });
-  const { toast } = useToast();
+  const { toast, toastException } = useToast();
   const createTAP = async () => {
     generateTAP()
       .then((result) => {
@@ -97,17 +97,13 @@ export const CreateTAP = (props: TFunctionProps) => {
           });
           toast({
             variant: "destructive",
-            title: "Something went wrong during TAP generation.",
-            description: result.errorMessage,
+            title: "Something went wrong",
+            description: "Something went wrong on the client side.",
           });
         }
       })
       .catch((error) => {
-        toast({
-          variant: "destructive",
-          title: "Something went wrong during TAP generation.",
-          description: error.response.statusText,
-        });
+        toastException(error);
         setTapDisplay({
           visible: false,
           value: "",
@@ -121,7 +117,7 @@ export const CreateTAP = (props: TFunctionProps) => {
       createTAP();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [props.comingFromRedirect]);
 
   return (
     <div>

@@ -76,7 +76,7 @@ export const ValidateIdentity = (/*props: ActionResultProps<any>*/) => {
       }
     });
   }, []);
-  const { toast } = useToast();
+  const { toast, toastException } = useToast();
   const validateIdentity = () => {
     setVerifiedIdDisplay({
       visible: false,
@@ -100,8 +100,8 @@ export const ValidateIdentity = (/*props: ActionResultProps<any>*/) => {
           });
           toast({
             variant: "destructive",
-            title: "Something went wrong during Identity validation.",
-            description: "No license for verified ID is assigned",
+            title: "Something went wrong",
+            description: "Something went wrong on the client side.",
           });
         }
       })
@@ -111,11 +111,7 @@ export const ValidateIdentity = (/*props: ActionResultProps<any>*/) => {
           qrCodeBase64: undefined,
           loading: false,
         });
-        toast({
-          variant: "destructive",
-          title: "Something went wrong during Identity validation.",
-          description: error.response.statusText,
-        });
+        toastException(error);
       });
   };
 
