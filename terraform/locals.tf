@@ -31,27 +31,31 @@ locals {
 # Static variables
 locals {
   verified_id_create_presentation_request_uri = "https://verifiedid.did.msidentity.com/v1.0/verifiableCredentials/createPresentationRequest"
+  create_tap_app_role_name                    = "MyWorkID.CreateTAP"
+  dismiss_user_risk_app_role_name             = "MyWorkID.DismissUserRisk"
+  password_reset_app_role_name                = "MyWorkID.PasswordReset"
+  validate_identity_app_role_name             = "MyWorkID.ValidateIdentity"
 }
 
 locals {
   backend_access_groups_map = {
     "CreateTAP" = {
-      group_name = "sec - MyWorkID - Create TAP"
-      app_role   = "MyWorkID.CreateTAP"
+      group_name = "${var.backend_access_group_names.create_tap}"
+      app_role   = "${local.create_tap_app_role_name}"
     }
     "DismissUserRisk" = {
-      group_name = "sec - MyWorkID - Dismiss User Risk"
-      app_role   = "MyWorkID.DismissUserRisk"
+      group_name = "${var.backend_access_group_names.dismiss_user_risk}"
+      app_role   = "${local.dismiss_user_risk_app_role_name}"
     }
     "PasswordReset" = {
-      group_name = "sec - MyWorkID - Password Reset"
-      app_role   = "MyWorkID.PasswordReset"
+      group_name = "${var.backend_access_group_names.password_reset}"
+      app_role   = "${local.password_reset_app_role_name}"
     }
     "ValidateIdentity" = {
-      group_name = "sec - MyWorkID - Validate Identity"
-      app_role   = "MyWorkID.ValidateIdentity"
+      group_name = "${var.backend_access_group_names.validate_identity}"
+      app_role   = "${local.validate_identity_app_role_name}"
     }
   }
 
-  base_access_groups_map = { for k, v in local.backend_access_groups_map : k => v if var.create_backend_access_groups && !var.skip_actions_requiring_global_admin }
+  base_access_groups_map = { for k, v in local.backend_access_groups_map : k => v if var.skip_creation_backend_access_groups && !var.skip_actions_requiring_global_admin }
 }

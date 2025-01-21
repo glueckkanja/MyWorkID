@@ -81,3 +81,23 @@ variable "verified_id_verify_security_attribute" {
   description = "The name of the custom security attribute where the last verified date should be stored."
   default     = "lastVerifiedFaceCheck"
 }
+variable "skip_creation_backend_access_groups" {
+  type        = bool
+  description = "Value to determine if the backend access groups should be created automatically or if this action should be skipped"
+  default     = false
+}
+variable "backend_access_group_names" {
+  type = object({
+    create_tap        = string
+    dismiss_user_risk = string
+    password_reset    = string
+    validate_identity = string
+  })
+
+  default = {
+    create_tap        = "sec - MyWorkID - Create TAP" 
+    dismiss_user_risk = "sec - MyWorkID - Dismiss User Risk" 
+    password_reset    = "sec - MyWorkID - Password Reset" 
+    validate_identity = "sec - MyWorkID - Validate Identity" 
+  }
+}
