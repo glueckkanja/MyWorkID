@@ -170,7 +170,7 @@ function toastException(error: unknown) {
   let description = "Something went wrong";
 
   if (axios.isAxiosError(error)) {
-    description = error.response?.data.detail ?? "Something went wrong";
+    description = error.response?.data.detail ? error.response?.data.message :"Something went wrong";
   }
 
   toast({
