@@ -9,6 +9,10 @@ import { Input } from "@/components/ui/input";
 import { callResetPassword } from "../../../services/api-service";
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { PasswordResetSvg } from "@/assets/svg/password-reset-svg";
+import { EyeOpenSvg } from "@/assets/svg/eye-open-svg";
+import { EyeClosedSvg } from "@/assets/svg/eye-closed-svg";
+
 type PasswordDisplay = {
   visible: boolean;
   value: string;
@@ -29,88 +33,7 @@ const PASSWORD_MUST_CONTAIN_ERROR_TEXT =
   "Please use characters from at least 3 of these groups: lowercase, uppercase, digits, special symbols.";
 const PASSWORD_MUST_BE_SAME_ERROR_TEXT =
   "Password must be the same in both fields.";
-const svgIcon = (
-  <svg
-    width="40"
-    height="43"
-    viewBox="0 0 40 43"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <g id="Group 24">
-      <path
-        id="Vector"
-        d="M2.62903 1.62024V13.1833H14.3865"
-        stroke="white"
-        strokeWidth="2"
-        strokeLinecap="square"
-      />
-      <path
-        id="Vector_2"
-        d="M3.64105 11.6177C7.10735 7.72748 11.9237 5.37118 17.0445 5.06028C22.1654 4.74938 27.1773 6.50899 30.9922 9.9571C33.2483 12.0078 34.9891 14.5801 36.0719 17.4629C37.1548 20.3458 37.5487 23.4569 37.2214 26.541C36.8941 29.6252 35.8548 32.5944 34.189 35.2049C32.5231 37.8155 30.2782 39.9929 27.6383 41.5586"
-        stroke="white"
-        strokeWidth="2"
-        strokeLinecap="square"
-      />
-    </g>
-  </svg>
-);
-const eyeIcon = (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="20"
-    height="12"
-    viewBox="0 0 20 12"
-    fill="none"
-  >
-    <path
-      d="M7.46298 6.00005C7.46298 6.71409 7.74664 7.39889 8.25154 7.9038C8.75645 8.4087 9.44125 8.69236 10.1553 8.69236C10.8693 8.69236 11.5541 8.4087 12.059 7.9038C12.5639 7.39889 12.8476 6.71409 12.8476 6.00005C12.8476 5.286 12.5639 4.6012 12.059 4.0963C11.5541 3.59139 10.8693 3.30774 10.1553 3.30774C9.44125 3.30774 8.75645 3.59139 8.25154 4.0963C7.74664 4.6012 7.46298 5.286 7.46298 6.00005Z"
-      stroke="#7F7F7F"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M18.9091 5.74615C18.0091 4.73077 14.4322 1 10.1553 1C5.87837 1 2.30145 4.73077 1.40145 5.74615C1.34269 5.8177 1.31058 5.90742 1.31058 6C1.31058 6.09258 1.34269 6.1823 1.40145 6.25385C2.30145 7.26923 5.87837 11 10.1553 11C14.4322 11 18.0091 7.26923 18.9091 6.25385C18.9679 6.1823 19 6.09258 19 6C19 5.90742 18.9679 5.8177 18.9091 5.74615Z"
-      stroke="#7F7F7F"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
-const closeEyeIcon = (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="20"
-    height="12"
-    viewBox="0 0 20 12"
-    fill="none"
-  >
-    <path
-      d="M7.46298 6.00005C7.46298 6.71409 7.74664 7.39889 8.25154 7.9038C8.75645 8.4087 9.44125 8.69236 10.1553 8.69236C10.8693 8.69236 11.5541 8.4087 12.059 7.9038C12.5639 7.39889 12.8476 6.71409 12.8476 6.00005C12.8476 5.286 12.5639 4.6012 12.059 4.0963C11.5541 3.59139 10.8693 3.30774 10.1553 3.30774C9.44125 3.30774 8.75645 3.59139 8.25154 4.0963C7.74664 4.6012 7.46298 5.286 7.46298 6.00005Z"
-      stroke="#7F7F7F"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M18.9091 5.74615C18.0091 4.73077 14.4322 1 10.1553 1C5.87837 1 2.30145 4.73077 1.40145 5.74615C1.34269 5.8177 1.31058 5.90742 1.31058 6C1.31058 6.09258 1.34269 6.1823 1.40145 6.25385C2.30145 7.26923 5.87837 11 10.1553 11C14.4322 11 18.0091 7.26923 18.9091 6.25385C18.9679 6.1823 19 6.09258 19 6C19 5.90742 18.9679 5.8177 18.9091 5.74615Z"
-      stroke="#7F7F7F"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <line
-      x1="14.0303"
-      y1="2.03033"
-      x2="6.03033"
-      y2="10.0303"
-      stroke="#7F7F7F"
-      strokeWidth="1.5"
-    />
-  </svg>
-);
+
 const formSchema = z.object({
   password: z.string().min(2).max(50),
   confirmPassword: z.string().min(2).max(50),
@@ -292,7 +215,7 @@ export const PasswordReset = (props: TFunctionProps) => {
           }}
         >
           <CardHeader>
-            <CardTitle>{svgIcon}</CardTitle>
+            <CardTitle>{PasswordResetSvg}</CardTitle>
           </CardHeader>
           <CardFooter className="action-card__footer">
             Reset Password
@@ -331,7 +254,7 @@ export const PasswordReset = (props: TFunctionProps) => {
                           }
                         }}
                       >
-                        {passwordDisplay.showValue ? closeEyeIcon : eyeIcon}
+                        {passwordDisplay.showValue ? EyeClosedSvg : EyeOpenSvg}
                       </button>
                     </div>
                   </FormControl>
@@ -367,7 +290,7 @@ export const PasswordReset = (props: TFunctionProps) => {
                           }
                         }}
                       >
-                        {passwordDisplay.showValue ? closeEyeIcon : eyeIcon}
+                        {passwordDisplay.showValue ? EyeClosedSvg : EyeOpenSvg}
                       </button>
                     </div>
                   </FormControl>
