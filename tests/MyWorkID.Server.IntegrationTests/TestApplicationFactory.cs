@@ -71,7 +71,6 @@ namespace MyWorkID.Server.IntegrationTests
             });
         }
 
-
         public static WebApplicationFactory<T> WithAuthenticationVerifiedId<T>(
             this WebApplicationFactory<T> factory,
             TestClaimsProvider claimsProvider,
@@ -79,7 +78,6 @@ namespace MyWorkID.Server.IntegrationTests
             IHubContext<VerifiedIdHub, IVerifiedIdHub>? hubContext = null,
             IRequestAdapter? requestAdapter = null) where T : class
         {
-
             return factory.WithWebHostBuilder(builder =>
             {
                 builder.ConfigureTestServices(services =>
@@ -92,14 +90,12 @@ namespace MyWorkID.Server.IntegrationTests
                         .AddAuthentication(TestAuthHandler.TestScheme)
                         .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.TestScheme, options => { });
 
-                    services.AddAuthorization(options =>
-                    {
-                        options.AddPolicy(Strings.VERIFIED_ID_CALLBACK_POLICY, policy =>
+                    services.AddAuthorizationBuilder()
+                        .AddPolicy(Strings.VERIFIED_ID_CALLBACK_POLICY, policy =>
                         {
                             policy.RequireAuthenticatedUser();
                             policy.AuthenticationSchemes.Add(TestAuthHandler.TestScheme);
                         });
-                    });
 
                     if (verifiedIdSignalRRepository != null)
                     {
@@ -155,7 +151,6 @@ namespace MyWorkID.Server.IntegrationTests
             }
         }
 
-
         public static void AddAuthContextConfig(
             this TestApplicationFactory factory, string appFunction, string? validAuthContextId = null)
         {
@@ -165,5 +160,4 @@ namespace MyWorkID.Server.IntegrationTests
             }));
         }
     }
-
 }
