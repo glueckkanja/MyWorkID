@@ -5,7 +5,7 @@ import { getVerifiedIdConnection } from "../../../services/signal-r-service";
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { CardContent, CircularProgress } from "@mui/material";
 import { useToast } from "@/hooks/use-toast";
-import { ValidateIdentitySvg } from "@/assets/svg/validate-identity-svg";
+import ValidateIdentitySvg from "../../../assets/svg/validate-identity.svg";
 
 type VerifiedIdDisplay = {
   visible: boolean;
@@ -91,7 +91,9 @@ export const ValidateIdentity = (/*props: ActionResultProps<any>*/) => {
           }}
         >
           <CardHeader>
-            <CardTitle>{ValidateIdentitySvg}</CardTitle>
+            <CardTitle>
+              <img src={ValidateIdentitySvg} alt="ValidateIdentity" />
+            </CardTitle>
           </CardHeader>
           <CardFooter className="action-card__footer">
             Validate Identity

@@ -9,9 +9,9 @@ import { Input } from "@/components/ui/input";
 import { callResetPassword } from "../../../services/api-service";
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { PasswordResetSvg } from "@/assets/svg/password-reset-svg";
-import { EyeOpenSvg } from "@/assets/svg/eye-open-svg";
-import { EyeClosedSvg } from "@/assets/svg/eye-closed-svg";
+import PasswordResetSvg from "../../../assets/svg/password-reset.svg";
+import EyeOpenSvg from "../../../assets/svg/eye-open.svg";
+import EyeClosedSvg from "../../../assets/svg/eye-closed.svg";
 
 type PasswordDisplay = {
   visible: boolean;
@@ -215,7 +215,9 @@ export const PasswordReset = (props: TFunctionProps) => {
           }}
         >
           <CardHeader>
-            <CardTitle>{PasswordResetSvg}</CardTitle>
+            <CardTitle>
+              <img src={PasswordResetSvg} alt="PasswordResetIcon" />
+            </CardTitle>
           </CardHeader>
           <CardFooter className="action-card__footer">
             Reset Password
@@ -254,7 +256,14 @@ export const PasswordReset = (props: TFunctionProps) => {
                           }
                         }}
                       >
-                        {passwordDisplay.showValue ? EyeClosedSvg : EyeOpenSvg}
+                        <img
+                          src={
+                            passwordDisplay.showValue
+                              ? EyeClosedSvg
+                              : EyeOpenSvg
+                          }
+                          alt="ShowPasswordIcon"
+                        />
                       </button>
                     </div>
                   </FormControl>
@@ -290,7 +299,14 @@ export const PasswordReset = (props: TFunctionProps) => {
                           }
                         }}
                       >
-                        {passwordDisplay.showValue ? EyeClosedSvg : EyeOpenSvg}
+                        <img
+                          src={
+                            passwordDisplay.showValue
+                              ? EyeClosedSvg
+                              : EyeOpenSvg
+                          }
+                          alt="ShowPasswordIcon"
+                        />
                       </button>
                     </div>
                   </FormControl>

@@ -1,6 +1,6 @@
 import { useTheme } from "./use-theme";
-import { HeaderLogoSvg } from "@/assets/svg/header-logo-svg";
-import { DarkModeSvg } from "@/assets/svg/dark-mode-svg";
+import HeaderLogoSvg from "../assets/svg/header-logo.svg";
+import DarkModeSvg from "../assets/svg/dark-mode-toggle.svg";
 
 enum ColorTheme {
   Light = "light",
@@ -20,7 +20,7 @@ export const Header = () => {
 
   return (
     <div className="header__container">
-      {HeaderLogoSvg}
+      <img src={HeaderLogoSvg} alt="myWorkID Logo" />
       <div className="header__title">
         <span className="header__title__text-myWork">myWork</span>
         <span className="header__title__text-ID">ID</span>
@@ -35,7 +35,7 @@ export const Header = () => {
           }
         }}
       >
-        {DarkModeSvg}
+        <img src={DarkModeSvg} alt="DarkModeToggle" />
       </button>
     </div>
   );

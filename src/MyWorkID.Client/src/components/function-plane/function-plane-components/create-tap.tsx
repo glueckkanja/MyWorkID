@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { CreateTapSvgIcon } from "@/assets/svg/create-tap-svg";
+import  CreateTapSvgIcon  from "@/assets/svg/create-tap.svg";
 type TAPDisplay = {
   visible: boolean;
   value: string;
@@ -63,7 +63,7 @@ export const CreateTAP = (props: TFunctionProps) => {
           }}
         >
           <CardHeader>
-            <CardTitle>{CreateTapSvgIcon}</CardTitle>
+            <CardTitle><img src={CreateTapSvgIcon} alt="CreateTapIcon" /></CardTitle>
           </CardHeader>
           <CardFooter className="action-card__footer">
             Create Temporary Access Password
