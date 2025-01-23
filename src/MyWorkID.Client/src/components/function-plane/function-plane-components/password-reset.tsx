@@ -54,7 +54,7 @@ export const PasswordReset = (props: TFunctionProps) => {
       confirmPassword: "",
     },
   });
-  const { toast } = useToast();
+  const { toast, toastException } = useToast();
   const [enableSubmitButton, setEnableSubmitButton] = useState(true);
   // Note this is the claim challenge check - if successfull comes back the password reset UI should be accasible - if not we have to close the menu again
   useEffect(() => {
@@ -63,7 +63,7 @@ export const PasswordReset = (props: TFunctionProps) => {
       togglePasswordResetUI();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [props.comingFromRedirect]);
 
   const resetPassword = () => {
     const passwordToSet = passwordDisplay.value;
@@ -103,11 +103,7 @@ export const PasswordReset = (props: TFunctionProps) => {
             errorValue: "ERROR",
             errorValueConfirm: "ERROR",
           });
-          toast({
-            variant: "destructive",
-            title: "Something went wrong during Password reset generation.",
-            description: error.response.statusText,
-          });
+          toastException(error);
         });
     }
   };
