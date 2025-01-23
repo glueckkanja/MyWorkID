@@ -88,16 +88,11 @@ variable "skip_creation_backend_access_groups" {
 }
 variable "backend_access_group_names" {
   type = object({
-    create_tap        = string
-    dismiss_user_risk = string
-    password_reset    = string
-    validate_identity = string
+    create_tap        = optional(string, "sec - MyWorkID - Create TAP")
+    dismiss_user_risk = optional(string, "sec - MyWorkID - Dismiss User Risk")
+    password_reset    = optional(string, "sec - MyWorkID - Password Reset")
+    validate_identity = optional(string, "sec - MyWorkID - Validate Identity")
   })
-
-  default = {
-    create_tap        = "sec - MyWorkID - Create TAP" 
-    dismiss_user_risk = "sec - MyWorkID - Dismiss User Risk" 
-    password_reset    = "sec - MyWorkID - Password Reset" 
-    validate_identity = "sec - MyWorkID - Validate Identity" 
-  }
+ 
+  default = {}
 }

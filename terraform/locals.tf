@@ -57,5 +57,5 @@ locals {
     }
   }
 
-  base_access_groups_map = { for k, v in local.backend_access_groups_map : k => v if var.skip_creation_backend_access_groups && !var.skip_actions_requiring_global_admin }
+  base_access_groups_map = { for k, v in local.backend_access_groups_map : k => v if !var.skip_creation_backend_access_groups && !var.skip_actions_requiring_global_admin }
 }
