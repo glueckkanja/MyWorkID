@@ -18,7 +18,7 @@ namespace MyWorkID.Server.Features.VerifiedId.Commands
         public static void MapEndpoint(IEndpointRouteBuilder endpoints)
         {
             endpoints.MapPostWithUpdatedOpenApi("api/me/verifiedid/callback", HandleAsync)
-                .RequireAuthorization(Strings.VERIFIED_ID_CALLBACK_SCHEMA)
+                .RequireAuthorization(Strings.VERIFIED_ID_CALLBACK_POLICY)
                 .AddEndpointFilter<CheckVerifiedIdAppConfigurationEndpointFilter>()
                 .AddEndpointFilter<CheckForUserIdEndpointFilter>()
                 .WithTags(Strings.VERIFIEDID_OPENAPI_TAG);
