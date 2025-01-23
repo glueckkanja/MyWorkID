@@ -26,12 +26,12 @@ const convertTFunctionResult = async <T>(
       dataType: dataType,
     };
   } catch (error) {
-    if (!axios.isAxiosError(error)) {
+    if (axios.isAxiosError(error)) {
       throw error;
     }
     return {
       status: "error",
-      errorMessage: error.message,
+      errorMessage: "Something went wrong on the client side.",
       dataType: dataType,
     };
   }

@@ -75,14 +75,14 @@ export const DismissUserRisk = (props: TFunctionProps) => {
       </g>
     </svg>
   );
-  const { toast } = useToast();
+  const { toastException } = useToast();
 
   useEffect(() => {
     if (props.comingFromRedirect) {
       dismissUserRisk();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.comingFromRedirect]);
 
   const triggerDismissUserRisk = () => {
     setLoading(true);
@@ -94,11 +94,7 @@ export const DismissUserRisk = (props: TFunctionProps) => {
       .catch((error) => {
         setLoading(false);
         setSuccess(false);
-        toast({
-          variant: "destructive",
-          title: "Something went wrong trying to dismiss User risk.",
-          description: error.response.statusText,
-        });
+        toastException(error);
       });
   };
   return (
