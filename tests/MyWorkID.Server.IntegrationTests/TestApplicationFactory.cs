@@ -94,7 +94,7 @@ namespace MyWorkID.Server.IntegrationTests
 
                     services.AddAuthorization(options =>
                     {
-                        options.AddPolicy(Strings.VERIFIED_ID_CALLBACK_SCHEMA, policy =>
+                        options.AddPolicy(Strings.VERIFIED_ID_CALLBACK_POLICY, policy =>
                         {
                             policy.RequireAuthenticatedUser();
                             policy.AuthenticationSchemes.Add(TestAuthHandler.TestScheme);
