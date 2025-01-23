@@ -180,11 +180,11 @@ function toastException(error: unknown) {
   });
 }
 
-function toastError() {
+function toastError(description: string = "Something went wrong on the client side.") {
   toast({
     variant: "destructive",
     title: "Something went wrong",
-    description: "Something went wrong on the client side.",
+    description: description,
   });
 }
 
