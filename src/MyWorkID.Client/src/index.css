@@ -42,6 +42,8 @@
     --password-reset-button: #5cbbff;
     --header-title-text-ID: #0072c6;
     --font-family: "Lato", sans-serif;
+    --footer-svg-icon-light: block;
+    --footer-svg-icon-dark: none;
   }
   .dark {
     --background: 0 0% 3.9%;
@@ -81,6 +83,8 @@
     --brand-svg-bottom-path: "M39.8954 10.6294H47.0075V3.56567H39.8954V10.6294ZM46.5503 7.09753H40.3552V4.02081H46.5503V7.09753Z";
     --password-reset-button: #0072c6;
     --header-title-text-ID: #ffffff;
+    --footer-svg-icon-light: none;
+    --footer-svg-icon-dark: block;
   }
 }
 @layer base {
@@ -132,6 +136,13 @@ body {
 .footer_svg-icon {
   margin-top: 12px;
   margin-bottom: 12px;
+}
+.footer_svg-icon-light {
+  display: var(--footer-svg-icon-light) !important;
+}
+
+.footer_svg-icon-dark {
+  display: var(--footer-svg-icon-dark) !important;
 }
 .header__container {
   width: 100%;
@@ -191,9 +202,6 @@ body {
   font-weight: "700";
   color: var(--user-displayname);
 }
-.brand__svg {
-  fill: var(--footer-svg-color);
-}
 .action-card__tap {
   background-color: var(--action-card-activated-background);
   border-radius: 24px;
@@ -208,14 +216,7 @@ body {
   width: "164px";
   border-radius: "24px";
 }
-.brand__svg__logo__top {
-  fill: var(--brand-svg-color-top);
-  d: path(var(--brand-svg-top-path));
-}
-.brand__svg__logo__bottom {
-  fill: var(--brand-svg-color-bottom);
-  d: path(var(--brand-svg-bottom-path));
-}
+
 .action-card__tap_content {
   color: var(--user-displayname);
   text-align: center;
@@ -303,8 +304,8 @@ body {
   align-items: center;
 }
 
-
-.action-card__pasword-reser__input-container .action-card__pasword-reset__input-container__icon {
+.action-card__pasword-reser__input-container
+  .action-card__pasword-reset__input-container__icon {
   position: absolute;
   right: 24px; /* Adjust based on icon size */
   cursor: pointer;
