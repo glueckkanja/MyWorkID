@@ -138,11 +138,11 @@ body {
   margin-bottom: 12px;
 }
 .footer_svg-icon-light {
-  display: var(--footer-svg-icon-light) !important;
+  display: var(--footer-svg-icon-light);
 }
 
 .footer_svg-icon-dark {
-  display: var(--footer-svg-icon-dark) !important;
+  display: var(--footer-svg-icon-dark);
 }
 .header__container {
   width: 100%;
