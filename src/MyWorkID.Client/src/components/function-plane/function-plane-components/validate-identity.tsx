@@ -76,7 +76,7 @@ export const ValidateIdentity = (/*props: ActionResultProps<any>*/) => {
       }
     });
   }, []);
-  const { toast, toastException } = useToast();
+  const { toastError, toastException } = useToast();
   const validateIdentity = () => {
     setVerifiedIdDisplay({
       visible: false,
@@ -98,11 +98,7 @@ export const ValidateIdentity = (/*props: ActionResultProps<any>*/) => {
             qrCodeBase64: undefined,
             loading: false,
           });
-          toast({
-            variant: "destructive",
-            title: "Something went wrong",
-            description: "Something went wrong on the client side.",
-          });
+          toastError();
         }
       })
       .catch((error) => {

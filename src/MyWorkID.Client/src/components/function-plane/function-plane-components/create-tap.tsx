@@ -75,7 +75,7 @@ export const CreateTAP = (props: TFunctionProps) => {
     value: "",
     loading: false,
   });
-  const { toast, toastException } = useToast();
+  const { toastException, toastError } = useToast();
   const createTAP = async () => {
     generateTAP()
       .then((result) => {
@@ -95,11 +95,7 @@ export const CreateTAP = (props: TFunctionProps) => {
             value: "",
             loading: false,
           });
-          toast({
-            variant: "destructive",
-            title: "Something went wrong",
-            description: "Something went wrong on the client side.",
-          });
+          toastError();
         }
       })
       .catch((error) => {

@@ -180,6 +180,14 @@ function toastException(error: unknown) {
   });
 }
 
+function toastError() {
+  toast({
+    variant: "destructive",
+    title: "Something went wrong",
+    description: "Something went wrong on the client side.",
+  });
+}
+
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState);
 
@@ -197,6 +205,7 @@ function useToast() {
     ...state,
     toast,
     toastException,
+    toastError,
     dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
   };
 }
