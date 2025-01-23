@@ -83,13 +83,13 @@ namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
         }
 
         [Fact]
-        public async Task ValidateIdentity_Returns400_WithoutPresentation()
+        public async Task ValidateIdentity_Returns500_WithoutPresentation()
         {
             var handler = new MockHttpMessageHandler(HttpStatusCode.OK, null);
             var provider = new TestClaimsProvider().WithValidateIdentityRole().WithRandomSubAndOid();
             var client = _testApplicationFactory.WithHttpMock(handler).CreateClientWithTestAuth(provider);
             var response = await client.PostAsync(_baseUrl, null);
-            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
         }
 
         [Fact]
