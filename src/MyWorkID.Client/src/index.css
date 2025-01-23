@@ -94,9 +94,7 @@
 body {
   background-color: var(--background-color);
 }
-#ic_fluent_person_48_regular{
-  fill: var(--tile-color);
-}
+
 .action-card {
   background-color: var(--tile-color);
   color: white;

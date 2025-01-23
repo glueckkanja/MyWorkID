@@ -8,7 +8,7 @@ import {
 } from "../../services/api-service";
 import { TGetRiskStateResponse, User } from "../../types";
 import { useTheme } from "@mui/material";
-import { AvatarPlaceholderSvg } from "@/assets/svg/avatar-placholder-svg";
+import AvatarPlaceholderSvg from "@/assets/svg/avatar-placeholder.svg";
 
 type RiskUserState = {
   loading: boolean;
@@ -105,7 +105,9 @@ export const UserDisplay = () => {
     <div className="userdisplay">
       <Avatar className="userdisplay__avatar">
         <AvatarImage src={userImage} />
-        <AvatarFallback>{AvatarPlaceholderSvg}</AvatarFallback>
+        <AvatarFallback>
+          <img src={AvatarPlaceholderSvg} alt="AvatarPlaceholder" />
+        </AvatarFallback>
       </Avatar>
       <div>
         <div style={{ textAlign: "center" }}>
