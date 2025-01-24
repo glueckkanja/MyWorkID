@@ -35,7 +35,7 @@ export const UserDisplay = () => {
         setRiskUserState({
           loading: false,
           data: result,
-          displayValue: result?.riskLevel ?? result?.riskState ?? "UNKNOWN",
+          displayValue: result?.riskLevel ?? result?.riskState ?? "NONE",
         });
       })
       .catch((e) => {
