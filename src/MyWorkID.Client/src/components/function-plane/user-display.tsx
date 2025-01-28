@@ -35,7 +35,7 @@ export const UserDisplay = () => {
         setRiskUserState({
           loading: false,
           data: result,
-          displayValue: result?.riskLevel ?? result?.riskState ?? "UNKNOWN",
+          displayValue: result?.riskLevel ?? result?.riskState ?? "None",
         });
       })
       .catch((e) => {
@@ -43,7 +43,7 @@ export const UserDisplay = () => {
         setRiskUserState({
           loading: false,
           data: undefined,
-          displayValue: "UNKNOWN",
+          displayValue: "Unknown",
         });
       });
   }, [setRiskUserState]);
