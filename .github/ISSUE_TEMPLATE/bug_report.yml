@@ -46,6 +46,13 @@ body:
     validations: 
       required: false
   - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: If applicable, please provide screenshots to help explain the issue.
+    validations:
+      required: false
+  - type: textarea
     id: frontend-logs
     attributes:
       label: Console output (frontend)
@@ -60,4 +67,11 @@ body:
       description: If available, please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
       render: shell
     validations: 
+      required: false
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: If applicable, provide additional context.
+    validations:
       required: false
