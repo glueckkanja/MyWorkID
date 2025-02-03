@@ -3,8 +3,6 @@ description: Suggest an idea or feature request for this project
 title: "[FEATURE] "
 labels: ["feature request"]
 projects: ["glueckkanja/1"]
-assignees:
-  - octocat
 body:
   - type: checkboxes
     id: terms

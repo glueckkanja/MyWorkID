@@ -3,7 +3,6 @@ description: File a bug report.
 title: "[Bug] "
 labels: ["bug"]
 projects: ["glueckkanja/1"]
-assignees:
 body:
   - type: checkboxes
     id: terms
