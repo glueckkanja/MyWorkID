@@ -1,0 +1,32 @@
+name: 💡 Feature request
+description: Suggest an idea or feature request for this project
+title: "[FEATURE] "
+labels: ["feature request"]
+projects: ["glueckkanja/1"]
+assignees:
+  - octocat
+body:
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Check for duplicate issues
+      description: Check [issues](https://github.com/glueckkanja/MyWorkID/issues) for similar feature requests.
+      options:
+        - label: I have verified that this feature has not been requested before
+          required: true
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: What should be added or changed?
+      description: Please describe your feature request as detailed as possible.
+      placeholder: Feature request
+    validations:
+      required: true
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: If applicable, provide additional context, screenshots or mock-ups.
+    validations:
+      required: false
+  
