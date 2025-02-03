@@ -6,9 +6,11 @@ import {
   getUserImage,
   getUserRiskState,
 } from "../../services/api-service";
-import { TGetRiskStateResponse, User } from "../../types";
+import { RiskStateDescription, TGetRiskStateResponse, User } from "../../types";
 import { useTheme } from "@mui/material";
 import AvatarPlaceholderSvg from "@/assets/svg/avatar-placeholder.svg";
+import { Tooltip, TooltipTrigger } from "../ui/tooltip";
+import { TooltipContent } from "@radix-ui/react-tooltip";
 
 type RiskUserState = {
   loading: boolean;
@@ -26,7 +28,9 @@ export const UserDisplay = () => {
     loading: true,
     data: undefined,
   });
-
+  const [riskStateDescription, setRiskStateDescription] = useState<
+    string | undefined
+  >();
   const riskStatePollingIntervalRef = useRef<NodeJS.Timeout>();
 
   const updateRiskState = useCallback(() => {
@@ -35,15 +39,17 @@ export const UserDisplay = () => {
         setRiskUserState({
           loading: false,
           data: result,
-          displayValue: result?.riskLevel ?? result?.riskState ?? "None",
+          displayValue: result?.riskLevel ?? "None",
         });
+        getRiskStateDescription(result?.riskLevel ?? "None");
       })
       .catch((e) => {
         console.error("Could not get risk state", e);
+        setRiskStateDescription(RiskStateDescription.NONE);
         setRiskUserState({
           loading: false,
           data: undefined,
-          displayValue: "Unknown",
+          displayValue: "None",
         });
       });
   }, [setRiskUserState]);
@@ -79,7 +85,25 @@ export const UserDisplay = () => {
       }
     };
   }, [updateRiskState]);
-
+  const getRiskStateDescription = (value?: string) => {
+    switch (value?.toLocaleLowerCase()) {
+      case "none":
+        setRiskStateDescription(RiskStateDescription.NONE);
+        break;
+      case "low":
+        setRiskStateDescription(RiskStateDescription.NONE);
+        break;
+      case "medium":
+        setRiskStateDescription(RiskStateDescription.NONE);
+        break;
+      case "high":
+        setRiskStateDescription(RiskStateDescription.NONE);
+        break;
+      default:
+        setRiskStateDescription(undefined);
+        break;
+    }
+  };
   const getRiskStateColor = useCallback(
     (value?: string) => {
       switch (value?.toLocaleLowerCase()) {
@@ -114,17 +138,30 @@ export const UserDisplay = () => {
           <span className="userdisplay__username">{user?.displayName}</span>
           <div className="userdisplay__container">
             <div className="userdisplay__risk-state">Risk State:</div>
-            <div
-              style={{ color: getRiskStateColor(riskUserState.displayValue) }}
-            >
-              {riskUserState.loading && (
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-[200px]" />
-                  <Skeleton className="h-4 w-[200px]" />
+            <Tooltip>
+              <TooltipTrigger className="tooltip__trigger">
+                <div
+                  style={{
+                    color: getRiskStateColor(riskUserState.displayValue),
+                  }}
+                >
+                  {riskUserState.loading && (
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-[200px]" />
+                      <Skeleton className="h-4 w-[200px]" />
+                    </div>
+                  )}
+                  {riskUserState.displayValue}
                 </div>
+              </TooltipTrigger>
+              {riskStateDescription && (
+                <TooltipContent className="tooltip__content">
+                  <span className="tooltip__content__text">
+                    <b>{riskUserState.displayValue}</b> - {riskStateDescription}
+                  </span>
+                </TooltipContent>
               )}
-              {riskUserState.displayValue}
-            </div>
+            </Tooltip>
           </div>
         </div>
       </div>

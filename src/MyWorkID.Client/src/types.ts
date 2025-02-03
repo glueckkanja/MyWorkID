@@ -56,3 +56,10 @@ export type TGetRiskStateResponse = {
   riskState: string;
   riskLevel?: string;
 };
+
+export enum RiskStateDescription {
+  NONE = "No current indications of risk.",
+  LOW = "Minimal risk, no immediate action required.",
+  MEDIUM = "Potential risk, monitoring recommended.",
+  HIGH = "Severe risk, urgent intervention needed.",
+}
