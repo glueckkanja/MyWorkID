@@ -6,6 +6,7 @@ import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { CardContent, CircularProgress } from "@mui/material";
 import { useToast } from "@/hooks/use-toast";
 import ValidateIdentitySvg from "../../../assets/svg/validate-identity.svg";
+import { Spinner } from "@/components/ui/spinner";
 
 type VerifiedIdDisplay = {
   visible: boolean;
@@ -91,6 +92,10 @@ export const ValidateIdentity = (/*props: ActionResultProps<any>*/) => {
             Validate Identity
           </CardFooter>
         </Card>
+      ) : verifiedIdDisplay.loading ? (
+        <div className="action-card__loading">
+          <Spinner />
+        </div>
       ) : (
         <>
           {!verifiedIdDisplay.loading ? (

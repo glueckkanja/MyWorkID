@@ -9,7 +9,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import  CreateTapSvgIcon  from "@/assets/svg/create-tap.svg";
+import CreateTapSvgIcon from "../../../assets/svg/create-tap.svg";
+import { Spinner } from "@/components/ui/spinner";
 type TAPDisplay = {
   visible: boolean;
   value: string;
@@ -22,31 +23,27 @@ export const CreateTAP = (props: TFunctionProps) => {
     value: "",
     loading: false,
   });
-  const { toastException, toastError } = useToast();
+  const { toast } = useToast();
   const createTAP = async () => {
+    setTapDisplay({
+      visible: true,
+      value: "",
+      loading: true,
+    });
     generateTAP()
       .then((result) => {
-        if (
-          result.status === "success" &&
-          !!result.data?.temporaryAccessPassword &&
-          result.data?.temporaryAccessPassword.trim().length > 0
-        ) {
-          setTapDisplay({
-            visible: true,
-            value: result.data?.temporaryAccessPassword,
-            loading: false,
-          });
-        } else {
-          setTapDisplay({
-            visible: false,
-            value: "",
-            loading: false,
-          });
-          toastError();
-        }
+        setTapDisplay({
+          visible: true,
+          value: result.data?.temporaryAccessPassword ?? "ERROR",
+          loading: false,
+        });
       })
       .catch((error) => {
-        toastException(error);
+        toast({
+          variant: "destructive",
+          title: "Something went wrong during TAP generation.",
+          description: error.response.statusText,
+        });
         setTapDisplay({
           visible: false,
           value: "",
@@ -60,7 +57,7 @@ export const CreateTAP = (props: TFunctionProps) => {
       createTAP();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.comingFromRedirect]);
+  }, []);
 
   return (
     <div>
@@ -72,12 +69,18 @@ export const CreateTAP = (props: TFunctionProps) => {
           }}
         >
           <CardHeader>
-            <CardTitle><img src={CreateTapSvgIcon} alt="CreateTapIcon" /></CardTitle>
+            <CardTitle>
+              <img src={CreateTapSvgIcon} alt="CreateTapIcon" />
+            </CardTitle>
           </CardHeader>
           <CardFooter className="action-card__footer">
             Create Temporary Access Password
           </CardFooter>
         </Card>
+      ) : tapDisplay.loading ? (
+        <div className="action-card__loading">
+          <Spinner />
+        </div>
       ) : (
         <Card className="action-card__tap">
           <CardContent className="action-card__tap_content">

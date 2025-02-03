@@ -310,3 +310,6 @@ body {
   right: 24px; /* Adjust based on icon size */
   cursor: pointer;
 }
+.action-card__loading {
+  padding: 3rem;
+}

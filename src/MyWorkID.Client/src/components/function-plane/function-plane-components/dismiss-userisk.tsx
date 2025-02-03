@@ -2,11 +2,10 @@ import { dismissUserRisk } from "../../../services/api-service";
 import { useEffect, useState } from "react";
 import { TFunctionProps } from "../../../types";
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import CircularProgress from "@mui/material/CircularProgress/CircularProgress";
-import { CardContent } from "@mui/material";
 import { useToast } from "@/hooks/use-toast";
 import DismissUserRiskSvg from "@/assets/svg/dismiss-user-risk.svg";
 import SuccessSvg from "../../../assets/svg/success.svg";
+import { Spinner } from "@/components/ui/spinner";
 
 export const DismissUserRisk = (props: TFunctionProps) => {
   const [loading, setLoading] = useState<boolean>(false);
@@ -43,7 +42,9 @@ export const DismissUserRisk = (props: TFunctionProps) => {
           }}
         >
           <CardHeader>
-            <CardTitle><img src={DismissUserRiskSvg} alt="DismissUserRiskIcon" /></CardTitle>
+            <CardTitle>
+              <img src={DismissUserRiskSvg} alt="DismissUserRiskIcon" />
+            </CardTitle>
           </CardHeader>
           <CardFooter className="action-card__footer">
             Dismiss User Risk
@@ -51,11 +52,9 @@ export const DismissUserRisk = (props: TFunctionProps) => {
         </Card>
       )}
       {loading && success === undefined && (
-        <Card className="action-card__validate-id-success">
-          <CardContent>
-            <CircularProgress />
-          </CardContent>
-        </Card>
+        <div className="action-card__loading">
+          <Spinner />
+        </div>
       )}
       {!loading && success === true && (
         <Card className="action-card__validate-id-success">

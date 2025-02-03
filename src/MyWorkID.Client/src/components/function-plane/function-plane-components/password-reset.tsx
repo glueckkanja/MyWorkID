@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import PasswordResetSvg from "../../../assets/svg/password-reset.svg";
 import EyeOpenSvg from "../../../assets/svg/eye-open.svg";
 import EyeClosedSvg from "../../../assets/svg/eye-closed.svg";
+import { Spinner } from "@/components/ui/spinner";
 
 type PasswordDisplay = {
   visible: boolean;
@@ -109,6 +110,15 @@ export const PasswordReset = (props: TFunctionProps) => {
   };
 
   const togglePasswordResetUI = () => {
+    setPasswordDisplay({
+      visible: true,
+      value: "",
+      showValue: false,
+      valueConfirm: "",
+      showValueConfirm: false,
+      loading: true,
+    });
+
     if (!passwordDisplay.visible) {
       setPasswordDisplay({
         visible: true,
@@ -203,7 +213,7 @@ export const PasswordReset = (props: TFunctionProps) => {
 
   return (
     <div>
-      {!passwordDisplay.visible && (
+      {!passwordDisplay.visible ? (
         <Card
           className="action-card"
           onClick={() => {
@@ -219,8 +229,11 @@ export const PasswordReset = (props: TFunctionProps) => {
             Reset Password
           </CardFooter>
         </Card>
-      )}
-      {passwordDisplay.visible && (
+      ) : passwordDisplay.loading ? (
+        <div className="action-card__loading">
+          <Spinner />
+        </div>
+      ) : (
         <Form {...form}>
           <form className="space-y-2">
             <FormField
