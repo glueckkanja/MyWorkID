@@ -1,6 +1,6 @@
-name: 💡 Feature request
+name: 💡 Feature Request
 description: Suggest an idea or feature request for this project
-title: "[FEATURE] "
+title: "[Feature] "
 labels: ["feature request"]
 projects: ["glueckkanja/1"]
 body:
@@ -24,7 +24,6 @@ body:
     id: additional-context
     attributes:
       label: Additional context
-      description: If applicable, provide additional context, screenshots or mock-ups.
+      description: If applicable, provide additional context, screenshots, or mock-ups.
     validations:
       required: false
-  
