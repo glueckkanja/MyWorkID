@@ -1,0 +1,63 @@
+name: 🐞 Bug Report
+description: File a bug report.
+title: "[Bug]: "
+labels: ["bug"]
+projects: ["glueckkanja/1"]
+assignees:
+body:
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Check for duplicate issues
+      description: Check [issues](https://github.com/glueckkanja/MyWorkID/issues) for similar bug reports.
+      options:
+        - label: I have verified that this issue has not been reported before
+          required: true
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report! ❤️
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: Describe the bug
+      description: Please also include the expected behavior.
+      placeholder: What happened?
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Affected Version
+      description: Please specify the version of MyWorkID that you have deployed.
+      placeholder: v2025.1.0
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: How can we reproduce the issue?
+      description: Please provide a step-by-step guide to reproduce the issue.
+      placeholder: |
+        1. Go to '...'
+        2. Click on '....'
+        3. Scroll down to '....'
+        4. See error
+    validations: 
+      required: false
+  - type: textarea
+    id: frontend-logs
+    attributes:
+      label: Console output (frontend)
+      description: If available, please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
+      render: shell
+    validations: 
+      required: false
+  - type: textarea
+    id: backend-logs
+    attributes:
+      label: Log output (backend)
+      description: If available, please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
+      render: shell
+    validations: 
+      required: false
