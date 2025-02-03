@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import "./index.css";
+import "./assets/css/main.css";
+import "./assets/css/custom.css";
 import { BrowserRouter } from "react-router-dom";
 import { AppAutentication } from "./app-authentication";
 import App from "./app";
