@@ -311,5 +311,8 @@ body {
   cursor: pointer;
 }
 .action-card__loading {
-  padding: 3rem;
+  svg{
+    scale: 2;
+    margin: 3rem auto;
+  }
 }
