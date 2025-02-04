@@ -9,8 +9,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import CreateTapSvgIcon from "../../../assets/svg/create-tap.svg";
 import { Spinner } from "@/components/ui/spinner";
+import  CreateTapSvgIcon  from "@/assets/svg/create-tap.svg";
 type TAPDisplay = {
   visible: boolean;
   value: string;
@@ -23,7 +23,7 @@ export const CreateTAP = (props: TFunctionProps) => {
     value: "",
     loading: false,
   });
-  const { toast } = useToast();
+  const { toastException, toastError } = useToast();
   const createTAP = async () => {
     setTapDisplay({
       visible: true,
@@ -32,18 +32,27 @@ export const CreateTAP = (props: TFunctionProps) => {
     });
     generateTAP()
       .then((result) => {
-        setTapDisplay({
-          visible: true,
-          value: result.data?.temporaryAccessPassword ?? "ERROR",
-          loading: false,
-        });
+        if (
+          result.status === "success" &&
+          !!result.data?.temporaryAccessPassword &&
+          result.data?.temporaryAccessPassword.trim().length > 0
+        ) {
+          setTapDisplay({
+            visible: true,
+            value: result.data?.temporaryAccessPassword,
+            loading: false,
+          });
+        } else {
+          setTapDisplay({
+            visible: false,
+            value: "",
+            loading: false,
+          });
+          toastError();
+        }
       })
       .catch((error) => {
-        toast({
-          variant: "destructive",
-          title: "Something went wrong during TAP generation.",
-          description: error.response.statusText,
-        });
+        toastException(error);
         setTapDisplay({
           visible: false,
           value: "",
@@ -57,7 +66,7 @@ export const CreateTAP = (props: TFunctionProps) => {
       createTAP();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [props.comingFromRedirect]);
 
   return (
     <div>
