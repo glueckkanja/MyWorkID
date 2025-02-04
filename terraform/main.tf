@@ -244,6 +244,15 @@ resource "azuread_service_principal" "frontend" {
   client_id = azuread_application_registration.frontend.client_id
   owners    = [data.azuread_client_config.current_user.object_id]
 }
+resource "azuread_service_principal" "msgraph" {
+  client_id    = data.azuread_application_published_app_ids.well_known.result.MicrosoftGraph
+  use_existing = true
+}
+resource "azuread_service_principal_delegated_permission_grant" "frontend" {
+  service_principal_object_id          = azuread_service_principal.frontend.id
+  resource_service_principal_object_id = azuread_service_principal.msgraph.object_id
+  claim_values                         = ["User.Read"]
+}
 
 # Key vault
 resource "azurerm_key_vault" "backend_secrets" {
