@@ -2,8 +2,13 @@ import { useEffect, useState } from "react";
 import { verifyIdentity } from "../../../services/api-service";
 import { HubConnectionState } from "@microsoft/signalr";
 import { getVerifiedIdConnection } from "../../../services/signal-r-service";
-import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { CardContent, CircularProgress } from "@mui/material";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import ValidateIdentitySvg from "../../../assets/svg/validate-identity.svg";
 import { Spinner } from "@/components/ui/spinner";
@@ -42,7 +47,7 @@ export const ValidateIdentity = (/*props: ActionResultProps<any>*/) => {
   const { toastError, toastException } = useToast();
   const validateIdentity = () => {
     setVerifiedIdDisplay({
-      visible: false,
+      visible: true,
       qrCodeBase64: undefined,
       loading: true,
     });
@@ -97,26 +102,18 @@ export const ValidateIdentity = (/*props: ActionResultProps<any>*/) => {
           <Spinner />
         </div>
       ) : (
-        <>
-          {!verifiedIdDisplay.loading ? (
-            <Card
-              className="action-card__qr-code"
-              onClick={() => {
-                validateIdentity();
-              }}
-            >
-              <CardContent>
-                <div>
-                  <img alt="QrCode" src={verifiedIdDisplay.qrCodeBase64}></img>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
+        <Card
+          className="action-card__qr-code"
+          onClick={() => {
+            validateIdentity();
+          }}
+        >
+          <CardContent>
             <div>
-              <CircularProgress />
+              <img alt="QrCode" src={verifiedIdDisplay.qrCodeBase64}></img>
             </div>
-          )}
-        </>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
