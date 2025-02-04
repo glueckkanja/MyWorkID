@@ -1,7 +1,13 @@
 import { dismissUserRisk } from "../../../services/api-service";
 import { useEffect, useState } from "react";
 import { TFunctionProps } from "../../../types";
-import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import DismissUserRiskSvg from "@/assets/svg/dismiss-user-risk.svg";
 import SuccessSvg from "../../../assets/svg/success.svg";
@@ -52,9 +58,13 @@ export const DismissUserRisk = (props: TFunctionProps) => {
         </Card>
       )}
       {loading && success === undefined && (
-        <div className="action-card__loading">
-          <Spinner />
-        </div>
+        <Card className="action-card__validate-id-success">
+          <CardContent>
+            <div className="action-card__loading">
+              <Spinner />
+            </div>
+          </CardContent>
+        </Card>
       )}
       {!loading && success === true && (
         <Card className="action-card__validate-id-success">

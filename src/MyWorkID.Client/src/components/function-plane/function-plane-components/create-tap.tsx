@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Spinner } from "@/components/ui/spinner";
-import  CreateTapSvgIcon  from "@/assets/svg/create-tap.svg";
+import CreateTapSvgIcon from "@/assets/svg/create-tap.svg";
 type TAPDisplay = {
   visible: boolean;
   value: string;
@@ -87,9 +87,13 @@ export const CreateTAP = (props: TFunctionProps) => {
           </CardFooter>
         </Card>
       ) : tapDisplay.loading ? (
-        <div className="action-card__loading">
-          <Spinner />
-        </div>
+        <Card className="action-card__tap">
+          <CardContent className="action-card__tap_content">
+            <div className="action-card__loading">
+              <Spinner />
+            </div>
+          </CardContent>
+        </Card>
       ) : (
         <Card className="action-card__tap">
           <CardContent className="action-card__tap_content">

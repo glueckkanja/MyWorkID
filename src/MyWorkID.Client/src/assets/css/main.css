@@ -211,10 +211,15 @@ body {
   justify-content: center;
   align-items: center;
 }
+.action-card__password-reset {
+  background-color: var(--action-card-activated-background);
+  width: 164px;
+  border-radius: 24px;
+}
 .action-card__qr-code {
   background-color: var(--action-card-activated-background);
-  width: "164px";
-  border-radius: "24px";
+  width: 164px;
+  border-radius: 24px;
 }
 
 .action-card__tap_content {
@@ -311,8 +316,8 @@ body {
   cursor: pointer;
 }
 .action-card__loading {
-  svg{
+  svg {
     scale: 2;
-    margin: 3rem auto;
+    margin: auto;
   }
 }
