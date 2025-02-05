@@ -9,7 +9,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import  CreateTapSvgIcon  from "@/assets/svg/create-tap.svg";
+import { Spinner } from "@/components/ui/spinner";
+import CreateTapSvgIcon from "@/assets/svg/create-tap.svg";
 type TAPDisplay = {
   visible: boolean;
   value: string;
@@ -24,6 +25,11 @@ export const CreateTAP = (props: TFunctionProps) => {
   });
   const { toastException, toastError } = useToast();
   const createTAP = async () => {
+    setTapDisplay({
+      visible: true,
+      value: "",
+      loading: true,
+    });
     generateTAP()
       .then((result) => {
         if (
@@ -72,11 +78,21 @@ export const CreateTAP = (props: TFunctionProps) => {
           }}
         >
           <CardHeader>
-            <CardTitle><img src={CreateTapSvgIcon} alt="CreateTapIcon" /></CardTitle>
+            <CardTitle>
+              <img src={CreateTapSvgIcon} alt="CreateTapIcon" />
+            </CardTitle>
           </CardHeader>
           <CardFooter className="action-card__footer">
             Create Temporary Access Password
           </CardFooter>
+        </Card>
+      ) : tapDisplay.loading ? (
+        <Card className="action-card__tap">
+          <CardContent className="action-card__tap_content">
+            <div className="action-card__loading">
+              <Spinner />
+            </div>
+          </CardContent>
         </Card>
       ) : (
         <Card className="action-card__tap">

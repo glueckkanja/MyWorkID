@@ -2,10 +2,16 @@ import { useEffect, useState } from "react";
 import { verifyIdentity } from "../../../services/api-service";
 import { HubConnectionState } from "@microsoft/signalr";
 import { getVerifiedIdConnection } from "../../../services/signal-r-service";
-import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { CardContent, CircularProgress } from "@mui/material";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import ValidateIdentitySvg from "../../../assets/svg/validate-identity.svg";
+import { Spinner } from "@/components/ui/spinner";
 
 type VerifiedIdDisplay = {
   visible: boolean;
@@ -41,7 +47,7 @@ export const ValidateIdentity = (/*props: ActionResultProps<any>*/) => {
   const { toastError, toastException } = useToast();
   const validateIdentity = () => {
     setVerifiedIdDisplay({
-      visible: false,
+      visible: true,
       qrCodeBase64: undefined,
       loading: true,
     });
@@ -91,27 +97,27 @@ export const ValidateIdentity = (/*props: ActionResultProps<any>*/) => {
             Validate Identity
           </CardFooter>
         </Card>
-      ) : (
-        <>
-          {!verifiedIdDisplay.loading ? (
-            <Card
-              className="action-card__qr-code"
-              onClick={() => {
-                validateIdentity();
-              }}
-            >
-              <CardContent>
-                <div>
-                  <img alt="QrCode" src={verifiedIdDisplay.qrCodeBase64}></img>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <div>
-              <CircularProgress />
+      ) : verifiedIdDisplay.loading ? (
+        <Card className="action-card__qr-code">
+          <CardContent>
+            <div className="action-card__loading">
+              <Spinner />
             </div>
-          )}
-        </>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card
+          className="action-card__qr-code"
+          onClick={() => {
+            validateIdentity();
+          }}
+        >
+          <CardContent>
+            <div>
+              <img alt="QrCode" src={verifiedIdDisplay.qrCodeBase64}></img>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
