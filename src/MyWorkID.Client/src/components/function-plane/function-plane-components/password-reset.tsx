@@ -7,7 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { callResetPassword } from "../../../services/api-service";
-import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import PasswordResetSvg from "../../../assets/svg/password-reset.svg";
 import EyeOpenSvg from "../../../assets/svg/eye-open.svg";
@@ -213,7 +219,7 @@ export const PasswordReset = (props: TFunctionProps) => {
 
   return (
     <div>
-      {!passwordDisplay.visible ? (
+      {!passwordDisplay.visible && (
         <Card
           className="action-card"
           onClick={() => {
@@ -229,112 +235,121 @@ export const PasswordReset = (props: TFunctionProps) => {
             Reset Password
           </CardFooter>
         </Card>
-      ) : passwordDisplay.loading ? (
-        <div className="action-card__loading">
-          <Spinner />
-        </div>
-      ) : (
-        <Form {...form}>
-          <form className="space-y-2">
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <div className="action-card__pasword-reser__input-container">
-                      <Input
-                        type={passwordDisplay.showValue ? "text" : "password"}
-                        className="action-card__pasword-reset__input"
-                        placeholder="Enter Password"
-                        {...field}
-                        onChange={(e) =>
-                          handleInput(PasswordInputType.MAIN, e.target.value)
-                        }
-                        value={passwordDisplay.value}
-                      />
-                      <button
-                        tabIndex={0}
-                        className="action-card__pasword-reset__input-container__icon"
-                        onClick={() =>
-                          handleClickShowPassword(PasswordInputType.MAIN)
-                        }
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            handleClickShowPassword(PasswordInputType.MAIN);
-                          }
-                        }}
-                      >
-                        <img
-                          src={
-                            passwordDisplay.showValue
-                              ? EyeClosedSvg
-                              : EyeOpenSvg
-                          }
-                          alt="ShowPasswordIcon"
-                        />
-                      </button>
-                    </div>
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="confirmPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <div className="action-card__pasword-reser__input-container">
-                      <Input
-                        className="action-card__pasword-reset__input"
-                        type={passwordDisplay.showValue ? "text" : "password"}
-                        placeholder="Confirm Password"
-                        {...field}
-                        onChange={(e) =>
-                          handleInput(PasswordInputType.CONFIRM, e.target.value)
-                        }
-                        value={passwordDisplay.valueConfirm}
-                      />
-                      <button
-                        className="action-card__pasword-reset__input-container__icon"
-                        tabIndex={0}
-                        onClick={() =>
-                          handleClickShowPassword(PasswordInputType.MAIN)
-                        }
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            handleClickShowPassword(PasswordInputType.MAIN);
-                          }
-                        }}
-                      >
-                        <img
-                          src={
-                            passwordDisplay.showValue
-                              ? EyeClosedSvg
-                              : EyeOpenSvg
-                          }
-                          alt="ShowPasswordIcon"
-                        />
-                      </button>
-                    </div>
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <Button
-              className="action-card__pasword-reset__submit-button"
-              type="submit"
-              disabled={enableSubmitButton}
-              onClick={() => {
-                onSubmit();
-              }}
-            >
-              Submit
-            </Button>
-          </form>
-        </Form>
       )}
+      {passwordDisplay.visible &&
+        (passwordDisplay.loading ? (
+          <Card className="action-card">
+            <CardContent>
+              <div className="action-card__loading">
+                <Spinner />
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Form {...form}>
+            <form className="space-y-2">
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <div className="action-card__pasword-reser__input-container">
+                        <Input
+                          type={passwordDisplay.showValue ? "text" : "password"}
+                          className="action-card__pasword-reset__input"
+                          placeholder="Enter Password"
+                          {...field}
+                          onChange={(e) =>
+                            handleInput(PasswordInputType.MAIN, e.target.value)
+                          }
+                          value={passwordDisplay.value}
+                        />
+                        <button
+                          tabIndex={0}
+                          className="action-card__pasword-reset__input-container__icon"
+                          onClick={() =>
+                            handleClickShowPassword(PasswordInputType.MAIN)
+                          }
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              handleClickShowPassword(PasswordInputType.MAIN);
+                            }
+                          }}
+                        >
+                          <img
+                            src={
+                              passwordDisplay.showValue
+                                ? EyeClosedSvg
+                                : EyeOpenSvg
+                            }
+                            alt="ShowPasswordIcon"
+                          />
+                        </button>
+                      </div>
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <div className="action-card__pasword-reser__input-container">
+                        <Input
+                          className="action-card__pasword-reset__input"
+                          type={passwordDisplay.showValue ? "text" : "password"}
+                          placeholder="Confirm Password"
+                          {...field}
+                          onChange={(e) =>
+                            handleInput(
+                              PasswordInputType.CONFIRM,
+                              e.target.value
+                            )
+                          }
+                          value={passwordDisplay.valueConfirm}
+                        />
+                        <button
+                          className="action-card__pasword-reset__input-container__icon"
+                          tabIndex={0}
+                          onClick={() =>
+                            handleClickShowPassword(PasswordInputType.MAIN)
+                          }
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              handleClickShowPassword(PasswordInputType.MAIN);
+                            }
+                          }}
+                        >
+                          <img
+                            src={
+                              passwordDisplay.showValue
+                                ? EyeClosedSvg
+                                : EyeOpenSvg
+                            }
+                            alt="ShowPasswordIcon"
+                          />
+                        </button>
+                      </div>
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <Button
+                className="action-card__pasword-reset__submit-button"
+                type="submit"
+                disabled={enableSubmitButton}
+                onClick={() => {
+                  onSubmit();
+                }}
+              >
+                Submit
+              </Button>
+            </form>
+          </Form>
+        ))}
     </div>
   );
 };
