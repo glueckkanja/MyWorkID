@@ -15,5 +15,3 @@ Please refer to this documentation when you want to setup [myWorkID](https://www
 1. [Final setup steps](https://github.com/glueckkanja/my-work-id/wiki/Final-steps)
 
 If you need additional, paid, setup support please contact sales@glueckkanja.com
-
-![image](https://github.com/user-attachments/assets/373b0ce5-2139-4c2f-ad55-f13ddced8aa3)
