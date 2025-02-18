@@ -1,42 +1,57 @@
+# General
 variable "tenant_id" {
   type = string
 }
-
 variable "subscription_id" {
   type = string
 }
-
 variable "resource_group_name" {
   type    = string
   default = "rg-myWorkID"
 }
-
 variable "resource_location" {
   type    = string
   default = "westeurope"
 }
+variable "binaries_zip_path" {
+  type        = string
+  description = "Path where binaries are located"
+}
 
+# Flags
+variable "skip_actions_requiring_global_admin" {
+  description = "Skip actions that require global admin permissions. If set to true you will have to set some settings, like the permission grants, manually. NOTE: If this ever was set to false a change to true will result in the previously set permissions being removed"
+  type        = bool
+  default     = false
+}
+variable "skip_creation_backend_access_groups" {
+  type        = bool
+  description = "Value to determine if the backend access groups should be created automatically or if this action should be skipped"
+  default     = false
+}
+
+# AppService
 variable "api_name" {
   type        = string
   description = "Name of the AppService that hosts the api. Note this has to be globally unique."
 }
+variable "custom_redirect_url" {
+  type    = set(string)
+  default = []
+  description = "List of custom domains for MyWorkId. Must be configured at a later time"
+}
 
+# AppRegistrations
 variable "backed_appreg_name" {
   type    = string
   default = "ar-myWorkID-backend"
 }
-
 variable "frontend_appreg_name" {
   type    = string
   default = "ar-myWorkID-frontend"
 }
 
-variable "custom_redirect_url" {
-  type    = set(string)
-  default = []
-  description = "Custom URL for the frontend, must be configured  at a later time"
-}
-
+# AuthContexts
 variable "dismiss_user_risk_auth_context_id" {
   type        = string
   description = "AuthContext Id configured that is challenged for the dismissUser action"
@@ -49,15 +64,10 @@ variable "reset_password_auth_context_id" {
   type        = string
   description = "AuthContext Id configured that is challenged for the resetPassword action"
 }
-variable "skip_actions_requiring_global_admin" {
-  description = "Skip actions that require global admin permissions. If set to true you will have to set some settings, like the permission grants, manually. NOTE: If this ever was set to false a change to true will result in the previously set permissions being removed"
-  type        = bool
-  default     = false
-}
-variable "binaries_zip_path" {
-  type        = string
-  description = "Path where binaries are located"
-}
+
+
+
+# VerifiedId
 variable "verified_id_jwt_signing_key_secret_name" {
   type        = string
   description = "KeyVault secret name for the signing key of the jwt used int the verifiedId callbacks"
@@ -78,11 +88,8 @@ variable "verified_id_verify_security_attribute" {
   description = "The name of the custom security attribute where the last verified date should be stored."
   default     = "lastVerifiedFaceCheck"
 }
-variable "skip_creation_backend_access_groups" {
-  type        = bool
-  description = "Value to determine if the backend access groups should be created automatically or if this action should be skipped"
-  default     = false
-}
+
+# Backend Access Groups
 variable "backend_access_group_names" {
   type = object({
     create_tap        = optional(string, "sec - MyWorkID - Create TAP")
@@ -92,6 +99,8 @@ variable "backend_access_group_names" {
   })
   default = {}
 }
+
+# Dev
 variable "is_dev" {
   type    = bool
   default = false
