@@ -34,6 +34,7 @@ variable "frontend_appreg_name" {
 variable "custom_redirect_url" {
   type    = set(string)
   default = []
+  description = "Custom URL for the frontend, must be configured  at a later time"
 }
 
 variable "dismiss_user_risk_auth_context_id" {
@@ -89,6 +90,8 @@ variable "backend_access_group_names" {
     password_reset    = optional(string, "sec - MyWorkID - Password Reset")
     validate_identity = optional(string, "sec - MyWorkID - Validate Identity")
   })
+  default = {}
+}
 variable "is_dev" {
   type    = bool
   default = false
@@ -96,7 +99,4 @@ variable "is_dev" {
 variable "dev_redirect_url" {
   type    = set(string)
   default = []
-}
- 
-  default = {}
 }
