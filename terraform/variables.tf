@@ -45,10 +45,12 @@ variable "custom_domains" {
 variable "backed_appreg_name" {
   type    = string
   default = "ar-myWorkID-backend"
+  description = "Name of the AppRegistration that is used by the backend"
 }
 variable "frontend_appreg_name" {
   type    = string
   default = "ar-myWorkID-frontend"
+  description = "Name of the AppRegistration that is used by the frontend"
 }
 
 # AuthContexts
@@ -64,8 +66,6 @@ variable "reset_password_auth_context_id" {
   type        = string
   description = "AuthContext Id configured that is challenged for the resetPassword action"
 }
-
-
 
 # VerifiedId
 variable "verified_id_jwt_signing_key_secret_name" {
@@ -98,6 +98,7 @@ variable "backend_access_group_names" {
     validate_identity = optional(string, "sec - MyWorkID - Validate Identity")
   })
   default = {}
+  description = "Values for the backend access group names. Only relevant if skip_creation_backend_access_groups = false"
 }
 
 # Dev
