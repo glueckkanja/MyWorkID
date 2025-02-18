@@ -250,7 +250,7 @@ resource "azuread_service_principal" "msgraph" {
 }
 resource "azuread_service_principal_delegated_permission_grant" "frontend" {
   count                                = local.skip_actions_requiring_global_admin ? 0 : 1
-  service_principal_object_id          = azuread_service_principal.frontend.id
+  service_principal_object_id          = azuread_service_principal.frontend.object_id
   resource_service_principal_object_id = azuread_service_principal.msgraph.object_id
   claim_values                         = ["User.Read"]
 }
