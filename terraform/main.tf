@@ -236,6 +236,7 @@ resource "azuread_application_redirect_uris" "frontend_backend" {
   redirect_uris = setunion(
     ["https://${azurerm_linux_web_app.backend.default_hostname}/"],
     local.frontend_dev_redirect_uris,
+    var.custom_redirect_url
   )
 }
 # Frontend AppReg End

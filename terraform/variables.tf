@@ -31,6 +31,11 @@ variable "frontend_appreg_name" {
   default = "ar-myWorkID-frontend"
 }
 
+variable "custom_redirect_url" {
+  type    = set(string)
+  default = []
+}
+
 variable "dismiss_user_risk_auth_context_id" {
   type        = string
   description = "AuthContext Id configured that is challenged for the dismissUser action"
@@ -42,15 +47,6 @@ variable "generate_tap_auth_context_id" {
 variable "reset_password_auth_context_id" {
   type        = string
   description = "AuthContext Id configured that is challenged for the resetPassword action"
-}
-variable "is_dev" {
-  type    = bool
-  default = false
-}
-
-variable "dev_redirect_url" {
-  type    = set(string)
-  default = []
 }
 variable "skip_actions_requiring_global_admin" {
   description = "Skip actions that require global admin permissions. If set to true you will have to set some settings, like the permission grants, manually. NOTE: If this ever was set to false a change to true will result in the previously set permissions being removed"
@@ -93,6 +89,14 @@ variable "backend_access_group_names" {
     password_reset    = optional(string, "sec - MyWorkID - Password Reset")
     validate_identity = optional(string, "sec - MyWorkID - Validate Identity")
   })
+variable "is_dev" {
+  type    = bool
+  default = false
+}
+variable "dev_redirect_url" {
+  type    = set(string)
+  default = []
+}
  
   default = {}
 }
