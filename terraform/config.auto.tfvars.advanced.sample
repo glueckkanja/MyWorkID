@@ -23,8 +23,9 @@ skip_creation_backend_access_groups = false
 # Name of the AppService that hosts the api. Note this has to be globally unique.
 api_name = "REPLACE_WITH_UNIQUE_APPSERVICE_NAME"
 
-# Custom URL for the frontend, must be configured  at a later time
-custom_redirect_url = "https://REPLACE_WITH_CUSTOM_REDIRECT_URL"
+# List of custom domains for MyWorkId. Must be configured at a later time. 
+# NOTE: If sepcified the VerifiedId callbacks will always use the first domain in the list.
+custom_domains = ["REPLACE_WITH_CUSTOM_DOMAIN"]
 
 # ------- AppRegistrations -------
 
