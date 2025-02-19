@@ -87,7 +87,7 @@ resource "azurerm_linux_web_app" "backend" {
     VerifiedId__DecentralizedIdentifier        = "@Microsoft.KeyVault(VaultName=${azurerm_key_vault.backend_secrets.name};SecretName=${local.verified_id_decentralized_identifier_secret_name})"
     VerifiedId__TargetSecurityAttributeSet     = local.verified_id_verify_security_attribute_set
     VerifiedId__TargetSecurityAttribute        = local.verified_id_verify_security_attribute
-    VerifiedId__BackendUrl                     = "https://${local.api_name}.azurewebsites.net"
+    VerifiedId__BackendUrl                     = local.is_custom_domain_configured ? "https://${local.custom_domains[0]}" : "https://${local.api_name}.azurewebsites.net"
     VerifiedId__CreatePresentationRequestUri   = local.verified_id_create_presentation_request_uri
   }
 
@@ -234,6 +234,7 @@ resource "azuread_application_redirect_uris" "frontend_backend" {
   type           = "SPA"
 
   redirect_uris = setunion(
+    formatlist("https://%s/", local.custom_domains),
     ["https://${azurerm_linux_web_app.backend.default_hostname}/"],
     local.frontend_dev_redirect_uris,
   )
@@ -250,7 +251,7 @@ resource "azuread_service_principal" "msgraph" {
 }
 resource "azuread_service_principal_delegated_permission_grant" "frontend" {
   count                                = local.skip_actions_requiring_global_admin ? 0 : 1
-  service_principal_object_id          = azuread_service_principal.frontend.id
+  service_principal_object_id          = azuread_service_principal.frontend.object_id
   resource_service_principal_object_id = azuread_service_principal.msgraph.object_id
   claim_values                         = ["User.Read"]
 }

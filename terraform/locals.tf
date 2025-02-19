@@ -16,6 +16,7 @@ locals {
   verified_id_decentralized_identifier_secret_name = var.verified_id_decentralized_identifier_secret_name
   verified_id_verify_security_attribute_set        = var.verified_id_verify_security_attribute_set
   verified_id_verify_security_attribute            = var.verified_id_verify_security_attribute
+  custom_domains                                   = var.custom_domains
 }
 
 # Permissions necessary for the banend managed identity
@@ -35,6 +36,11 @@ locals {
   dismiss_user_risk_app_role_name             = "MyWorkID.DismissUserRisk"
   password_reset_app_role_name                = "MyWorkID.PasswordReset"
   validate_identity_app_role_name             = "MyWorkID.ValidateIdentity"
+}
+
+# Helper properties
+locals {
+  is_custom_domain_configured = length(local.custom_domains) > 0
 }
 
 locals {
