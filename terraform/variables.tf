@@ -36,7 +36,7 @@ variable "api_name" {
   description = "Name of the AppService that hosts the api. Note this has to be globally unique."
 }
 variable "custom_domains" {
-  type    = set(string)
+  type    = list(string)
   default = []
   description = "OPTIONAL: List of custom domains for MyWorkId. Must be configured at a later time. NOTE: If sepcified the VerifiedId callbacks will always use the first domain in the list."
 }
