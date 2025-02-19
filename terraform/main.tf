@@ -87,7 +87,7 @@ resource "azurerm_linux_web_app" "backend" {
     VerifiedId__DecentralizedIdentifier        = "@Microsoft.KeyVault(VaultName=${azurerm_key_vault.backend_secrets.name};SecretName=${local.verified_id_decentralized_identifier_secret_name})"
     VerifiedId__TargetSecurityAttributeSet     = local.verified_id_verify_security_attribute_set
     VerifiedId__TargetSecurityAttribute        = local.verified_id_verify_security_attribute
-    VerifiedId__BackendUrl                     = local.is_custom_domain_configured ? "https://${local.custom_domains[0]}" : "https://${local.api_name}.azurewebsites.net"
+    VerifiedId__BackendUrl                     = local.is_custom_domain_configured ? "https://${tolist(local.custom_domains)[0]}" : "https://${local.api_name}.azurewebsites.net"
     VerifiedId__CreatePresentationRequestUri   = local.verified_id_create_presentation_request_uri
   }
 
