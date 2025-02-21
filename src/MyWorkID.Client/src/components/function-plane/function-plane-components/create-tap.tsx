@@ -83,7 +83,7 @@ export const CreateTAP = (props: TFunctionProps) => {
             </CardTitle>
           </CardHeader>
           <CardFooter className="action-card__footer">
-            Create Temporary Access Password
+            Create Temporary Access Pass
           </CardFooter>
         </Card>
       ) : tapDisplay.loading ? (
