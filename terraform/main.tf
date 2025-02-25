@@ -66,7 +66,7 @@ resource "azurerm_linux_web_app" "backend" {
       dotnet_version = "8.0"
     }
     minimum_tls_version = "1.2"
-    always_on           = false
+    always_on           = true
   }
 
   app_settings = {
@@ -119,6 +119,7 @@ resource "azuread_directory_role_assignment" "backend_managed_identity_authentic
 }
 
 resource "azuread_service_principal" "verifiable_credentials_service_request" {
+  count = local.skip_actions_requiring_global_admin ? 0 : 1
   client_id    = "3db474b9-6a0c-4840-96ac-1fceb342124f"
   use_existing = true
 }
@@ -127,7 +128,7 @@ resource "azuread_app_role_assignment" "verifiable_credentials" {
   for_each            = local.skip_actions_requiring_global_admin ? toset([]) : toset(["VerifiableCredential.Create.All"])
   app_role_id         = "949ebb93-18f8-41b4-b677-c2bfea940027" // VerifiableCredential.Create.All
   principal_object_id = azurerm_linux_web_app.backend.identity[0].principal_id
-  resource_object_id  = azuread_service_principal.verifiable_credentials_service_request.object_id
+  resource_object_id  = azuread_service_principal.verifiable_credentials_service_request[0].object_id
 }
 
 resource "azuread_service_principal_delegated_permission_grant" "frontend_backend_access" {
