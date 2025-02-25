@@ -11,12 +11,12 @@ locals {
   generate_tap_auth_context_id                     = var.generate_tap_auth_context_id
   reset_password_auth_context_id                   = var.reset_password_auth_context_id
   skip_actions_requiring_global_admin              = var.skip_actions_requiring_global_admin
-  binaries_zip_path                                = var.binaries_zip_path
   verified_id_jwt_signing_key_secret_name          = var.verified_id_jwt_signing_key_secret_name
   verified_id_decentralized_identifier_secret_name = var.verified_id_decentralized_identifier_secret_name
   verified_id_verify_security_attribute_set        = var.verified_id_verify_security_attribute_set
   verified_id_verify_security_attribute            = var.verified_id_verify_security_attribute
   custom_domains                                   = var.custom_domains
+  enable_auto_update                               = var.enable_auto_update
 }
 
 # Permissions necessary for the banend managed identity
@@ -36,6 +36,7 @@ locals {
   dismiss_user_risk_app_role_name             = "MyWorkID.DismissUserRisk"
   password_reset_app_role_name                = "MyWorkID.PasswordReset"
   validate_identity_app_role_name             = "MyWorkID.ValidateIdentity"
+  latest_binaries_url                         = "https://github.com/glueckkanja/MyWorkID/releases/latest/download/binaries.zip"
 }
 
 # Helper properties

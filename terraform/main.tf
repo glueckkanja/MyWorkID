@@ -55,7 +55,6 @@ resource "azurerm_linux_web_app" "backend" {
   service_plan_id         = azurerm_service_plan.backend.id
   https_only              = true
   client_affinity_enabled = false
-  zip_deploy_file         = local.binaries_zip_path
 
   identity {
     type = "SystemAssigned"
@@ -79,7 +78,7 @@ resource "azurerm_linux_web_app" "backend" {
     Frontend__FrontendClientId                 = azuread_application_registration.frontend.client_id
     Frontend__BackendClientId                  = azuread_application.backend.client_id
     Frontend__TenantId                         = data.azuread_client_config.current_user.tenant_id
-    WEBSITE_RUN_FROM_PACKAGE                   = "1"
+    WEBSITE_RUN_FROM_PACKAGE                   = local.enable_auto_update ? local.latest_binaries_url : "1"
     APPLICATIONINSIGHTS_CONNECTION_STRING      = azurerm_application_insights.backend.connection_string
     ApplicationInsightsAgent_EXTENSION_VERSION = "~3"          #https://learn.microsoft.com/en-us/azure/azure-monitor/app/azure-web-apps-net-core?tabs=Windows%2Cwindows#application-settings-definitions
     XDT_MicrosoftApplicationInsights_Mode      = "recommended" #https://learn.microsoft.com/en-us/azure/azure-monitor/app/azure-web-apps-net-core?tabs=Windows%2Cwindows#application-settings-definitions
@@ -95,6 +94,14 @@ resource "azurerm_linux_web_app" "backend" {
     ignore_changes = [
       tags
     ]
+
+    replace_triggered_by = [ terraform_data.recreate_on_enable_auto_update_change ]
+  }
+}
+
+resource "terraform_data" "recreate_on_enable_auto_update_change" {
+  triggers_replace = {
+    enable_auto_update = local.enable_auto_update
   }
 }
 
