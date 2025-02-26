@@ -13,10 +13,6 @@ variable "resource_location" {
   type    = string
   default = "westeurope"
 }
-variable "binaries_zip_path" {
-  type        = string
-  description = "Path where binaries are located"
-}
 
 # Flags
 variable "skip_actions_requiring_global_admin" {
@@ -28,6 +24,11 @@ variable "skip_creation_backend_access_groups" {
   type        = bool
   description = "Value to determine if the backend access groups should be created automatically or if this action should be skipped"
   default     = false
+}
+variable "enable_auto_update" {
+  type = bool
+  description = "Decides wether the backend should be updated automatically. If set to false the backend will not be updated automatically. If set to true the backend will be updated automatically. NOTE: If this ever was set to false a change to true will result in the backend being recreated automatically"
+  default = true
 }
 
 # AppService

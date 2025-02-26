@@ -55,7 +55,6 @@ resource "azurerm_linux_web_app" "backend" {
   service_plan_id         = azurerm_service_plan.backend.id
   https_only              = true
   client_affinity_enabled = false
-  zip_deploy_file         = local.binaries_zip_path
 
   identity {
     type = "SystemAssigned"
@@ -66,7 +65,7 @@ resource "azurerm_linux_web_app" "backend" {
       dotnet_version = "8.0"
     }
     minimum_tls_version = "1.2"
-    always_on           = false
+    always_on           = true
   }
 
   app_settings = {
@@ -79,7 +78,7 @@ resource "azurerm_linux_web_app" "backend" {
     Frontend__FrontendClientId                 = azuread_application_registration.frontend.client_id
     Frontend__BackendClientId                  = azuread_application.backend.client_id
     Frontend__TenantId                         = data.azuread_client_config.current_user.tenant_id
-    WEBSITE_RUN_FROM_PACKAGE                   = "1"
+    WEBSITE_RUN_FROM_PACKAGE                   = local.enable_auto_update ? local.latest_binaries_url : "1"
     APPLICATIONINSIGHTS_CONNECTION_STRING      = azurerm_application_insights.backend.connection_string
     ApplicationInsightsAgent_EXTENSION_VERSION = "~3"          #https://learn.microsoft.com/en-us/azure/azure-monitor/app/azure-web-apps-net-core?tabs=Windows%2Cwindows#application-settings-definitions
     XDT_MicrosoftApplicationInsights_Mode      = "recommended" #https://learn.microsoft.com/en-us/azure/azure-monitor/app/azure-web-apps-net-core?tabs=Windows%2Cwindows#application-settings-definitions
@@ -112,17 +111,29 @@ resource "azuread_directory_role" "authentication_administrator" {
   # display_name = "Privileged Authentication Administrator" #Necessary if privilaged users should also be able to use all functions (createTAP & changePassword) via myWorkID
 }
 
+resource "time_sleep" "wait_30_seconds_after_user_assigned_identity_creation" {
+  depends_on = [azurerm_linux_web_app.backend]
+  create_duration = "30s"
+}
+
 resource "azuread_directory_role_assignment" "backend_managed_identity_authentication_administrator" {
+  depends_on = [ time_sleep.wait_30_seconds_after_user_assigned_identity_creation ]
   count               = local.skip_actions_requiring_global_admin ? 0 : 1
   role_id             = azuread_directory_role.authentication_administrator[0].template_id
   principal_object_id = azurerm_linux_web_app.backend.identity[0].principal_id
+}
+
+resource "azuread_service_principal" "verifiable_credentials_service_request" {
+  count = local.skip_actions_requiring_global_admin ? 0 : 1
+  client_id    = "3db474b9-6a0c-4840-96ac-1fceb342124f"
+  use_existing = true
 }
 
 resource "azuread_app_role_assignment" "verifiable_credentials" {
   for_each            = local.skip_actions_requiring_global_admin ? toset([]) : toset(["VerifiableCredential.Create.All"])
   app_role_id         = "949ebb93-18f8-41b4-b677-c2bfea940027" // VerifiableCredential.Create.All
   principal_object_id = azurerm_linux_web_app.backend.identity[0].principal_id
-  resource_object_id  = data.azuread_service_principal.verifiable_credentials_service_request.object_id
+  resource_object_id  = azuread_service_principal.verifiable_credentials_service_request[0].object_id
 }
 
 resource "azuread_service_principal_delegated_permission_grant" "frontend_backend_access" {
@@ -275,7 +286,7 @@ resource "azurerm_key_vault" "backend_secrets" {
 }
 
 resource "azurerm_role_assignment" "backend_key_vault_access" {
-  depends_on           = [azurerm_linux_web_app.backend]
+  depends_on = [ time_sleep.wait_30_seconds_after_user_assigned_identity_creation ]
   scope                = azurerm_key_vault.backend_secrets.id
   role_definition_name = "Key Vault Secrets User"
   principal_id         = azurerm_linux_web_app.backend.identity[0].principal_id
