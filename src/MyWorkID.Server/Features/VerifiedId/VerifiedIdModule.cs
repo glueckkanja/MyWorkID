@@ -20,8 +20,9 @@ namespace MyWorkID.Server.Features.VerifiedId
         /// <param name="environment">The web host environment.</param>
         public static void ConfigureServices(IServiceCollection services, IConfigurationManager configurationManager, IWebHostEnvironment environment)
         {
-            services.Configure<VerifiedIdOptions>(configurationManager.GetSection("VerifiedId"));
-            TokenCredential verifiedIdCredentials = new ManagedIdentityCredential();
+            services.Configure<VerifiedIdOptions>(configurationManager.GetSection(VerifiedIdOptions.SectionName));
+            IdentityOptions? identity = configurationManager.GetSection(IdentityOptions.SectionName).Get<IdentityOptions>();
+            TokenCredential verifiedIdCredentials = new ManagedIdentityCredential(clientId: identity?.ManagedIdentityClientId);
             if (environment.IsDevelopment())
             {
                 verifiedIdCredentials = new ClientSecretCredential(

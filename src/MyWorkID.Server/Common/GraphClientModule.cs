@@ -1,5 +1,6 @@
 ﻿using Azure.Identity;
 using Microsoft.Graph;
+using MyWorkID.Server.Options;
 
 namespace MyWorkID.Server.Common
 {
@@ -16,7 +17,8 @@ namespace MyWorkID.Server.Common
         /// <param name="environment">The web host environment.</param>
         public static void ConfigureServices(IServiceCollection services, IConfigurationManager configurationManager, IWebHostEnvironment environment)
         {
-            services.AddSingleton(new GraphServiceClient(new ChainedTokenCredential(new ManagedIdentityCredential(), new DefaultAzureCredential())));
+            IdentityOptions? identity = configurationManager.GetSection(IdentityOptions.SectionName).Get<IdentityOptions>();
+            services.AddSingleton(new GraphServiceClient(new ChainedTokenCredential(new ManagedIdentityCredential(clientId: identity?.ManagedIdentityClientId), new DefaultAzureCredential())));
         }
     }
 }
