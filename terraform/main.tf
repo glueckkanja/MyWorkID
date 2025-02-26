@@ -94,14 +94,6 @@ resource "azurerm_linux_web_app" "backend" {
     ignore_changes = [
       tags
     ]
-
-    replace_triggered_by = [ terraform_data.recreate_on_enable_auto_update_change ]
-  }
-}
-
-resource "terraform_data" "recreate_on_enable_auto_update_change" {
-  triggers_replace = {
-    enable_auto_update = local.enable_auto_update
   }
 }
 
@@ -122,9 +114,6 @@ resource "azuread_directory_role" "authentication_administrator" {
 resource "time_sleep" "wait_30_seconds_after_user_assigned_identity_creation" {
   depends_on = [azurerm_linux_web_app.backend]
   create_duration = "30s"
-  lifecycle {
-    replace_triggered_by = [ terraform_data.recreate_on_enable_auto_update_change ]
-  }
 }
 
 resource "azuread_directory_role_assignment" "backend_managed_identity_authentication_administrator" {
