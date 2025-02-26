@@ -25,10 +25,10 @@ namespace MyWorkID.Server
         public static void AddCustomAuthentication(this IServiceCollection services, IConfiguration configuration)
         {
             VerifiedIdOptions verifiedIdConfig = new();
-            configuration.GetSection(VerifiedIdOptions.SectionName).Bind(verifiedIdConfig);
+            configuration.GetSection("VerifiedId").Bind(verifiedIdConfig);
             // If the signing key is not set, generate a random one. For the Verified Id functionality we test if JwtSigningKey is set beforehand so the GUID will never be used.
             // We need it as we need to add the VERIFIED_ID_CALLBACK_SCHEMA
-            byte[] signingByte = Encoding.UTF8.GetBytes(verifiedIdConfig.JwtSigningKey ?? RandomNumberGenerator.GetString(ALLOWED_RANDOM_CHARACTERS, 30));
+            var signingByte = Encoding.UTF8.GetBytes(verifiedIdConfig.JwtSigningKey ?? RandomNumberGenerator.GetString(ALLOWED_RANDOM_CHARACTERS, 30));
 
             // Add services to the container.
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -60,11 +60,6 @@ namespace MyWorkID.Server
 
             services.AddOptions<FrontendOptions>()
                 .Bind(configuration.GetRequiredSection(FrontendOptions.SectionName))
-                .ValidateDataAnnotations()
-                .ValidateOnStart();
-
-            services.AddOptions<IdentityOptions>(IdentityOptions.SectionName)
-                .Bind(configuration.GetSection(IdentityOptions.SectionName))
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
         }

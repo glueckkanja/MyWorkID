@@ -7,8 +7,6 @@ namespace MyWorkID.Server.Options
     /// </summary>
     public class VerifiedIdOptions
     {
-        public const string SectionName = "VerifiedId";
-
         /// <summary>
         /// Gets or sets the decentralized identifier.
         /// </summary>
