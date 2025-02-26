@@ -120,7 +120,7 @@ resource "azuread_directory_role" "authentication_administrator" {
 }
 
 resource "time_sleep" "wait_30_seconds_after_user_assigned_identity_creation" {
-  depends_on = [azurerm_user_assigned_identity.backend]
+  depends_on = [azurerm_linux_web_app.backend]
   create_duration = "30s"
 }
 
