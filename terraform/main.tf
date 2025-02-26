@@ -48,15 +48,6 @@ resource "azurerm_application_insights" "backend" {
   }
 }
 
-resource "azurerm_user_assigned_identity" "backend" {
-  location            = azurerm_resource_group.main.location
-  name                = "mi-${local.api_name}"
-  resource_group_name = azurerm_resource_group.main.name
-  lifecycle {
-    ignore_changes = [tags]
-  }
-}
-
 resource "azurerm_linux_web_app" "backend" {
   name                    = local.api_name
   location                = azurerm_resource_group.main.location
@@ -66,11 +57,8 @@ resource "azurerm_linux_web_app" "backend" {
   client_affinity_enabled = false
 
   identity {
-    type         = "SystemAssigned, UserAssigned"
-    identity_ids = [azurerm_user_assigned_identity.backend.id]
+    type = "SystemAssigned"
   }
-
-  key_vault_reference_identity_id = azurerm_user_assigned_identity.backend.id
 
   site_config {
     application_stack {
@@ -100,7 +88,6 @@ resource "azurerm_linux_web_app" "backend" {
     VerifiedId__TargetSecurityAttribute        = local.verified_id_verify_security_attribute
     VerifiedId__BackendUrl                     = local.is_custom_domain_configured ? "https://${local.custom_domains[0]}" : "https://${local.api_name}.azurewebsites.net"
     VerifiedId__CreatePresentationRequestUri   = local.verified_id_create_presentation_request_uri
-    Identity__ManagedIdentityClientId          = azurerm_user_assigned_identity.backend.client_id
   }
 
   lifecycle {
@@ -108,7 +95,7 @@ resource "azurerm_linux_web_app" "backend" {
       tags
     ]
 
-    replace_triggered_by = [terraform_data.recreate_on_enable_auto_update_change]
+    replace_triggered_by = [ terraform_data.recreate_on_enable_auto_update_change ]
   }
 }
 
@@ -121,7 +108,7 @@ resource "terraform_data" "recreate_on_enable_auto_update_change" {
 resource "azuread_app_role_assignment" "backend_managed_identity" {
   for_each            = local.skip_actions_requiring_global_admin ? toset([]) : toset(local.backend_graph_permissions)
   app_role_id         = data.azuread_service_principal.msgraph.app_role_ids[each.key]
-  principal_object_id = azurerm_user_assigned_identity.backend.principal_id
+  principal_object_id = azurerm_linux_web_app.backend.identity[0].principal_id
   resource_object_id  = data.azuread_service_principal.msgraph.object_id
 }
 
@@ -141,11 +128,11 @@ resource "azuread_directory_role_assignment" "backend_managed_identity_authentic
   depends_on = [ time_sleep.wait_30_seconds_after_user_assigned_identity_creation ]
   count               = local.skip_actions_requiring_global_admin ? 0 : 1
   role_id             = azuread_directory_role.authentication_administrator[0].template_id
-  principal_object_id = azurerm_user_assigned_identity.backend.principal_id
+  principal_object_id = azurerm_linux_web_app.backend.identity[0].principal_id
 }
 
 resource "azuread_service_principal" "verifiable_credentials_service_request" {
-  count        = local.skip_actions_requiring_global_admin ? 0 : 1
+  count = local.skip_actions_requiring_global_admin ? 0 : 1
   client_id    = "3db474b9-6a0c-4840-96ac-1fceb342124f"
   use_existing = true
 }
@@ -153,7 +140,7 @@ resource "azuread_service_principal" "verifiable_credentials_service_request" {
 resource "azuread_app_role_assignment" "verifiable_credentials" {
   for_each            = local.skip_actions_requiring_global_admin ? toset([]) : toset(["VerifiableCredential.Create.All"])
   app_role_id         = "949ebb93-18f8-41b4-b677-c2bfea940027" // VerifiableCredential.Create.All
-  principal_object_id = azurerm_user_assigned_identity.backend.principal_id
+  principal_object_id = azurerm_linux_web_app.backend.identity[0].principal_id
   resource_object_id  = azuread_service_principal.verifiable_credentials_service_request[0].object_id
 }
 
@@ -310,7 +297,7 @@ resource "azurerm_role_assignment" "backend_key_vault_access" {
   depends_on = [ time_sleep.wait_30_seconds_after_user_assigned_identity_creation ]
   scope                = azurerm_key_vault.backend_secrets.id
   role_definition_name = "Key Vault Secrets User"
-  principal_id         = azurerm_user_assigned_identity.backend.principal_id
+  principal_id         = azurerm_linux_web_app.backend.identity[0].principal_id
 }
 
 resource "azuread_group" "backend_access" {
