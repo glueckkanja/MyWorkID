@@ -132,7 +132,13 @@ resource "azuread_directory_role" "authentication_administrator" {
   # display_name = "Privileged Authentication Administrator" #Necessary if privilaged users should also be able to use all functions (createTAP & changePassword) via myWorkID
 }
 
+resource "time_sleep" "wait_30_seconds_after_user_assigned_identity_creation" {
+  depends_on = [azurerm_user_assigned_identity.backend]
+  create_duration = "30s"
+}
+
 resource "azuread_directory_role_assignment" "backend_managed_identity_authentication_administrator" {
+  depends_on = [ time_sleep.wait_30_seconds_after_user_assigned_identity_creation ]
   count               = local.skip_actions_requiring_global_admin ? 0 : 1
   role_id             = azuread_directory_role.authentication_administrator[0].template_id
   principal_object_id = azurerm_user_assigned_identity.backend.principal_id
@@ -301,6 +307,7 @@ resource "azurerm_key_vault" "backend_secrets" {
 }
 
 resource "azurerm_role_assignment" "backend_key_vault_access" {
+  depends_on = [ time_sleep.wait_30_seconds_after_user_assigned_identity_creation ]
   scope                = azurerm_key_vault.backend_secrets.id
   role_definition_name = "Key Vault Secrets User"
   principal_id         = azurerm_user_assigned_identity.backend.principal_id
