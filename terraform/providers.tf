@@ -16,7 +16,7 @@ terraform {
 }
 
 provider "azurerm" {
-  resource_provider_registrations = "none"
+  resource_provider_registrations = "extended"
   tenant_id                       = local.tenant_id
   subscription_id                 = local.subscription_id
   features {}
