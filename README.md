@@ -6,7 +6,7 @@ ___
 
 [MyWorkID](https://www.glueckkanja.com/en/security/my-work-id/) empowers organizations to strengthen security while offering users greater flexibility in managing access and authentication. By integrating with Microsoft Entra ID, MyWorkID enables secure self-service solutions for handling compromised accounts, generating Temporary Access Passes (TAP), resetting passwords, and verifying user identities. Through the use of Conditional Access policies and authentication context, organizations can apply stringent security controls while allowing users to address risks in a controlled environment, ensuring both robust protection and a seamless user experience.
 
-Please refer to this documentation when you want to setup [myWorkID](https://www.glueckkanja.com/en/security/my-work-id/) in your environment.
+Please refer to this documentation when you want to setup [MyWorkID](https://www.glueckkanja.com/en/security/my-work-id/) in your environment.
 
 1. [Preparations](https://github.com/glueckkanja/MyWorkID/wiki/Preparations)
 1. [Installation](https://github.com/glueckkanja/MyWorkID/wiki/Installation)

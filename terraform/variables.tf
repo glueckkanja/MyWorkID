@@ -7,7 +7,7 @@ variable "subscription_id" {
 }
 variable "resource_group_name" {
   type    = string
-  default = "rg-myWorkID"
+  default = "rg-MyWorkID"
 }
 variable "resource_location" {
   type    = string
@@ -39,18 +39,18 @@ variable "api_name" {
 variable "custom_domains" {
   type    = list(string)
   default = []
-  description = "OPTIONAL: List of custom domains for MyWorkId. Must be configured at a later time. NOTE: If specified the VerifiedId callbacks will always use the first domain in the list."
+  description = "OPTIONAL: List of custom domains for MyWorkID. Must be configured at a later time. NOTE: If specified the VerifiedId callbacks will always use the first domain in the list."
 }
 
 # AppRegistrations
 variable "backed_appreg_name" {
   type    = string
-  default = "ar-myWorkID-backend"
+  default = "ar-MyWorkID-backend"
   description = "Name of the AppRegistration that is used by the backend"
 }
 variable "frontend_appreg_name" {
   type    = string
-  default = "ar-myWorkID-frontend"
+  default = "ar-MyWorkID-frontend"
   description = "Name of the AppRegistration that is used by the frontend"
 }
 
@@ -82,7 +82,7 @@ variable "verified_id_decentralized_identifier_secret_name" {
 variable "verified_id_verify_security_attribute_set" {
   type        = string
   description = "The name of the custom security attribute set where the last verified date should be stored."
-  default     = "myWorkID"
+  default     = "MyWorkID"
 }
 variable "verified_id_verify_security_attribute" {
   type        = string
