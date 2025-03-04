@@ -39,7 +39,7 @@ variable "api_name" {
 variable "custom_domains" {
   type    = list(string)
   default = []
-  description = "OPTIONAL: List of custom domains for MyWorkId. Must be configured at a later time. NOTE: If specified the VerifiedId callbacks will always use the first domain in the list."
+  description = "OPTIONAL: List of custom domains for MyWorkID. Must be configured at a later time. NOTE: If specified the VerifiedId callbacks will always use the first domain in the list."
 }
 
 # AppRegistrations
