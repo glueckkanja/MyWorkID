@@ -1,8 +1,8 @@
-name: Build myWorkId Binaries
-run-name: Build myWorkId Binaries
+name: Build MyWorkID Binaries
+run-name: Build MyWorkID Binaries
 
 concurrency:
-  group: "Build myWorkId Binaries"
+  group: "Build MyWorkID Binaries"
   cancel-in-progress: true
 
 on:
