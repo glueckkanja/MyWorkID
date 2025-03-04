@@ -24,7 +24,7 @@ enable_auto_update = true
 # Name of the AppService that hosts the api. Note this has to be globally unique.
 api_name = "REPLACE_WITH_UNIQUE_APPSERVICE_NAME"
 
-# List of custom domains for MyWorkId. Must be configured at a later time. 
+# List of custom domains for MyWorkID. Must be configured at a later time. 
 # NOTE: If specified the VerifiedId callbacks will always use the first domain in the list.
 custom_domains = ["REPLACE_WITH_CUSTOM_DOMAIN"]
 
