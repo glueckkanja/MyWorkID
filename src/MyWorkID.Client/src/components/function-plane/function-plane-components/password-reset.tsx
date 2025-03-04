@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { callResetPassword } from "../../../services/api-service";
+import { callResetPassword, checkResetPasswordClaim } from "../../../services/api-service";
 import {
   Card,
   CardContent,
@@ -66,7 +66,6 @@ export const PasswordReset = (props: TFunctionProps) => {
   // Note this is the claim challenge check - if successfull comes back the password reset UI should be accasible - if not we have to close the menu again
   useEffect(() => {
     if (props.comingFromRedirect) {
-      resetPassword();
       togglePasswordResetUI();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -116,34 +115,18 @@ export const PasswordReset = (props: TFunctionProps) => {
   };
 
   const togglePasswordResetUI = () => {
+    if (!passwordDisplay.visible) {
+      checkResetPasswordClaim();
+    }
+
     setPasswordDisplay({
-      visible: true,
+      visible: !passwordDisplay.visible,
       value: "",
       showValue: false,
       valueConfirm: "",
       showValueConfirm: false,
-      loading: true,
+      loading: false,
     });
-
-    if (!passwordDisplay.visible) {
-      setPasswordDisplay({
-        visible: true,
-        value: "",
-        showValue: false,
-        valueConfirm: "",
-        showValueConfirm: false,
-        loading: false,
-      });
-    } else {
-      setPasswordDisplay({
-        visible: false,
-        value: "",
-        showValue: false,
-        valueConfirm: "",
-        showValueConfirm: false,
-        loading: false,
-      });
-    }
   };
 
   const handleClickShowPassword = (inputType: PasswordInputType) => {
