@@ -1,12 +1,12 @@
-﻿using MyWorkID.Server.Common;
-using MyWorkID.Server.Features.ResetPassword.Entities;
-using MyWorkID.Server.Features.ResetPassword.Filters;
-using MyWorkID.Server.Filters;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
 using Microsoft.Identity.Web;
+using MyWorkID.Server.Common;
+using MyWorkID.Server.Features.ResetPassword.Entities;
+using MyWorkID.Server.Features.ResetPassword.Filters;
+using MyWorkID.Server.Filters;
 using System.Security.Claims;
 
 namespace MyWorkID.Server.Features.ResetPassword.Commands
@@ -43,7 +43,7 @@ namespace MyWorkID.Server.Features.ResetPassword.Commands
         public static async Task<IResult> HandleAsync([FromBody] PasswordResetRequest passwordResetRequest,
             ClaimsPrincipal user, GraphServiceClient graphClient, CancellationToken cancellationToken)
         {
-            var userId = user.GetObjectId();
+            string userId = user.GetObjectId();
             await graphClient.Users[userId].PatchAsync(
                 new User
                 {
