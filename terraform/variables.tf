@@ -7,7 +7,7 @@ variable "subscription_id" {
 }
 variable "resource_group_name" {
   type    = string
-  default = "rg-myWorkID"
+  default = "rg-MyWorkID"
 }
 variable "resource_location" {
   type    = string
@@ -45,12 +45,12 @@ variable "custom_domains" {
 # AppRegistrations
 variable "backed_appreg_name" {
   type    = string
-  default = "ar-myWorkID-backend"
+  default = "ar-MyWorkID-backend"
   description = "Name of the AppRegistration that is used by the backend"
 }
 variable "frontend_appreg_name" {
   type    = string
-  default = "ar-myWorkID-frontend"
+  default = "ar-MyWorkID-frontend"
   description = "Name of the AppRegistration that is used by the frontend"
 }
 
@@ -82,7 +82,7 @@ variable "verified_id_decentralized_identifier_secret_name" {
 variable "verified_id_verify_security_attribute_set" {
   type        = string
   description = "The name of the custom security attribute set where the last verified date should be stored."
-  default     = "myWorkID"
+  default     = "MyWorkID"
 }
 variable "verified_id_verify_security_attribute" {
   type        = string
