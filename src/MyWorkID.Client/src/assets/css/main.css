@@ -218,8 +218,12 @@ body {
 }
 .action-card__qr-code {
   background-color: var(--action-card-activated-background);
-  width: 164px;
+  width: 100%;
   border-radius: 24px;
+}
+.action-card__qr-code__img {
+  margin: auto;
+  margin-top: 1.5rem;
 }
 
 .action-card__container__loading {

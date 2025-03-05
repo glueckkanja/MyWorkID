@@ -114,7 +114,7 @@ export const ValidateIdentity = (/*props: ActionResultProps<any>*/) => {
         >
           <CardContent>
             <div>
-              <img alt="QrCode" src={verifiedIdDisplay.qrCodeBase64}></img>
+              <img alt="QrCode" className="action-card__qr-code__img" src={verifiedIdDisplay.qrCodeBase64}></img>
             </div>
           </CardContent>
         </Card>
