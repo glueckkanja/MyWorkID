@@ -205,7 +205,7 @@ export const PasswordReset = (props: TFunctionProps) => {
       )}
       {passwordDisplay.visible &&
         (passwordDisplay.loading ? (
-          <Card className="action-card">
+          <Card className="action-card__container__loading">
             <CardContent>
               <div className="action-card__loading">
                 <Spinner />

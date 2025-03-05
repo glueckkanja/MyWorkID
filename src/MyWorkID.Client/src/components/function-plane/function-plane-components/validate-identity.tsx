@@ -98,7 +98,7 @@ export const ValidateIdentity = (/*props: ActionResultProps<any>*/) => {
           </CardFooter>
         </Card>
       ) : verifiedIdDisplay.loading ? (
-        <Card className="action-card__qr-code">
+        <Card className="action-card__container__loading">
           <CardContent>
             <div className="action-card__loading">
               <Spinner />
@@ -114,7 +114,7 @@ export const ValidateIdentity = (/*props: ActionResultProps<any>*/) => {
         >
           <CardContent>
             <div>
-              <img alt="QrCode" src={verifiedIdDisplay.qrCodeBase64}></img>
+              <img alt="QrCode" className="action-card__qr-code__img" src={verifiedIdDisplay.qrCodeBase64}></img>
             </div>
           </CardContent>
         </Card>
