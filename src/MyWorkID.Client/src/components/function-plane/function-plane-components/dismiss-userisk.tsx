@@ -58,7 +58,7 @@ export const DismissUserRisk = (props: TFunctionProps) => {
         </Card>
       )}
       {loading && success === undefined && (
-        <Card className="action-card__validate-id-success">
+        <Card className="action-card__container__loading">
           <CardContent>
             <div className="action-card__loading">
               <Spinner />

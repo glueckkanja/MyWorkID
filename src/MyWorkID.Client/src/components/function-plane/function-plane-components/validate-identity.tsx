@@ -98,7 +98,7 @@ export const ValidateIdentity = (/*props: ActionResultProps<any>*/) => {
           </CardFooter>
         </Card>
       ) : verifiedIdDisplay.loading ? (
-        <Card className="action-card__qr-code">
+        <Card className="action-card__container__loading">
           <CardContent>
             <div className="action-card__loading">
               <Spinner />
