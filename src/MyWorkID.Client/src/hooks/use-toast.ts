@@ -166,6 +166,14 @@ function toast({ ...props }: Toast) {
   };
 }
 
+function toastSuccess(title: string, description: string) {
+  toast({
+    variant: "default",
+    title,
+    description,
+  });
+}
+
 function toastException(error: unknown) {
   let description = "Something went wrong";
 
@@ -206,8 +214,9 @@ function useToast() {
     toast,
     toastException,
     toastError,
+    toastSuccess,
     dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
   };
 }
 
-export { useToast, toast };
+export { useToast };
