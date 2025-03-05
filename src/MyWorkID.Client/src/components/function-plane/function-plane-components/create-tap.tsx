@@ -88,7 +88,7 @@ export const CreateTAP = (props: TFunctionProps) => {
         </Card>
       ) : tapDisplay.loading ? (
         <Card className="action-card__container__loading">
-          <CardContent >
+          <CardContent>
             <div className="action-card__loading">
               <Spinner />
             </div>
