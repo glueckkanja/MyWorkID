@@ -19,6 +19,9 @@ skip_creation_backend_access_groups = false
 # NOTE: If this ever was set to false a change to true will result in the backend being recreated automatically
 enable_auto_update = true
 
+# Allow credential operations for privileged users. If set to true, users with privileged roles (e.g. Global Admin or User Admin) can perform credential operations like create TAP and reset password
+allow_credential_operations_for_privileged_users = false
+
 # ------- AppService -------
 
 # Name of the AppService that hosts the api. Note this has to be globally unique.

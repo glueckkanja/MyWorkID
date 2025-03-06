@@ -17,6 +17,7 @@ locals {
   verified_id_verify_security_attribute            = var.verified_id_verify_security_attribute
   custom_domains                                   = var.custom_domains
   enable_auto_update                               = var.enable_auto_update
+  allow_credential_operations_for_privileged_users = var.allow_credential_operations_for_privileged_users
 }
 
 # Permissions necessary for the banend managed identity
