@@ -30,6 +30,11 @@ variable "enable_auto_update" {
   description = "Decides wether the backend should be updated automatically. If set to false the backend will not be updated automatically. If set to true the backend will be updated automatically. NOTE: If this ever was set to false a change to true will result in the backend being recreated automatically"
   default = true
 }
+variable "allow_credential_operations_for_privileged_users"{
+  type = bool
+  description = "Allow credential operations for privileged users. If set to true, users with privileged roles (e.g. Global Admin or User Admin) can perform credential operations like create TAP and reset password"
+  default = false
+}
 
 # AppService
 variable "api_name" {
