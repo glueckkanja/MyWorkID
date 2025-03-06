@@ -1,0 +1,42 @@
+name: 'Test CI'
+
+on:
+  pull_request:
+
+env:
+  DOTNET_CORE_VERSION: 8.0.x
+
+jobs:
+  run-tests:
+    name: run tests
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore NuGet Cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('src/MyWorkID.Server') }}
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_CORE_VERSION }}
+      - name: Build
+        run: |
+          dotnet restore
+          dotnet build --configuration Release --no-restore
+      - name: Test
+        run: |
+          dotnet test --logger "trx;logfilename=testResults.trx"
+      - name: Gather Test Results
+        if: success() || failure()
+        run: |
+          mkdir TestResults
+          cp tests/MyWorkID.Server.IntegrationTests/TestResults/testResults.trx TestResults/Integration-Tests.trx
+          cp tests/MyWorkID.Server.UnitTests/TestResults/testResults.trx TestResults/Unit-Tests.trx
+      - uses: actions/upload-artifact@v4
+        if: success() || failure()
+        with:
+          name: testResults
+          path: TestResults/*.trx

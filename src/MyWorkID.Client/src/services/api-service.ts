@@ -116,7 +116,7 @@ export const checkResetPasswordClaim = async (): Promise<
 > => {
   return convertTFunctionResult(
     authenticateRequest(
-      `${backendApiUrl}/api/resetpasswordcontroller/checkClaim`,
+      `${backendApiUrl}/me/resetPassword/checkClaim`,
       REQUEST_TYPE.GET,
       EApiFunctionTypes.PASSWORD_RESET
     ),

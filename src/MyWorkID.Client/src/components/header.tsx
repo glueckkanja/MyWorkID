@@ -22,7 +22,7 @@ export const Header = () => {
     <div className="header__container">
       <img src={HeaderLogoSvg} alt="myWorkID Logo" />
       <div className="header__title">
-        <span className="header__title__text-myWork">myWork</span>
+        <span className="header__title__text-myWork">MyWork</span>
         <span className="header__title__text-ID">ID</span>
       </div>
       <button

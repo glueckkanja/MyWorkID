@@ -47,7 +47,7 @@ namespace MyWorkID.Server.IntegrationTests
                 ["VerifiedId:DecentralizedIdentifier"] = "did:web:verifiedid.entra.microsoft.com:d2a8f8b2-3c4e-4b8e-9f2e-1a2b3c4d5e6f:7a8b9c0d-1e2f-3a4b-5c6d-7e8f9a0b1c2d",
                 ["VerifiedId:BackendUrl"] = "https://myworkid.glueckkanja.com",
                 ["VerifiedId:JwtSigningKey"] = "b1c2d3e4-f5a6-7b8c-9d0e-1f2a3b4c5123",
-                ["VerifiedId:TargetSecurityAttributeSet"] = "myWorkId",
+                ["VerifiedId:TargetSecurityAttributeSet"] = "MyWorkId",
                 ["VerifiedId:TargetSecurityAttribute"] = "lastVerifiedFaceCheck",
                 ["VerifiedId:CreatePresentationRequestUri"] = "https://verifiedid.did.msidentity.com/v1.0/verifiableCredentials/createPresentationRequest",
             };
