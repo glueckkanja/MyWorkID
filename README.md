@@ -1,4 +1,4 @@
-![03-myworkid-repository-readme-banner](https://github.com/user-attachments/assets/259f8071-aab1-447c-b985-9624cefa7696)
+![03-myworkid-repository-readme-banner](https://github.com/user-attachments/assets/3127825c-6da1-42c7-bfe6-f773c6be0a00)
 # MyWorkID
 See the [Wiki tab](https://github.com/glueckkanja/MyWorkID/wiki) for detailed docs.
 
