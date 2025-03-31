@@ -172,13 +172,14 @@ body {
 .header__title__text-myWork {
   color: #5cbbff;
 }
-.header__dark-mode-toggle {
-  margin-left: auto;
-  margin-right: 30px;
+.header__buttons__dark-mode-toggle {
   height: 36px;
   width: 36px;
   align-self: center;
   cursor: pointer;
+  img {
+    margin-top: 0.22rem;
+  }
 }
 .action-card__validate-id-success {
   background-color: var(--action-card-activated-background);
@@ -335,6 +336,17 @@ body {
   svg {
     scale: 2;
     margin: auto;
+  }
+}
+.header__buttons {
+  margin-left: auto;
+  margin-right: 30px;
+}
+
+.header__buttons__logout-button {
+  margin-right: 1.5rem;
+  img {
+    max-height: 1.8rem;
   }
 }
 .no-select {
