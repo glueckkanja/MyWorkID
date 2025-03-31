@@ -24,6 +24,14 @@ export const CreateTAP = (props: TFunctionProps) => {
     loading: false,
   });
   const { toastException, toastError } = useToast();
+
+  useEffect(() => {
+    if (props.comingFromRedirect) {
+      createTAP();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.comingFromRedirect]);
+
   const createTAP = async () => {
     setTapDisplay({
       visible: true,
@@ -60,17 +68,9 @@ export const CreateTAP = (props: TFunctionProps) => {
         });
       });
   };
-
-  useEffect(() => {
-    if (props.comingFromRedirect) {
-      createTAP();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.comingFromRedirect]);
-
-  return (
-    <div>
-      {!tapDisplay.visible ? (
+  const getCardContent = () => {
+    if (!tapDisplay.visible) {
+      return (
         <Card
           className="action-card"
           onClick={() => {
@@ -86,7 +86,11 @@ export const CreateTAP = (props: TFunctionProps) => {
             Create Temporary Access Pass
           </CardFooter>
         </Card>
-      ) : tapDisplay.loading ? (
+      );
+    }
+
+    if (tapDisplay.loading) {
+      return (
         <Card className="action-card__container__loading">
           <CardContent>
             <div className="action-card__loading">
@@ -94,13 +98,17 @@ export const CreateTAP = (props: TFunctionProps) => {
             </div>
           </CardContent>
         </Card>
-      ) : (
+      );
+    } else {
+      return (
         <Card className="action-card__tap">
-          <CardContent className="action-card__tap_content">
+          <CardContent className="action-card__tap_content text-select">
             {tapDisplay.value}
           </CardContent>
         </Card>
-      )}
-    </div>
-  );
+      );
+    }
+  };
+
+  return <div>{getCardContent()}</div>;
 };
