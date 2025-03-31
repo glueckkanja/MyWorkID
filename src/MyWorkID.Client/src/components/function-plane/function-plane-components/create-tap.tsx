@@ -24,6 +24,14 @@ export const CreateTAP = (props: TFunctionProps) => {
     loading: false,
   });
   const { toastException, toastError } = useToast();
+
+  useEffect(() => {
+    if (props.comingFromRedirect) {
+      createTAP();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.comingFromRedirect]);
+
   const createTAP = async () => {
     setTapDisplay({
       visible: true,
@@ -80,7 +88,7 @@ export const CreateTAP = (props: TFunctionProps) => {
         </Card>
       );
     }
-    
+
     if (tapDisplay.loading) {
       return (
         <Card className="action-card__container__loading">
@@ -101,13 +109,6 @@ export const CreateTAP = (props: TFunctionProps) => {
       );
     }
   };
-
-  useEffect(() => {
-    if (props.comingFromRedirect) {
-      createTAP();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.comingFromRedirect]);
 
   return <div>{getCardContent()}</div>;
 };
