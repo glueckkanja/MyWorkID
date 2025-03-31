@@ -60,7 +60,27 @@ export const CreateTAP = (props: TFunctionProps) => {
         });
       });
   };
-  const showCardContent = () => {
+  const getCardContent = () => {
+    if (!tapDisplay.visible) {
+      return (
+        <Card
+          className="action-card"
+          onClick={() => {
+            createTAP();
+          }}
+        >
+          <CardHeader>
+            <CardTitle>
+              <img src={CreateTapSvgIcon} alt="CreateTapIcon" />
+            </CardTitle>
+          </CardHeader>
+          <CardFooter className="action-card__footer">
+            Create Temporary Access Pass
+          </CardFooter>
+        </Card>
+      );
+    }
+    
     if (tapDisplay.loading) {
       return (
         <Card className="action-card__container__loading">
@@ -89,27 +109,5 @@ export const CreateTAP = (props: TFunctionProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.comingFromRedirect]);
 
-  return (
-    <div>
-      {!tapDisplay.visible ? (
-        <Card
-          className="action-card"
-          onClick={() => {
-            createTAP();
-          }}
-        >
-          <CardHeader>
-            <CardTitle>
-              <img src={CreateTapSvgIcon} alt="CreateTapIcon" />
-            </CardTitle>
-          </CardHeader>
-          <CardFooter className="action-card__footer">
-            Create Temporary Access Pass
-          </CardFooter>
-        </Card>
-      ) : (
-        showCardContent()
-      )}
-    </div>
-  );
+  return <div>{getCardContent()}</div>;
 };
