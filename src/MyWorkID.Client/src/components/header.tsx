@@ -28,7 +28,7 @@ export const Header = () => {
       .catch(() => toastError("Logout failed. Please try again."));
   };
   return (
-    <div className="header__container">
+    <div className="header__container no-select">
       <img src={HeaderLogoSvg} alt="myWorkID Logo" />
       <div className="header__title">
         <span className="header__title__text-myWork">MyWork</span>

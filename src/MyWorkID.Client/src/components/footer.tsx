@@ -3,7 +3,7 @@ import BrandingSvgDark from "../assets/svg/branding-dark.svg";
 
 export const Footer = () => {
   return (
-    <div className="footer__container">
+    <div className="footer__container no-select">
       <span className="footer__text">powered by</span>
       <div className="footer_svg-icon">
         <img
