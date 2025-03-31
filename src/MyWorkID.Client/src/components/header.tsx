@@ -39,7 +39,7 @@ export const Header = () => {
           className="header__buttons__logout-button"
           onClick={handleLogoutRedirect}
         >
-          <img src={LogOutSvg} alt="LogOutButton" />
+          <img src={LogOutSvg} alt="LogOut Button" />
         </button>
         <button
           className="header__buttons__dark-mode-toggle"
@@ -51,7 +51,7 @@ export const Header = () => {
             }
           }}
         >
-          <img src={DarkModeSvg} alt="DarkModeToggle" />
+          <img src={DarkModeSvg} alt="DarkMode Toggle" />
         </button>
       </div>
     </div>
