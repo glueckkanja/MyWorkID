@@ -53,7 +53,7 @@ const FunctionPlane = () => {
   }, []);
 
   return (
-    <div>
+    <div className="no-select">
       <UserDisplay />
       <div className="function-plane__container">
         {FUNCTION_PLANE_COMPONENTS.map((functionComponent) => {

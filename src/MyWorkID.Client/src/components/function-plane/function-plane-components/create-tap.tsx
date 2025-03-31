@@ -96,7 +96,7 @@ export const CreateTAP = (props: TFunctionProps) => {
         </Card>
       ) : (
         <Card className="action-card__tap">
-          <CardContent className="action-card__tap_content">
+          <CardContent className="action-card__tap_content text-select">
             {tapDisplay.value}
           </CardContent>
         </Card>
