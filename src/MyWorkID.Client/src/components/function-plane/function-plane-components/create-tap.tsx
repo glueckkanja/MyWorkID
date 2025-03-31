@@ -60,6 +60,27 @@ export const CreateTAP = (props: TFunctionProps) => {
         });
       });
   };
+  const showCardContent = () => {
+    if (tapDisplay.loading) {
+      return (
+        <Card className="action-card__container__loading">
+          <CardContent>
+            <div className="action-card__loading">
+              <Spinner />
+            </div>
+          </CardContent>
+        </Card>
+      );
+    } else {
+      return (
+        <Card className="action-card__tap">
+          <CardContent className="action-card__tap_content text-select">
+            {tapDisplay.value}
+          </CardContent>
+        </Card>
+      );
+    }
+  };
 
   useEffect(() => {
     if (props.comingFromRedirect) {
@@ -86,20 +107,8 @@ export const CreateTAP = (props: TFunctionProps) => {
             Create Temporary Access Pass
           </CardFooter>
         </Card>
-      ) : tapDisplay.loading ? (
-        <Card className="action-card__container__loading">
-          <CardContent>
-            <div className="action-card__loading">
-              <Spinner />
-            </div>
-          </CardContent>
-        </Card>
       ) : (
-        <Card className="action-card__tap">
-          <CardContent className="action-card__tap_content text-select">
-            {tapDisplay.value}
-          </CardContent>
-        </Card>
+        showCardContent()
       )}
     </div>
   );
