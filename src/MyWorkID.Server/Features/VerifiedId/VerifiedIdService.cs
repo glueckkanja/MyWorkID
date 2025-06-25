@@ -13,7 +13,7 @@ namespace MyWorkID.Server.Features.VerifiedId
     /// <summary>
     /// Service for handling Verified ID operations.
     /// </summary>
-    public class VerifiedIdService
+    public class VerifiedIdService : IVerifiedIdService
     {
         private readonly HttpClient _verifiedIdClient;
         private readonly VerifiedIdOptions _verifiedIdOptions;
@@ -210,6 +210,64 @@ namespace MyWorkID.Server.Features.VerifiedId
                         },
                 },
             };
+        }
+
+        /// <summary>
+        /// Checks if the user has a recent VerifiedID validation within the configured time window.
+        /// </summary>
+        /// <param name="userId">The ID of the user.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>True if the user has a recent VerifiedID validation, false otherwise.</returns>
+        public async Task<bool> HasRecentVerifiedId(string userId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var user = await _graphClient.Users[userId]
+                    .GetAsync(requestConfiguration => 
+                    {
+                        requestConfiguration.QueryParameters.Select = new[] { "customSecurityAttributes" };
+                    }, cancellationToken);
+
+                if (user?.CustomSecurityAttributes?.AdditionalData == null)
+                {
+                    return false;
+                }
+
+                if (!user.CustomSecurityAttributes.AdditionalData.TryGetValue(_verifiedIdOptions.TargetSecurityAttributeSet!, out var attributeSetObj))
+                {
+                    return false;
+                }
+
+                if (attributeSetObj is not CustomSecurityAttributeValue attributeSet)
+                {
+                    return false;
+                }
+
+                if (!attributeSet.AdditionalData.TryGetValue(_verifiedIdOptions.TargetSecurityAttribute!, out var timestampObj))
+                {
+                    return false;
+                }
+
+                if (timestampObj is not string timestampString)
+                {
+                    return false;
+                }
+
+                if (!DateTime.TryParse(timestampString, out var verificationTime))
+                {
+                    return false;
+                }
+
+                var timeWindow = TimeSpan.FromMinutes(_verifiedIdOptions.RequiredVerificationTimeWindowMinutes);
+                var cutoffTime = DateTime.UtcNow.Subtract(timeWindow);
+
+                return verificationTime >= cutoffTime;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to check recent VerifiedID for user {UserId}", userId);
+                return false;
+            }
         }
     }
 }

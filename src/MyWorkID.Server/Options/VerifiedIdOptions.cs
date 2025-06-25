@@ -47,5 +47,11 @@ namespace MyWorkID.Server.Options
         /// </summary>
         [Required]
         public string? CreatePresentationRequestUri { get; set; }
+
+        /// <summary>
+        /// Gets or sets the time window in minutes for which a VerifiedID is considered recent.
+        /// Default is 30 minutes.
+        /// </summary>
+        public int RequiredVerificationTimeWindowMinutes { get; set; } = 30;
     }
 }

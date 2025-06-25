@@ -32,6 +32,7 @@ namespace MyWorkID.Server.Features.VerifiedId
             services.AddTransient<VerifiedIdAuthenticationHandler>();
             services.AddSingleton(new VerifiedIdAccessTokenService(verifiedIdCredentials));
             services.AddHttpClient<VerifiedIdService>().AddHttpMessageHandler<VerifiedIdAuthenticationHandler>();
+            services.AddScoped<IVerifiedIdService, VerifiedIdService>();
             services.AddSingleton<IVerifiedIdSignalRRepository, VerifiedIdSignalRRepository>();
         }
     }

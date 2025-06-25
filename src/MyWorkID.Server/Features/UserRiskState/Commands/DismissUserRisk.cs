@@ -23,6 +23,7 @@ namespace MyWorkID.Server.Features.UserRiskState.Commands
                 .AddEndpointFilter<CheckDismissUserRiskAppConfigurationEndpointFilter>()
                 .AddEndpointFilter<DismissUserRiskAuthContextEndpointFilter>()
                 .AddEndpointFilter<CheckForObjectIdEndpointFilter>()
+                .AddEndpointFilter<RequireRecentVerifiedIdEndpointFilter>()
                 .WithTags(Strings.USERRISKSTATE_OPENAPI_TAG);
         }
 

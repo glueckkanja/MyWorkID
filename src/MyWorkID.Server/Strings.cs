@@ -14,6 +14,7 @@
         public const string RESET_PASSWORD_ROLE = "MyWorkID.PasswordReset";
         public const string DISMISS_USER_RISK_ROLE = "MyWorkID.DismissUserRisk";
         public const string VALIDATE_IDENTITY_ROLE = "MyWorkID.ValidateIdentity";
+        public const string REQUIRE_RECENT_VERIFIED_ID_ROLE = "MyWorkID.RequireRecentVerifiedId";
         public const string PASSWORD_VALIDATION_MISSING_ERROR = "Password is required.";
         public const string PASSWORD_VALIDATION_LENGTH_ERROR = "Password must be between 8 and 255 characters.";
         public const string PASSWORD_VALIDATION_SYMBOLS_ERROR = "Please use characters from at least 3 of these groups: lowercase, uppercase, digits, special symbols.";

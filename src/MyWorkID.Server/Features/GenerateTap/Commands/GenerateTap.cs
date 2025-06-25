@@ -25,6 +25,7 @@ namespace MyWorkID.Server.Features.GenerateTap.Commands
                 .AddEndpointFilter<CheckGenerateTapAppConfigurationEndpointFilter>()
                 .AddEndpointFilter<GenerateTapAuthContextEndpointFilter>()
                 .AddEndpointFilter<CheckForObjectIdEndpointFilter>()
+                .AddEndpointFilter<RequireRecentVerifiedIdEndpointFilter>()
                 .WithTags(nameof(GenerateTap));
         }
 
