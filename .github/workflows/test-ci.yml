@@ -5,7 +5,8 @@ on:
 
 permissions:
   contents: read
-
+  checks: write
+  
 env:
   DOTNET_CORE_VERSION: 8.0.x
 
