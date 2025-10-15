@@ -67,13 +67,12 @@ namespace MyWorkID.Server.Features.VerifiedId
             Entities.Validation validation = new(allowRevoked: false, validateLinkedDomain: true, faceCheck: faceCheck);
 
             List<RequestCredential> credentialList = new()
-                {
-                    new RequestCredential(
-                        type: "VerifiedEmployee",
-                        purpose: "Verify users identity",
-                        acceptedIssuers: null,
-                        configuration: new Entities.Configuration(validation))
-                };
+            {
+                new RequestCredential(
+                    type: "VerifiedEmployee",
+                    purpose: "Verify users identity",
+                    configuration: new Entities.Configuration(validation))
+            };
 
             var request = new CreatePresentationRequest(
                 authority: _verifiedIdOptions.DecentralizedIdentifier!,

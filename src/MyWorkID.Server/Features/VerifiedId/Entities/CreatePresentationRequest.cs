@@ -240,7 +240,7 @@ namespace MyWorkID.Server.Features.VerifiedId.Entities
         /// Gets or sets the list of accepted issuers for the requested credential.
         /// </summary>
         [JsonPropertyName("acceptedIssuers")]
-        public IEnumerable<string>? AcceptedIssuers { get; set; }
+        public IEnumerable<string> AcceptedIssuers { get; set; }
 
         /// <summary>
         /// Gets or sets the configuration details for the requested credential.
@@ -267,7 +267,7 @@ namespace MyWorkID.Server.Features.VerifiedId.Entities
         {
             Type = type;
             Purpose = purpose;
-            AcceptedIssuers = acceptedIssuers;
+            AcceptedIssuers = acceptedIssuers ?? [];
             Configuration = configuration;
             Constraints = constraints;
         }
