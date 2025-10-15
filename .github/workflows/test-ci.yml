@@ -3,6 +3,9 @@ name: 'Test CI'
 on:
   pull_request:
 
+permissions:
+  contents: read
+
 env:
   DOTNET_CORE_VERSION: 8.0.x
 

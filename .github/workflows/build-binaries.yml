@@ -13,6 +13,9 @@ on:
     branches:
       - "main"
 
+permissions:
+  contents: read
+
 env:
   PROJECT_ROOT_DIRECTORY: "./src/MyWorkID.Server"
   DOTNET_VERSION: "8.0.x"
