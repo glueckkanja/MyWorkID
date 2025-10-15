@@ -8,6 +8,10 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+permissions:
+  contents: read
+  pull-requests: write
+
 env:
   CONFIGURATION: Release
   DOTNET_CORE_VERSION: 8.0.x
