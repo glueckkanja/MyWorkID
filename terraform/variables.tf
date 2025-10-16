@@ -98,6 +98,13 @@ variable "verified_id_face_match_confidence_threshold" {
   type        = number
   description = "The minimum confidence threshold for face match verification."
   default     = 70
+  validation {
+    condition = (
+      var.verified_id_face_match_confidence_threshold >= 50 &&
+      var.verified_id_face_match_confidence_threshold <= 100
+    )
+    error_message = "Must be between 50 and 100 (inclusive)."
+  }
 }
 
 # Backend Access Groups
