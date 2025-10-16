@@ -27,7 +27,7 @@ jobs:
       run:
         working-directory: ${{env.PROJECT_ROOT_DIRECTORY}}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # Load NuGetCache
       - name: Restore NuGet Cache
