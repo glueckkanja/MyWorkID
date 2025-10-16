@@ -62,7 +62,7 @@ namespace MyWorkID.Server.Features.VerifiedId
                 state: userId,
                 headers: new Dictionary<string, string>() { { "Authorization", $"Bearer {JwtTokenProvider.GenerateToken(userId, jwtSigningKey)}" } });
 
-            FaceCheck faceCheck = new(sourcePhotoClaimName: "photo", matchConfidenceThreshold: 50);
+            FaceCheck faceCheck = new(sourcePhotoClaimName: "photo", _verifiedIdOptions.FaceMatchConfidenceThreshold);
 
             Entities.Validation validation = new(allowRevoked: false, validateLinkedDomain: true, faceCheck: faceCheck);
 

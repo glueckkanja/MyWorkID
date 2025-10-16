@@ -47,5 +47,10 @@ namespace MyWorkID.Server.Options
         /// </summary>
         [Required]
         public string? CreatePresentationRequestUri { get; set; }
+
+        /// <summary>
+        /// Gets or sets the face match confidence threshold.
+        /// </summary>
+        public int FaceMatchConfidenceThreshold { get; set; } = 70;
     }
 }
