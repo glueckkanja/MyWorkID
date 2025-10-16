@@ -15,6 +15,7 @@ locals {
   verified_id_decentralized_identifier_secret_name = var.verified_id_decentralized_identifier_secret_name
   verified_id_verify_security_attribute_set        = var.verified_id_verify_security_attribute_set
   verified_id_verify_security_attribute            = var.verified_id_verify_security_attribute
+  verified_id_face_match_confidence_threshold      = var.verified_id_face_match_confidence_threshold
   custom_domains                                   = var.custom_domains
   enable_auto_update                               = var.enable_auto_update
   allow_credential_operations_for_privileged_users = var.allow_credential_operations_for_privileged_users

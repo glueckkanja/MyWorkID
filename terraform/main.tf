@@ -88,6 +88,7 @@ resource "azurerm_linux_web_app" "backend" {
     VerifiedId__TargetSecurityAttribute        = local.verified_id_verify_security_attribute
     VerifiedId__BackendUrl                     = local.is_custom_domain_configured ? "https://${local.custom_domains[0]}" : "https://${local.api_name}.azurewebsites.net"
     VerifiedId__CreatePresentationRequestUri   = local.verified_id_create_presentation_request_uri
+    VerifiedId__FaceMatchConfidenceThreshold   = local.verified_id_face_match_confidence_threshold
   }
 
   lifecycle {
@@ -111,19 +112,19 @@ resource "azuread_directory_role" "authentication_administrator" {
 }
 
 resource "time_sleep" "wait_30_seconds_after_user_assigned_identity_creation" {
-  depends_on = [azurerm_linux_web_app.backend]
+  depends_on      = [azurerm_linux_web_app.backend]
   create_duration = "30s"
 }
 
 resource "azuread_directory_role_assignment" "backend_managed_identity_authentication_administrator" {
-  depends_on = [ time_sleep.wait_30_seconds_after_user_assigned_identity_creation ]
+  depends_on          = [time_sleep.wait_30_seconds_after_user_assigned_identity_creation]
   count               = local.skip_actions_requiring_global_admin ? 0 : 1
   role_id             = azuread_directory_role.authentication_administrator[0].template_id
   principal_object_id = azurerm_linux_web_app.backend.identity[0].principal_id
 }
 
 resource "azuread_service_principal" "verifiable_credentials_service_request" {
-  count = local.skip_actions_requiring_global_admin ? 0 : 1
+  count        = local.skip_actions_requiring_global_admin ? 0 : 1
   client_id    = "3db474b9-6a0c-4840-96ac-1fceb342124f"
   use_existing = true
 }
@@ -285,7 +286,7 @@ resource "azurerm_key_vault" "backend_secrets" {
 }
 
 resource "azurerm_role_assignment" "backend_key_vault_access" {
-  depends_on = [ time_sleep.wait_30_seconds_after_user_assigned_identity_creation ]
+  depends_on           = [time_sleep.wait_30_seconds_after_user_assigned_identity_creation]
   scope                = azurerm_key_vault.backend_secrets.id
   role_definition_name = "Key Vault Secrets User"
   principal_id         = azurerm_linux_web_app.backend.identity[0].principal_id

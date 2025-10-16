@@ -26,14 +26,14 @@ variable "skip_creation_backend_access_groups" {
   default     = false
 }
 variable "enable_auto_update" {
-  type = bool
+  type        = bool
   description = "Decides wether the backend should be updated automatically. If set to false the backend will not be updated automatically. If set to true the backend will be updated automatically. NOTE: If this ever was set to false a change to true will result in the backend being recreated automatically"
-  default = true
+  default     = true
 }
-variable "allow_credential_operations_for_privileged_users"{
-  type = bool
+variable "allow_credential_operations_for_privileged_users" {
+  type        = bool
   description = "Allow credential operations for privileged users. If set to true, users with privileged roles (e.g. Global Admin or User Admin) can perform credential operations like create TAP and reset password"
-  default = false
+  default     = false
 }
 
 # AppService
@@ -42,20 +42,20 @@ variable "api_name" {
   description = "Name of the AppService that hosts the api. Note this has to be globally unique."
 }
 variable "custom_domains" {
-  type    = list(string)
-  default = []
+  type        = list(string)
+  default     = []
   description = "OPTIONAL: List of custom domains for MyWorkID. Must be configured at a later time. NOTE: If specified the VerifiedId callbacks will always use the first domain in the list."
 }
 
 # AppRegistrations
 variable "backed_appreg_name" {
-  type    = string
-  default = "ar-MyWorkID-backend"
+  type        = string
+  default     = "ar-MyWorkID-backend"
   description = "Name of the AppRegistration that is used by the backend"
 }
 variable "frontend_appreg_name" {
-  type    = string
-  default = "ar-MyWorkID-frontend"
+  type        = string
+  default     = "ar-MyWorkID-frontend"
   description = "Name of the AppRegistration that is used by the frontend"
 }
 
@@ -94,6 +94,18 @@ variable "verified_id_verify_security_attribute" {
   description = "The name of the custom security attribute where the last verified date should be stored."
   default     = "lastVerifiedFaceCheck"
 }
+variable "verified_id_face_match_confidence_threshold" {
+  type        = number
+  description = "The minimum confidence threshold for face match verification."
+  default     = 70
+  validation {
+    condition = (
+      var.verified_id_face_match_confidence_threshold >= 50 &&
+      var.verified_id_face_match_confidence_threshold <= 100
+    )
+    error_message = "Must be between 50 and 100 (inclusive)."
+  }
+}
 
 # Backend Access Groups
 variable "backend_access_group_names" {
@@ -103,7 +115,7 @@ variable "backend_access_group_names" {
     password_reset    = optional(string, "sec - MyWorkID - Password Reset")
     validate_identity = optional(string, "sec - MyWorkID - Validate Identity")
   })
-  default = {}
+  default     = {}
   description = "Values for the backend access group names. Only relevant if skip_creation_backend_access_groups = false"
 }
 
