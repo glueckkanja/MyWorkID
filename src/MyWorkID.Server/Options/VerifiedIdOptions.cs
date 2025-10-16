@@ -51,6 +51,7 @@ namespace MyWorkID.Server.Options
         /// <summary>
         /// Gets or sets the face match confidence threshold.
         /// </summary>
+        [Range(50, 100)]
         public int FaceMatchConfidenceThreshold { get; set; } = 70;
     }
 }
