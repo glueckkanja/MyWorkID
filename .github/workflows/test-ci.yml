@@ -39,7 +39,7 @@ jobs:
           mkdir TestResults
           cp tests/MyWorkID.Server.IntegrationTests/TestResults/testResults.trx TestResults/Integration-Tests.trx
           cp tests/MyWorkID.Server.UnitTests/TestResults/testResults.trx TestResults/Unit-Tests.trx
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: success() || failure()
         with:
           name: testResults
