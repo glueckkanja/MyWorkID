@@ -48,7 +48,7 @@ app.UseExceptionHandler(exceptionHandlerApp =>
         }
         await Results.Problem(extensions: new Dictionary<string, object?>
         {
-            ["traceId"] = context.TraceIdentifier
+            ["correlationId"] = context.TraceIdentifier
         }).ExecuteAsync(context);
     });
 });
@@ -58,7 +58,7 @@ app.UseStatusCodePages(async statusCodeContext
         statusCode: statusCodeContext.HttpContext.Response.StatusCode,
         extensions: new Dictionary<string, object?>
         {
-            ["traceId"] = statusCodeContext.HttpContext.TraceIdentifier
+            ["correlationId"] = statusCodeContext.HttpContext.TraceIdentifier
         }).ExecuteAsync(statusCodeContext.HttpContext));
 
 if (app.Environment.IsDevelopment())

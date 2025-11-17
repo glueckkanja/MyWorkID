@@ -181,7 +181,7 @@ function toastException(error: unknown) {
 
   if (axios.isAxiosError(error)) {
     description = error.response?.data.detail ?? "Something went wrong";
-    correlationId = error.response?.data.traceId;
+    correlationId = error.response?.data.correlationId;
   }
 
   toast({
@@ -192,7 +192,10 @@ function toastException(error: unknown) {
   });
 }
 
-function toastError(description: string = "Something went wrong on the client side.", correlationId?: string) {
+function toastError(
+  description: string = "Something went wrong on the client side.",
+  correlationId?: string
+) {
   toast({
     variant: "destructive",
     title: "Something went wrong",
