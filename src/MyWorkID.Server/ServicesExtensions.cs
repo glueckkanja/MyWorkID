@@ -62,6 +62,11 @@ namespace MyWorkID.Server
                 .Bind(configuration.GetRequiredSection(FrontendOptions.SectionName))
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
+
+            services.AddOptions<TapOptions>()
+                .Bind(configuration.GetSection(TapOptions.SectionName))
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
         }
     }
 }

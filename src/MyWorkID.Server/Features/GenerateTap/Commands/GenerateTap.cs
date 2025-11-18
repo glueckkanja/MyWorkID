@@ -1,7 +1,9 @@
 ﻿using MyWorkID.Server.Common;
 using MyWorkID.Server.Features.GenerateTap.Entities;
 using MyWorkID.Server.Filters;
+using MyWorkID.Server.Options;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Options;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
 using Microsoft.Identity.Web;
@@ -37,11 +39,24 @@ namespace MyWorkID.Server.Features.GenerateTap.Commands
         /// <returns>The generated TAP or an error response.</returns>
         [Authorize(Roles = Strings.CREATE_TAP_ROLE)]
         public static async Task<IResult> HandleAsync(ClaimsPrincipal user, GraphServiceClient graphClient,
-            CancellationToken cancellationToken)
+            IOptions<TapOptions> tapOptions, CancellationToken cancellationToken)
         {
             var userId = user.GetObjectId();
+            var tapSettings = tapOptions.Value;
+            var tapRequest = new TemporaryAccessPassAuthenticationMethod();
+
+            if (tapSettings.LifetimeInMinutes.HasValue)
+            {
+                tapRequest.LifetimeInMinutes = tapSettings.LifetimeInMinutes;
+            }
+
+            if (tapSettings.IsUsableOnce.HasValue)
+            {
+                tapRequest.IsUsableOnce = tapSettings.IsUsableOnce;
+            }
+
             var tapResponse = await graphClient.Users[userId].Authentication.TemporaryAccessPassMethods.PostAsync(
-                new TemporaryAccessPassAuthenticationMethod(),
+                tapRequest,
                 cancellationToken: cancellationToken);
             if (tapResponse?.TemporaryAccessPass == null)
             {
