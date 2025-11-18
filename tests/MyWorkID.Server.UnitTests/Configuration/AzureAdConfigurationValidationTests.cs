@@ -30,9 +30,9 @@ namespace MyWorkID.Server.UnitTests.Configuration
             }
         }
 
-        public static TheoryData<KeyValuePair<string, string?>[], Type, string> GetTestConfigurations()
+        public static TheoryData<KeyValuePair<string, string?>[], Type?, string?> GetTestConfigurations()
         {
-            return new TheoryData<KeyValuePair<string, string?>[], Type, string>
+            return new TheoryData<KeyValuePair<string, string?>[], Type?, string?>
             {
                 {
                 new KeyValuePair<string, string?>[]

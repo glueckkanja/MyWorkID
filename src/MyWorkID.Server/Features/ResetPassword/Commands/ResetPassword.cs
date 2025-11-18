@@ -43,7 +43,11 @@ namespace MyWorkID.Server.Features.ResetPassword.Commands
         public static async Task<IResult> HandleAsync([FromBody] PasswordResetRequest passwordResetRequest,
             ClaimsPrincipal user, GraphServiceClient graphClient, CancellationToken cancellationToken)
         {
-            string userId = user.GetObjectId();
+            string? userId = user.GetObjectId();
+            if (string.IsNullOrEmpty(userId))
+            {
+                return TypedResults.Unauthorized();
+            }
             await graphClient.Users[userId].PatchAsync(
                 new User
                 {
