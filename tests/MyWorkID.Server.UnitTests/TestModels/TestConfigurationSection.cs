@@ -7,7 +7,7 @@ namespace MyWorkID.Server.UnitTests.TestModels;
 /// </summary>
 public class TestConfigurationSection : IXunitSerializable
 {
-    private IList<KeyValuePair<string, string?>> _entries = new List<KeyValuePair<string, string?>>();
+    private List<KeyValuePair<string, string?>> _entries = new();
 
     /// <summary>
     /// Produces a shallow clone and applies the provided changes for fluent customization.
