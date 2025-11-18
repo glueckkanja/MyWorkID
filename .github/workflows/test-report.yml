@@ -20,3 +20,4 @@ jobs:
         name: test report
         path: '*.trx'
         reporter: dotnet-trx
+        use-actions-summary: 'false' # Write summary into check run details instead of actions summary
