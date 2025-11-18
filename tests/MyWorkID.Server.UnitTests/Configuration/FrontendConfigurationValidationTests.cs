@@ -1,6 +1,6 @@
-﻿using MyWorkID.Server.Options;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using MyWorkID.Server.Options;
 
 namespace MyWorkID.Server.UnitTests.Configuration
 {
