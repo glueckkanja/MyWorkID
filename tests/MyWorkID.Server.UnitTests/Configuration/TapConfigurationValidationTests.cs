@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using MyWorkID.Server.Options;
+using MyWorkID.Server.UnitTests.TestModels;
 
 namespace MyWorkID.Server.UnitTests.Configuration
 {
@@ -8,10 +9,11 @@ namespace MyWorkID.Server.UnitTests.Configuration
     {
         [Theory]
         [MemberData(nameof(GetTestConfigurations))]
-        public void ValidateTapConfigOptions(KeyValuePair<string, string?>[] testConfiguration, Type? expectedExceptionType, string? expectedErrorMessage)
+        public void ValidateTapConfigOptions(TestConfigurationSection testConfiguration, Type? expectedExceptionType, string? expectedErrorMessage)
         {
+            var configurationData = testConfiguration.ToKeyValuePairs();
             ServiceProvider serviceProvider = ConfigurationTestsHelper
-                .ConfigureOptions<TapOptions>(testConfiguration, TapOptions.SectionName, sectionRequired: false);
+                .ConfigureOptions<TapOptions>(configurationData, TapOptions.SectionName, sectionRequired: false);
 
             if (expectedExceptionType != null)
             {
@@ -30,37 +32,34 @@ namespace MyWorkID.Server.UnitTests.Configuration
             }
         }
 
-        public static TheoryData<KeyValuePair<string, string?>[], Type?, string?> GetTestConfigurations()
+        public static TheoryData<TestConfigurationSection, Type?, string?> GetTestConfigurations()
         {
-            return new TheoryData<KeyValuePair<string, string?>[], Type?, string?>
+            return new TheoryData<TestConfigurationSection, Type?, string?>
             {
                 {
-                    new KeyValuePair<string, string?>[]
-                    {
-                        new KeyValuePair<string, string?>("Tap:LifetimeInMinutes", "9")
-                    },
+                    TestConfigurationSection.Create(
+                        ("Tap:LifetimeInMinutes", "9")
+                    ),
                     typeof(OptionsValidationException),
                     "The field 'LifetimeInMinutes' must be between 10 and 43200."
                 },
                 {
-                    new KeyValuePair<string, string?>[]
-                    {
-                        new KeyValuePair<string, string?>("Tap:LifetimeInMinutes", "43201")
-                    },
+                    TestConfigurationSection.Create(
+                        ("Tap:LifetimeInMinutes", "43201")
+                    ),
                     typeof(OptionsValidationException),
                     "The field 'LifetimeInMinutes' must be between 10 and 43200."
                 },
                 {
-                    Array.Empty<KeyValuePair<string, string?>>(),
+                    TestConfigurationSection.Create(),
                     null,
                     null
                 },
                 {
-                    new KeyValuePair<string, string?>[]
-                    {
-                        new KeyValuePair<string, string?>("Tap:LifetimeInMinutes", "30"),
-                        new KeyValuePair<string, string?>("Tap:IsUsableOnce", "true")
-                    },
+                    TestConfigurationSection.Create(
+                        ("Tap:LifetimeInMinutes", "30"),
+                        ("Tap:IsUsableOnce", "true")
+                    ),
                     null,
                     null
                 }
