@@ -46,13 +46,20 @@ app.UseExceptionHandler(exceptionHandlerApp =>
         {
             logger.LogError(exceptionHandlerPathFeature.Error, "An unhandled exception has occurred.");
         }
-        await Results.Problem().ExecuteAsync(context);
+        await Results.Problem(extensions: new Dictionary<string, object?>
+        {
+            ["correlationId"] = context.TraceIdentifier
+        }).ExecuteAsync(context);
     });
 });
 
 app.UseStatusCodePages(async statusCodeContext
-    => await Results.Problem(statusCode: statusCodeContext.HttpContext.Response.StatusCode)
-                 .ExecuteAsync(statusCodeContext.HttpContext));
+    => await Results.Problem(
+        statusCode: statusCodeContext.HttpContext.Response.StatusCode,
+        extensions: new Dictionary<string, object?>
+        {
+            ["correlationId"] = statusCodeContext.HttpContext.TraceIdentifier
+        }).ExecuteAsync(statusCodeContext.HttpContext));
 
 if (app.Environment.IsDevelopment())
 {

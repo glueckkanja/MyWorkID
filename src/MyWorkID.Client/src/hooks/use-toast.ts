@@ -11,6 +11,7 @@ type ToasterToast = ToastProps & {
   title?: React.ReactNode;
   description?: React.ReactNode;
   action?: ToastActionElement;
+  correlationId?: string;
 };
 
 const actionTypes = {
@@ -176,23 +177,30 @@ function toastSuccess(title: string, description: string) {
 
 function toastException(error: unknown) {
   let description = "Something went wrong";
+  let correlationId: string | undefined;
 
   if (axios.isAxiosError(error)) {
     description = error.response?.data.detail ?? "Something went wrong";
+    correlationId = error.response?.data.correlationId;
   }
 
   toast({
     variant: "destructive",
     title: "An error occurred",
     description: description,
+    correlationId: correlationId,
   });
 }
 
-function toastError(description: string = "Something went wrong on the client side.") {
+function toastError(
+  description: string = "Something went wrong on the client side.",
+  correlationId?: string
+) {
   toast({
     variant: "destructive",
     title: "Something went wrong",
     description: description,
+    correlationId: correlationId,
   });
 }
 
