@@ -107,6 +107,28 @@ variable "verified_id_face_match_confidence_threshold" {
   }
 }
 
+# Tap settings
+variable "tap_lifetime_in_minutes" {
+  type        = number
+  description = "Optional override for the TAP lifetime (in minutes). Graph enforces 10-43200 minutes."
+  default     = null
+  nullable    = true
+  validation {
+    condition = var.tap_lifetime_in_minutes == null || (
+      var.tap_lifetime_in_minutes >= 10 &&
+      var.tap_lifetime_in_minutes <= 43200
+    )
+    error_message = "Must be null or between 10 and 43200 (inclusive)."
+  }
+}
+
+variable "tap_is_usable_once" {
+  type        = bool
+  description = "Optional override deciding whether generated TAPs can be used only once."
+  default     = null
+  nullable    = true
+}
+
 # Backend Access Groups
 variable "backend_access_group_names" {
   type = object({
