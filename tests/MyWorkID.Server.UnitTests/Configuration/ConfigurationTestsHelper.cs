@@ -6,15 +6,18 @@ namespace MyWorkID.Server.UnitTests.Configuration
 {
     public static class ConfigurationTestsHelper
     {
-        public static ServiceProvider ConfigureOptions<TOptions>(KeyValuePair<string, string?>[] testConfiguration, string sectionName) where TOptions : BaseOptions, new()
+        public static ServiceProvider ConfigureOptions<TOptions>(KeyValuePair<string, string?>[] testConfiguration, string sectionName, bool sectionRequired = true) where TOptions : BaseOptions, new()
         {
             var configuration = new ConfigurationBuilder()
                 .AddInMemoryCollection(testConfiguration)
                 .Build();
 
             var services = new ServiceCollection();
+            var section = sectionRequired
+                ? configuration.GetRequiredSection(sectionName)
+                : configuration.GetSection(sectionName);
             services.AddOptions<TOptions>()
-                    .Bind(configuration.GetRequiredSection(sectionName))
+                    .Bind(section)
                     .ValidateDataAnnotations()
                     .ValidateOnStart();
 
