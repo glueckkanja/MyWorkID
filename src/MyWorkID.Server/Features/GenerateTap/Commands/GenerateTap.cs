@@ -45,8 +45,15 @@ namespace MyWorkID.Server.Features.GenerateTap.Commands
             var tapSettings = tapOptions.Value;
             var tapRequest = new TemporaryAccessPassAuthenticationMethod();
 
-            tapRequest.LifetimeInMinutes = tapSettings.LifetimeInMinutes ?? tapRequest.LifetimeInMinutes;
-            tapRequest.IsUsableOnce = tapSettings.IsUsableOnce ?? tapRequest.IsUsableOnce;
+            if (tapSettings.LifetimeInMinutes.HasValue)
+            {
+                tapRequest.LifetimeInMinutes = tapSettings.LifetimeInMinutes;
+            }
+
+            if (tapSettings.IsUsableOnce.HasValue)
+            {
+                tapRequest.IsUsableOnce = tapSettings.IsUsableOnce;
+            }
 
             var tapResponse = await graphClient.Users[userId].Authentication.TemporaryAccessPassMethods.PostAsync(
                 tapRequest,
