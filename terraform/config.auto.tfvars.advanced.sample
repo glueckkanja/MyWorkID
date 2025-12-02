@@ -69,7 +69,8 @@ verified_id_face_match_confidence_threshold = 70
 
 # ------- Tap Settings -------
 
-# Optional override for the TAP lifetime (minutes). Must be between 10 and 43200 when set.
+# Optional override for the TAP lifetime (minutes). Must be between 60 and 480 when set.
+# Note: Official Microsoft documentation may show different ranges, but Graph API enforces 60-480.
 tap_lifetime_in_minutes = null
 
 # Optional override deciding whether generated TAPs can be used only once.

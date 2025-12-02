@@ -110,15 +110,15 @@ variable "verified_id_face_match_confidence_threshold" {
 # Tap settings
 variable "tap_lifetime_in_minutes" {
   type        = number
-  description = "Optional override for the TAP lifetime (in minutes). Graph enforces 10-43200 minutes."
+  description = "Optional override for the TAP lifetime (in minutes). Graph API enforces 60-480 minutes. Note: Official Microsoft documentation may differ, but actual API validation requires this range."
   default     = null
   nullable    = true
   validation {
     condition = var.tap_lifetime_in_minutes == null || (
-      var.tap_lifetime_in_minutes >= 10 &&
-      var.tap_lifetime_in_minutes <= 43200
+      var.tap_lifetime_in_minutes >= 60 &&
+      var.tap_lifetime_in_minutes <= 480
     )
-    error_message = "Must be null or between 10 and 43200 (inclusive)."
+    error_message = "Must be null or between 60 and 480 (inclusive). Note: Official documentation may show different ranges, but Graph API enforces 60-480."
   }
 }
 
