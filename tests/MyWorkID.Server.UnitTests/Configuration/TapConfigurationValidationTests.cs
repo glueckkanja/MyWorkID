@@ -38,17 +38,17 @@ namespace MyWorkID.Server.UnitTests.Configuration
             {
                 {
                     TestConfigurationSection.Create(
-                        ("Tap:LifetimeInMinutes", "9")
+                        ("Tap:LifetimeInMinutes", "59")
                     ),
                     typeof(OptionsValidationException),
-                    "The field 'LifetimeInMinutes' must be between 10 and 43200."
+                    "The field 'LifetimeInMinutes' must be between 60 and 480."
                 },
                 {
                     TestConfigurationSection.Create(
-                        ("Tap:LifetimeInMinutes", "43201")
+                        ("Tap:LifetimeInMinutes", "481")
                     ),
                     typeof(OptionsValidationException),
-                    "The field 'LifetimeInMinutes' must be between 10 and 43200."
+                    "The field 'LifetimeInMinutes' must be between 60 and 480."
                 },
                 {
                     TestConfigurationSection.Create(),
@@ -57,7 +57,7 @@ namespace MyWorkID.Server.UnitTests.Configuration
                 },
                 {
                     TestConfigurationSection.Create(
-                        ("Tap:LifetimeInMinutes", "30"),
+                        ("Tap:LifetimeInMinutes", "60"),
                         ("Tap:IsUsableOnce", "true")
                     ),
                     null,

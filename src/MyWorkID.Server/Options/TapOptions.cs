@@ -10,9 +10,10 @@ namespace MyWorkID.Server.Options
         public const string SectionName = "Tap";
 
         /// <summary>
-        /// Overrides the TAP lifetime in minutes. Graph enforces 10-43200 minutes.
+        /// Overrides the TAP lifetime in minutes. Graph API enforces 60-480 minutes.
+        /// Note: Official Microsoft documentation may show different ranges, but the actual API validation requires 60-480.
         /// </summary>
-        [Range(10, 43200, ErrorMessage = "The field 'LifetimeInMinutes' must be between 10 and 43200.")]
+        [Range(60, 480, ErrorMessage = "The field 'LifetimeInMinutes' must be between 60 and 480.")]
         public int? LifetimeInMinutes { get; set; }
 
         /// <summary>
