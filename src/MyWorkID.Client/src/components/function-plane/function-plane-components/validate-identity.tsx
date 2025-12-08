@@ -30,32 +30,28 @@ export const ValidateIdentity = (/*props: ActionResultProps<any>*/) => {
 
   const { toastError, toastException, toastSuccess } = useToast();
 
+  const hideVerifiedIdDisplay = () => {
+    setVerifiedIdDisplay({
+      visible: false,
+      qrCodeBase64: undefined,
+      loading: false,
+    });
+  };
+
   useEffect(() => {
     getVerifiedIdConnection().then((connection) => {
       if (connection.state === HubConnectionState.Disconnected) {
         connection.on("HideQrCode", () => {
-          setVerifiedIdDisplay({
-            visible: false,
-            qrCodeBase64: undefined,
-            loading: false,
-          });
+          hideVerifiedIdDisplay();
         });
 
         connection.on("VerificationSuccess", () => {
-          setVerifiedIdDisplay({
-            visible: false,
-            qrCodeBase64: undefined,
-            loading: false,
-          });
+          hideVerifiedIdDisplay();
           toastSuccess("Identity Verified", "Your identity has been successfully verified.");
         });
 
         connection.on("VerificationFailed", (errorMessage: string) => {
-          setVerifiedIdDisplay({
-            visible: false,
-            qrCodeBase64: undefined,
-            loading: false,
-          });
+          hideVerifiedIdDisplay();
           toastError(errorMessage || "Identity verification failed. Please try again.");
         });
         connection.start();
