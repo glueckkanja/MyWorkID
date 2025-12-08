@@ -107,6 +107,28 @@ variable "verified_id_face_match_confidence_threshold" {
   }
 }
 
+# Tap settings
+variable "tap_lifetime_in_minutes" {
+  type        = number
+  description = "Optional override for the TAP lifetime (in minutes). Graph API enforces 60-480 minutes. Note: Official Microsoft documentation may differ, but actual API validation requires this range."
+  default     = null
+  nullable    = true
+  validation {
+    condition = var.tap_lifetime_in_minutes == null || (
+      var.tap_lifetime_in_minutes >= 60 &&
+      var.tap_lifetime_in_minutes <= 480
+    )
+    error_message = "Must be null or between 60 and 480 (inclusive). Note: Official documentation may show different ranges, but Graph API enforces 60-480."
+  }
+}
+
+variable "tap_is_usable_once" {
+  type        = bool
+  description = "Optional override deciding whether generated TAPs can be used only once."
+  default     = null
+  nullable    = true
+}
+
 # Backend Access Groups
 variable "backend_access_group_names" {
   type = object({

@@ -68,7 +68,7 @@ resource "azurerm_linux_web_app" "backend" {
     always_on           = true
   }
 
-  app_settings = {
+  app_settings = merge({
     AppFunctions__DismissUserRisk              = local.dismiss_user_risk_auth_context_id
     AppFunctions__GenerateTap                  = local.generate_tap_auth_context_id
     AppFunctions__ResetPassword                = local.reset_password_auth_context_id
@@ -89,7 +89,13 @@ resource "azurerm_linux_web_app" "backend" {
     VerifiedId__BackendUrl                     = local.is_custom_domain_configured ? "https://${local.custom_domains[0]}" : "https://${local.api_name}.azurewebsites.net"
     VerifiedId__CreatePresentationRequestUri   = local.verified_id_create_presentation_request_uri
     VerifiedId__FaceMatchConfidenceThreshold   = local.verified_id_face_match_confidence_threshold
-  }
+    },
+    local.tap_lifetime_in_minutes == null ? {} : {
+      Tap__LifetimeInMinutes = tostring(local.tap_lifetime_in_minutes)
+    },
+    local.tap_is_usable_once == null ? {} : {
+      Tap__IsUsableOnce = tostring(local.tap_is_usable_once)
+  })
 
   lifecycle {
     ignore_changes = [
