@@ -7,13 +7,13 @@ namespace MyWorkID.Server.Features.VerifiedId.SignalR
     /// </summary>
     public class VerifiedIdHub : Hub<IVerifiedIdHub>
     {
-        private readonly VerifiedIdSignalRRepository _verifiedIdSignalRRepository;
+        private readonly IVerifiedIdSignalRRepository _verifiedIdSignalRRepository;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="VerifiedIdHub"/> class with the specified repository.
         /// </summary>
         /// <param name="verifiedIdSignalRRepository">The repository used to manage user connections.</param>
-        public VerifiedIdHub(VerifiedIdSignalRRepository verifiedIdSignalRRepository)
+        public VerifiedIdHub(IVerifiedIdSignalRRepository verifiedIdSignalRRepository)
         {
             _verifiedIdSignalRRepository = verifiedIdSignalRRepository;
         }

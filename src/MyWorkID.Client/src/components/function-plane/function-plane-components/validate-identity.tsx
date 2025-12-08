@@ -34,7 +34,6 @@ export const ValidateIdentity = (/*props: ActionResultProps<any>*/) => {
     getVerifiedIdConnection().then((connection) => {
       if (connection.state === HubConnectionState.Disconnected) {
         connection.on("HideQrCode", () => {
-          console.log("HideQrCode received");
           setVerifiedIdDisplay({
             visible: false,
             qrCodeBase64: undefined,
@@ -43,7 +42,6 @@ export const ValidateIdentity = (/*props: ActionResultProps<any>*/) => {
         });
 
         connection.on("VerificationSuccess", () => {
-          console.log("VerificationSuccess received");
           setVerifiedIdDisplay({
             visible: false,
             qrCodeBase64: undefined,
@@ -53,7 +51,6 @@ export const ValidateIdentity = (/*props: ActionResultProps<any>*/) => {
         });
 
         connection.on("VerificationFailed", (errorMessage: string) => {
-          console.log("VerificationFailed received:", errorMessage);
           setVerifiedIdDisplay({
             visible: false,
             qrCodeBase64: undefined,
@@ -61,8 +58,6 @@ export const ValidateIdentity = (/*props: ActionResultProps<any>*/) => {
           });
           toastError(errorMessage || "Identity verification failed. Please try again.");
         });
-
-        console.log("Connecting to SignalR hub...", connection);
         connection.start();
       }
     });
