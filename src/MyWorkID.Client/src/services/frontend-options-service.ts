@@ -16,3 +16,17 @@ export const getFrontendOptions = async () => {
   }
   return frontendOptionsCache;
 };
+
+export const loadCustomCss = (customCssUrl?: string) => {
+  if (!customCssUrl || customCssUrl.trim() === "") {
+    return;
+  }
+
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.type = "text/css";
+  link.href = customCssUrl;
+  link.id = "custom-css";
+  
+  document.head.appendChild(link);
+};
