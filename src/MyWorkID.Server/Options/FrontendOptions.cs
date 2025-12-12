@@ -26,5 +26,8 @@ namespace MyWorkID.Server.Options
         /// </summary>
         [Guid]
         public string? BackendClientId { get; set; }
-    }
-}
+
+    /// <summary>
+    /// Optional URL to a custom CSS file for theming.
+    /// </summary>
+    public string? CustomCssUrl { get; set; }

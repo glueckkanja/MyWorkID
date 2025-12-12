@@ -12,6 +12,7 @@ export type TFrontendOptions = {
   frontendClientId: string;
   tenantId: string;
   backendClientId: string;
+  customCssUrl?: string;
 };
 
 export type TFunctionResult<T = undefined> = {

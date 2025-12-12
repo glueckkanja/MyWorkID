@@ -6,7 +6,7 @@ import {
 import { EApiFunctionTypes, REQUEST_TYPE } from "../types";
 import axios, { AxiosResponse } from "axios";
 import { parseChallenges } from "../utils";
-import { getFrontendOptions } from "./frontend-options-service";
+import { getFrontendOptions, loadCustomCss } from "./frontend-options-service";
 import { Mutex } from "async-mutex";
 
 export type TMsalInfo = {
@@ -23,6 +23,9 @@ export const getMsalInfo = async (): Promise<TMsalInfo> => {
     }
 
     const frontendOptions = await getFrontendOptions();
+
+    // Load custom CSS if configured
+    loadCustomCss(frontendOptions.customCssUrl);
 
     msalInfoCache = {
       msalInstance: new PublicClientApplication({
