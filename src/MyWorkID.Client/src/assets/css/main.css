@@ -1,4 +1,4 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 @import "tailwind-animate";
 
@@ -355,8 +355,10 @@ body {
   grid-template-columns: repeat(2, 1fr) /* 2 items per row */;
   grid-auto-rows: minmax(auto, max-content);
   gap: 10px /* Space between items */;
-  margin-right: 29px;
-  margin-left: 29px;
+  margin: auto;
+  padding-left: 30px;
+  padding-right: 30px;
+  max-width: 1400px;
 }
 .userdisplay__risk-state {
   font-family: vcar(--font-family);
@@ -403,6 +405,7 @@ body {
 }
 
 .header__buttons__logout-button {
+  cursor: pointer;
   margin-right: 1.5rem;
   img {
     max-height: 1.8rem;
