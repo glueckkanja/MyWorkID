@@ -1,4 +1,4 @@
-﻿using MyWorkID.Server.Validation;
+using MyWorkID.Server.Validation;
 
 namespace MyWorkID.Server.Options
 {
@@ -27,7 +27,9 @@ namespace MyWorkID.Server.Options
         [Guid]
         public string? BackendClientId { get; set; }
 
-    /// <summary>
-    /// Optional URL to a custom CSS file for theming.
-    /// </summary>
-    public string? CustomCssUrl { get; set; }
+        /// <summary>
+        /// Optional URL to a custom CSS file for theming.
+        /// </summary>
+        public string? CustomCssUrl { get; set; }
+    }
+}
