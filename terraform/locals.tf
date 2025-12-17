@@ -19,6 +19,7 @@ locals {
   tap_lifetime_in_minutes                          = var.tap_lifetime_in_minutes
   tap_is_usable_once                               = var.tap_is_usable_once
   custom_domains                                   = var.custom_domains
+  custom_css_url                                   = var.custom_css_url
   enable_auto_update                               = var.enable_auto_update
   allow_credential_operations_for_privileged_users = var.allow_credential_operations_for_privileged_users
 }

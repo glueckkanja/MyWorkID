@@ -107,6 +107,14 @@ variable "verified_id_face_match_confidence_threshold" {
   }
 }
 
+# Frontend
+variable "custom_css_url" {
+  type        = string
+  description = "Optional URL to a custom CSS file that will be loaded by the frontend. Must be a publicly accessible HTTPS URL ending in .css"
+  default     = null
+  nullable    = true
+}
+
 # Tap settings
 variable "tap_lifetime_in_minutes" {
   type        = number
