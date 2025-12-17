@@ -167,6 +167,7 @@ namespace MyWorkID.Server.Features.VerifiedId
 
             if (callbackBody.RequestStatus == "presentation_error" || callbackBody.Error != null)
             {
+                await NotifyVerificationFailed(userId, callbackBody.Error?.Message ?? "Verification failed");
                 return;
             }
 
@@ -180,6 +181,32 @@ namespace MyWorkID.Server.Features.VerifiedId
                 User requestBody = CreateSetTargetSecurityAttributeRequestBody(DateTime.UtcNow.ToString("O"));
 
                 await _graphClient.Users[userId].PatchAsync(requestBody);
+                await NotifyVerificationSuccess(userId);
+            }
+        }
+
+        /// <summary>
+        /// Notifies the user that verification was successful.
+        /// </summary>
+        /// <param name="userId">The ID of the user.</param>
+        private async Task NotifyVerificationSuccess(string userId)
+        {
+            if (_verifiedIdSignalRRepository.TryGetConnections(userId, out var connections))
+            {
+                await _hubContext.Clients.Clients(connections).VerificationSuccess();
+            }
+        }
+
+        /// <summary>
+        /// Notifies the user that verification failed.
+        /// </summary>
+        /// <param name="userId">The ID of the user.</param>
+        /// <param name="errorMessage">The error message.</param>
+        private async Task NotifyVerificationFailed(string userId, string errorMessage)
+        {
+            if (_verifiedIdSignalRRepository.TryGetConnections(userId, out var connections))
+            {
+                await _hubContext.Clients.Clients(connections).VerificationFailed(errorMessage);
             }
         }
 
