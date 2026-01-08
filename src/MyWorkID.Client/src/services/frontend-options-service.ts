@@ -40,7 +40,10 @@ export const loadCustomCss = (customCssUrl?: string) => {
     const existingLink = document.getElementById("custom-css");
     if (existingLink) {
       // If the URL is the same, skip adding it again
-      if (existingLink instanceof HTMLLinkElement && existingLink.href === url.href) {
+      if (
+        existingLink instanceof HTMLLinkElement &&
+        existingLink.href === url.href
+      ) {
         return;
       }
       // If the URL is different, remove the old one
@@ -81,9 +84,12 @@ export const updateDocumentHead = (options: TFrontendOptions) => {
           document.head.appendChild(link);
         }
       } else {
-        console.error("Invalid favicon URL protocol (only HTTPS is allowed):", options.faviconUrl);
+        console.error(
+          "Invalid favicon URL protocol (only HTTPS is allowed):",
+          options.faviconUrl
+        );
       }
-    } catch (error) {
+    } catch {
       console.error("Invalid favicon URL:", options.faviconUrl);
     }
   }
