@@ -52,7 +52,7 @@ export const loadCustomCss = (customCssUrl?: string) => {
     link.rel = "stylesheet";
     link.href = url.href;
     document.head.appendChild(link);
-  } catch (error) {
+  } catch {
     console.error("Invalid custom CSS URL:", customCssUrl);
   }
 };
