@@ -15,7 +15,7 @@ export const App = () => {
         console.error("Failed to load frontend configuration:", error);
       }
     };
-    loadConfig();
+    void loadConfig();
   }, []);
 
   return (
