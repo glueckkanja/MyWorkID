@@ -65,14 +65,26 @@ export const updateDocumentHead = (options: TFrontendOptions) => {
 
   // Update favicon
   if (options.faviconUrl && options.faviconUrl.trim() !== "") {
-    const existingFavicon = document.querySelector("link[rel='icon']");
-    if (existingFavicon) {
-      existingFavicon.setAttribute("href", options.faviconUrl);
-    } else {
-      const link = document.createElement("link");
-      link.rel = "icon";
-      link.href = options.faviconUrl;
-      document.head.appendChild(link);
+    try {
+      const url = new URL(options.faviconUrl);
+      // Only allow HTTPS for favicon
+      if (url.protocol === "https:") {
+        const existingFavicon = document.querySelector("link[rel='icon']");
+        if (existingFavicon instanceof HTMLLinkElement) {
+          existingFavicon.href = url.href;
+        } else if (existingFavicon) {
+          existingFavicon.setAttribute("href", url.href);
+        } else {
+          const link = document.createElement("link");
+          link.rel = "icon";
+          link.href = url.href;
+          document.head.appendChild(link);
+        }
+      } else {
+        console.error("Invalid favicon URL protocol (only HTTPS is allowed):", options.faviconUrl);
+      }
+    } catch (error) {
+      console.error("Invalid favicon URL:", options.faviconUrl);
     }
   }
 
