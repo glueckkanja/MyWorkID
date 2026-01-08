@@ -31,5 +31,15 @@ namespace MyWorkID.Server.Options
         /// Optional URL to a custom CSS file for theming.
         /// </summary>
         public string? CustomCssUrl { get; set; }
+
+        /// <summary>
+        /// Application title to display in browser tab.
+        /// </summary>
+        public string? AppTitle { get; set; }
+
+        /// <summary>
+        /// URL to the favicon icon.
+        /// </summary>
+        public string? FaviconUrl { get; set; }
     }
 }
