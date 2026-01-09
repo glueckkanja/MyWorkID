@@ -60,16 +60,21 @@ export const loadCustomCss = (customCssUrl?: string) => {
   }
 };
 
+function sanitize(input: string): string {
+  return input.replace(/<[^>]*>?/gm, '');
+}
+
 export const updateDocumentHead = (options: TFrontendOptions) => {
   // Update page title
   if (options.appTitle && options.appTitle.trim() !== "") {
-    document.title = options.appTitle;
+    document.title = sanitize(options.appTitle);
   }
 
   // Update favicon
   if (options.faviconUrl && options.faviconUrl.trim() !== "") {
     try {
-      const url = new URL(options.faviconUrl);
+      const sanitizedUrl = sanitize(options.faviconUrl);
+      const url = new URL(sanitizedUrl);
       // Only allow HTTPS for favicon
       if (url.protocol === "https:") {
         const existingFavicon = document.querySelector("link[rel='icon']");

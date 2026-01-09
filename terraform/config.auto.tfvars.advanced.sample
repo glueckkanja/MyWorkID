@@ -72,6 +72,12 @@ verified_id_face_match_confidence_threshold = 70
 # Optional URL to a custom CSS file that will be loaded by the frontend. Must be a publicly accessible HTTPS URL ending in .css
 custom_css_url = null
 
+# Optional application title to display in browser tab
+app_title = null
+
+# Optional URL to the favicon icon. Must be a publicly accessible HTTPS URL
+favicon_url = null
+
 # ------- Tap Settings -------
 
 # Optional override for the TAP lifetime (minutes). Must be between 60 and 480 when set.
