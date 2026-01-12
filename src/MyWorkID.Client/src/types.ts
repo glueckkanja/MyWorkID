@@ -13,6 +13,8 @@ export type TFrontendOptions = {
   tenantId: string;
   backendClientId: string;
   customCssUrl?: string;
+  appTitle?: string;
+  faviconUrl?: string;
 };
 
 export type TFunctionResult<T = undefined> = {

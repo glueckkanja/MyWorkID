@@ -40,7 +40,10 @@ export const loadCustomCss = (customCssUrl?: string) => {
     const existingLink = document.getElementById("custom-css");
     if (existingLink) {
       // If the URL is the same, skip adding it again
-      if (existingLink instanceof HTMLLinkElement && existingLink.href === url.href) {
+      if (
+        existingLink instanceof HTMLLinkElement &&
+        existingLink.href === url.href
+      ) {
         return;
       }
       // If the URL is different, remove the old one
@@ -48,16 +51,54 @@ export const loadCustomCss = (customCssUrl?: string) => {
     }
 
     const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.type = "text/css";
-    link.href = url.href;
     link.id = "custom-css";
-
+    link.rel = "stylesheet";
+    link.href = url.href;
     document.head.appendChild(link);
-  } catch (error) {
-    console.error(
-      `Custom CSS URL rejected: Invalid URL format '${customCssUrl}'`,
-      error
-    );
+  } catch {
+    console.error("Invalid custom CSS URL:", customCssUrl);
   }
+};
+
+function sanitize(input: string): string {
+  return input.replace(/<[^>]*>?/gm, '');
+}
+
+export const updateDocumentHead = (options: TFrontendOptions) => {
+  // Update page title
+  if (options.appTitle && options.appTitle.trim() !== "") {
+    document.title = sanitize(options.appTitle);
+  }
+
+  // Update favicon
+  if (options.faviconUrl && options.faviconUrl.trim() !== "") {
+    try {
+      const sanitizedUrl = sanitize(options.faviconUrl);
+      const url = new URL(sanitizedUrl);
+      // Only allow HTTPS for favicon
+      if (url.protocol === "https:") {
+        const existingFavicon = document.querySelector("link[rel='icon']");
+        if (existingFavicon instanceof HTMLLinkElement) {
+          existingFavicon.href = url.href;
+        } else if (existingFavicon) {
+          existingFavicon.setAttribute("href", url.href);
+        } else {
+          const link = document.createElement("link");
+          link.rel = "icon";
+          link.href = url.href;
+          document.head.appendChild(link);
+        }
+      } else {
+        console.error(
+          "Invalid favicon URL protocol (only HTTPS is allowed):",
+          options.faviconUrl
+        );
+      }
+    } catch {
+      console.error("Invalid favicon URL:", options.faviconUrl);
+    }
+  }
+
+  // Load custom CSS if provided
+  loadCustomCss(options.customCssUrl);
 };
