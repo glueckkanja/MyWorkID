@@ -104,9 +104,14 @@ export const CreateTAP = (props: TFunctionProps) => {
         <Card
           className="action-card__tap"
           onClick={() => {
-            navigator.clipboard.writeText(tapDisplay.value).then(() => {
-              toastSuccess("Copied to clipboard!", "");
-            });
+            navigator.clipboard
+              .writeText(tapDisplay.value)
+              .then(() => {
+                toastSuccess("Copied to clipboard!", "");
+              })
+              .catch((error) => {
+                toastError(error);
+              });
           }}
         >
           <CardContent className="action-card__tap_content no-select">
