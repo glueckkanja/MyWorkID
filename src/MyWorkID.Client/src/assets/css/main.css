@@ -308,6 +308,10 @@ body {
   line-height: normal;
   align-self: center;
   padding: 1rem;
+  word-break: break-all;
+  overflow-wrap: break-word;
+  max-width: 100%;
+  cursor: pointer;
 }
 .action-card__pasword-reset__submit-button {
   display: flex;

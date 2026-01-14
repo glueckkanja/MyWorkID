@@ -23,7 +23,7 @@ export const CreateTAP = (props: TFunctionProps) => {
     value: "",
     loading: false,
   });
-  const { toastException, toastError } = useToast();
+  const { toastException, toastError, toastSuccess } = useToast();
 
   useEffect(() => {
     if (props.comingFromRedirect) {
@@ -101,8 +101,20 @@ export const CreateTAP = (props: TFunctionProps) => {
       );
     } else {
       return (
-        <Card className="action-card__tap">
-          <CardContent className="action-card__tap_content text-select">
+        <Card
+          className="action-card__tap"
+          onClick={() => {
+            navigator.clipboard
+              .writeText(tapDisplay.value)
+              .then(() => {
+                toastSuccess("Copied to clipboard!", "");
+              })
+              .catch((error) => {
+                toastError(error);
+              });
+          }}
+        >
+          <CardContent className="action-card__tap_content no-select">
             {tapDisplay.value}
           </CardContent>
         </Card>
