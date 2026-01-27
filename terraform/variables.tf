@@ -115,6 +115,20 @@ variable "custom_css_url" {
   nullable    = true
 }
 
+variable "app_title" {
+  type        = string
+  description = "Optional custom title for the application that will be displayed in the browser tab and header"
+  default     = null
+  nullable    = true
+}
+
+variable "favicon_url" {
+  type        = string
+  description = "Optional URL to a custom favicon that will be displayed in the browser tab. Must be a publicly accessible URL"
+  default     = null
+  nullable    = true
+}
+
 # Tap settings
 variable "tap_lifetime_in_minutes" {
   type        = number
