@@ -79,6 +79,8 @@ resource "azurerm_linux_web_app" "backend" {
     Frontend__BackendClientId                  = azuread_application.backend.client_id
     Frontend__TenantId                         = data.azuread_client_config.current_user.tenant_id
     Frontend__CustomCssUrl                     = local.custom_css_url
+    Frontend__AppTitle                         = local.app_title
+    Frontend__FaviconUrl                       = local.favicon_url
     WEBSITE_RUN_FROM_PACKAGE                   = local.enable_auto_update ? local.latest_binaries_url : "1"
     APPLICATIONINSIGHTS_CONNECTION_STRING      = azurerm_application_insights.backend.connection_string
     ApplicationInsightsAgent_EXTENSION_VERSION = "~3"          #https://learn.microsoft.com/en-us/azure/azure-monitor/app/azure-web-apps-net-core?tabs=Windows%2Cwindows#application-settings-definitions

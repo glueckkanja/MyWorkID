@@ -11,3 +11,6 @@ skip_creation_backend_access_groups              = false # Value to determine if
 skip_actions_requiring_global_admin              = false # Skip actions that require global admin permissions. If set to true you will have to set some settings, like the permission grants, manually. NOTE: If this ever was set to false a change to true will result in the previously set permissions being removed
 enable_auto_update                               = true # Determines if MyWorkID automatically updates with the most recent binaries published in github
 allow_credential_operations_for_privileged_users = false # Allow credential operations for privileged users. If set to true, users with privileged roles (e.g. Global Admin or User Admin) can perform credential operations like create TAP and reset password
+custom_css_url = "REPLACE_WITH_CUSTOM_CSS_URL" # URL to a custom CSS file for branding the MyWorkID app. Leave empty to use the default styling.
+favicon_url = "REPLACE_WITH_FAVICON_URL" # URL to a favicon image for the MyWorkID app. Leave empty to use the default favicon.
+app_title = "REPLACE_WITH_APP_TITLE" # The title displayed in the browser tab and app header. Set to customize the application name.
