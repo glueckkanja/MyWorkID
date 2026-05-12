@@ -129,6 +129,13 @@ variable "favicon_url" {
   nullable    = true
 }
 
+variable "help_url" {
+  type        = string
+  description = "Optional URL to a help page. When set, a help icon is shown in the header that links to this URL. Must be a publicly accessible HTTPS URL"
+  default     = null
+  nullable    = true
+}
+
 # Tap settings
 variable "tap_lifetime_in_minutes" {
   type        = number

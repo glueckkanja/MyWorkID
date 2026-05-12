@@ -15,6 +15,7 @@ export type TFrontendOptions = {
   customCssUrl?: string;
   appTitle?: string;
   faviconUrl?: string;
+  helpUrl?: string;
 };
 
 export type TFunctionResult<T = undefined> = {

@@ -415,6 +415,19 @@ body {
     max-height: 1.8rem;
   }
 }
+.header__buttons__help-link {
+  height: 36px;
+  width: 36px;
+  align-self: center;
+  cursor: pointer;
+  margin-right: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+.header__buttons__help-link__icon {
+  transform: translateY(4px);
+}
 .no-select {
   user-select: none;
   -moz-user-select: none;
