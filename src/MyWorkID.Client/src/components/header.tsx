@@ -24,12 +24,18 @@ export const Header = () => {
     let cancelled = false;
     void getFrontendOptions()
       .then((options) => {
-        if (cancelled) return;
+        if (cancelled) {
+          return;
+        }
         const url = options.helpUrl?.trim();
-        if (!url) return;
+        if (!url) {
+          return;
+        }
         try {
           const parsed = new URL(url);
-          if (parsed.protocol !== "https:") return;
+          if (parsed.protocol !== "https:") {
+            return;
+          }
           setHelpUrl(parsed.href);
         } catch {
           console.error("Invalid help URL:", url);
