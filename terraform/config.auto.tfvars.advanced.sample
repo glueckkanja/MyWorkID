@@ -78,6 +78,9 @@ app_title = null
 # Optional URL to the favicon icon. Must be a publicly accessible HTTPS URL
 favicon_url = null
 
+# Optional URL to a help page. When set, a help icon is shown in the header that links to this URL. Must be a publicly accessible HTTPS URL
+help_url = null
+
 # ------- Tap Settings -------
 
 # Optional override for the TAP lifetime (minutes). Must be between 60 and 480 when set.

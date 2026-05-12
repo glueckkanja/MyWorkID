@@ -1,5 +1,7 @@
 ﻿using MyWorkID.Server.Options;
 using FluentAssertions;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using System.Net;
@@ -23,6 +25,25 @@ namespace MyWorkID.Server.IntegrationTests.Features.Configuration
             frontendAppSettings.BackendClientId.Should().Be(frontendOptions!.BackendClientId);
             frontendAppSettings.FrontendClientId.Should().Be(frontendOptions.FrontendClientId);
             frontendAppSettings.TenantId.Should().Be(frontendOptions.TenantId);
+            frontendOptions.HelpUrl.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task GetConfig_WithHelpUrl_ReturnsHelpUrlInResponse()
+        {
+            var client = _testApplicationFactory
+                .WithWebHostBuilder(builder =>
+                    builder.ConfigureAppConfiguration((_, config) =>
+                        config.AddInMemoryCollection(new Dictionary<string, string?>
+                        {
+                            ["Frontend:HelpUrl"] = "https://example.com/help"
+                        })))
+                .CreateDefaultClient();
+            var response = await client.GetAsync(_baseUrl);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            var frontendOptions = await response.Content.ReadFromJsonAsync<FrontendOptions>();
+            frontendOptions.Should().NotBeNull();
+            frontendOptions!.HelpUrl.Should().Be("https://example.com/help");
         }
     }
 }

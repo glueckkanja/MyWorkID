@@ -22,6 +22,7 @@ locals {
   custom_css_url                                   = var.custom_css_url
   app_title                                        = var.app_title
   favicon_url                                      = var.favicon_url
+  help_url                                         = var.help_url
   enable_auto_update                               = var.enable_auto_update
   allow_credential_operations_for_privileged_users = var.allow_credential_operations_for_privileged_users
 }

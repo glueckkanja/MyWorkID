@@ -41,5 +41,10 @@ namespace MyWorkID.Server.Options
         /// URL to the favicon icon.
         /// </summary>
         public string? FaviconUrl { get; set; }
+
+        /// <summary>
+        /// Optional URL to a help page. When set, a help icon is shown in the header that links to this URL.
+        /// </summary>
+        public string? HelpUrl { get; set; }
     }
 }

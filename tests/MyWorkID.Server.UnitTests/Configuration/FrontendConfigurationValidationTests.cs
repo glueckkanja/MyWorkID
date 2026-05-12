@@ -95,6 +95,16 @@ namespace MyWorkID.Server.UnitTests.Configuration
                     ),
                     null,
                     null
+                },
+                {
+                    TestConfigurationSection.Create(
+                        ("Frontend:FrontendClientId", Guid.NewGuid().ToString()),
+                        ("Frontend:TenantId", Guid.NewGuid().ToString()),
+                        ("Frontend:BackendClientId", Guid.NewGuid().ToString()),
+                        ("Frontend:HelpUrl", "https://example.com/help")
+                    ),
+                    null,
+                    null
                 }
             };
         }

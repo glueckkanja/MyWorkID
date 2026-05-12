@@ -14,3 +14,4 @@ allow_credential_operations_for_privileged_users = false # Allow credential oper
 custom_css_url = "REPLACE_WITH_CUSTOM_CSS_URL" # URL to a custom CSS file for branding the MyWorkID app. Leave empty to use the default styling.
 favicon_url = "REPLACE_WITH_FAVICON_URL" # URL to a favicon image for the MyWorkID app. Leave empty to use the default favicon.
 app_title = "REPLACE_WITH_APP_TITLE" # The title displayed in the browser tab and app header. Set to customize the application name.
+help_url = "REPLACE_WITH_HELP_URL" # URL to a help page. When set, a help icon is shown in the header that links to this URL. Leave empty to hide the help icon.
