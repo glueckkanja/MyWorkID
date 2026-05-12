@@ -33,7 +33,7 @@ namespace MyWorkID.Server.IntegrationTests.Features.Configuration
         {
             var client = _testApplicationFactory
                 .WithWebHostBuilder(builder =>
-                    builder.ConfigureAppConfiguration(config =>
+                    builder.ConfigureAppConfiguration((_, config) =>
                         config.AddInMemoryCollection(new Dictionary<string, string?>
                         {
                             ["Frontend:HelpUrl"] = "https://example.com/help"
