@@ -9,12 +9,18 @@ export const getFrontendOptions = (): Promise<TFrontendOptions> => {
   }
 
   const apiUrl: string = `${window.location.protocol}//${window.location.host}/api/config/frontend`;
-  frontendOptionsPromise = axios.get<TFrontendOptions>(apiUrl).then((response) => {
-    if (!response.data) {
-      throw new Error("Frontend options not found");
-    }
-    return response.data;
-  });
+  frontendOptionsPromise = axios
+    .get<TFrontendOptions>(apiUrl)
+    .then((response) => {
+      if (!response.data) {
+        throw new Error("Frontend options not found");
+      }
+      return response.data;
+    })
+    .catch((error) => {
+      frontendOptionsPromise = undefined;
+      throw error;
+    });
 
   return frontendOptionsPromise;
 };
