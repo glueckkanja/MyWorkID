@@ -1,20 +1,22 @@
 import axios from "axios";
 import { TFrontendOptions } from "../types";
 
-let frontendOptionsCache: TFrontendOptions | undefined = undefined;
+let frontendOptionsPromise: Promise<TFrontendOptions> | undefined = undefined;
 
-export const getFrontendOptions = async () => {
-  if (frontendOptionsCache) {
-    return frontendOptionsCache;
+export const getFrontendOptions = (): Promise<TFrontendOptions> => {
+  if (frontendOptionsPromise) {
+    return frontendOptionsPromise;
   }
 
   const apiUrl: string = `${window.location.protocol}//${window.location.host}/api/config/frontend`;
-  const frontendOptionsResponse = await axios.get<TFrontendOptions>(apiUrl);
-  frontendOptionsCache = frontendOptionsResponse.data;
-  if (!frontendOptionsCache) {
-    throw new Error("Frontend options not found");
-  }
-  return frontendOptionsCache;
+  frontendOptionsPromise = axios.get<TFrontendOptions>(apiUrl).then((response) => {
+    if (!response.data) {
+      throw new Error("Frontend options not found");
+    }
+    return response.data;
+  });
+
+  return frontendOptionsPromise;
 };
 
 export const loadCustomCss = (customCssUrl?: string) => {
