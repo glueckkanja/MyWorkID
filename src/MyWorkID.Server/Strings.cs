@@ -4,6 +4,7 @@
     {
         public const string ERROR_INSUFFICIENT_CLAIMS = "The presented access tokens had insufficient claims. Please request for claims requested in the WWW-Authentication header and try again.";
         public const string ERROR_UNABLE_TO_GENERATE_TAP = "Unable to generate TAP";
+        public const string ERROR_UNABLE_TO_REVOKE_TEMPORARY_ACCESS_PASS = "Unable to revoke Temporary Access Pass";
         public const string VERIFIED_ID_CALLBACK_SCHEMA = "VerifiedIdCallbackSchema";
         public const string VERIFIED_ID_CALLBACK_POLICY = "VerifiedIdCallbackPolicy";
         public const string SIGNALR_WEBHOOK_SCHEMA = "SignalRWebhookSchema";

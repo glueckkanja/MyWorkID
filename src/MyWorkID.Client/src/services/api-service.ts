@@ -82,6 +82,19 @@ export const generateTAP = async (): Promise<
   );
 };
 
+export const revokeTemporaryAccessPass = async (
+  temporaryAccessPassId: string
+): Promise<TFunctionResult<unknown>> => {
+  return convertTFunctionResult(
+    authenticateRequest(
+      `${backendApiUrl}/me/tap/${temporaryAccessPassId}`,
+      REQUEST_TYPE.DELETE,
+      EApiFunctionTypes.CREATE_TAP
+    ),
+    EApiFunctionTypes.CREATE_TAP
+  );
+};
+
 export const verifyIdentity = async (): Promise<
   TFunctionResult<TVerifyIdentityReponse>
 > => {

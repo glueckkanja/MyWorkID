@@ -1,27 +1,28 @@
 import { useEffect, useState } from "react";
 import { TFunctionProps } from "../../../types";
-import { generateTAP } from "../../../services/api-service";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { generateTAP, revokeTemporaryAccessPass } from "../../../services/api-service";
+import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Spinner } from "@/components/ui/spinner";
+import { Trash2 } from "lucide-react";
 import CreateTapSvgIcon from "@/assets/svg/create-tap.svg";
+import CreateTapSvgIconFilled from "@/assets/svg/create-tap-filled.svg";
+
 type TAPDisplay = {
   visible: boolean;
   value: string;
+  temporaryAccessPassId: string;
   loading: boolean;
+  revoking: boolean;
 };
 
 export const CreateTAP = (props: TFunctionProps) => {
   const [tapDisplay, setTapDisplay] = useState<TAPDisplay>({
     visible: false,
     value: "",
+    temporaryAccessPassId: "",
     loading: false,
+    revoking: false,
   });
   const { toastException, toastError, toastSuccess } = useToast();
 
@@ -36,7 +37,9 @@ export const CreateTAP = (props: TFunctionProps) => {
     setTapDisplay({
       visible: true,
       value: "",
+      temporaryAccessPassId: "",
       loading: true,
+      revoking: false,
     });
     generateTAP()
       .then((result) => {
@@ -48,13 +51,17 @@ export const CreateTAP = (props: TFunctionProps) => {
           setTapDisplay({
             visible: true,
             value: result.data?.temporaryAccessPassword,
+            temporaryAccessPassId: result.data?.temporaryAccessPassId,
             loading: false,
+            revoking: false,
           });
         } else {
           setTapDisplay({
             visible: false,
             value: "",
+            temporaryAccessPassId: "",
             loading: false,
+            revoking: false,
           });
           toastError();
         }
@@ -64,63 +71,100 @@ export const CreateTAP = (props: TFunctionProps) => {
         setTapDisplay({
           visible: false,
           value: "",
+          temporaryAccessPassId: "",
           loading: false,
+          revoking: false,
         });
       });
   };
-  const getCardContent = () => {
-    if (!tapDisplay.visible) {
-      return (
-        <Card
-          className="action-card"
-          onClick={() => {
-            createTAP();
-          }}
-        >
-          <CardHeader>
-            <CardTitle>
-              <img src={CreateTapSvgIcon} alt="CreateTapIcon" />
-            </CardTitle>
-          </CardHeader>
-          <CardFooter className="action-card__footer">
-            Create Temporary Access Pass
-          </CardFooter>
-        </Card>
-      );
-    }
 
+  const handleRevokeTemporaryAccessPass = async () => {
+    setTapDisplay((previous) => ({ ...previous, revoking: true }));
+    revokeTemporaryAccessPass(tapDisplay.temporaryAccessPassId)
+      .then((result) => {
+        if (result.status === "success") {
+          setTapDisplay({
+            visible: false,
+            value: "",
+            temporaryAccessPassId: "",
+            loading: false,
+            revoking: false,
+          });
+          toastSuccess("Temporary Access Pass revoked.", "");
+        } else {
+          setTapDisplay((previous) => ({ ...previous, revoking: false }));
+          toastError();
+        }
+      })
+      .catch((error) => {
+        toastException(error);
+        setTapDisplay((previous) => ({ ...previous, revoking: false }));
+      });
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard
+      .writeText(tapDisplay.value)
+      .then(() => {
+        toastSuccess("Copied to clipboard!", "");
+      })
+      .catch((error) => {
+        toastError(error);
+      });
+  };
+
+  const isShowingToken = tapDisplay.visible && !tapDisplay.loading;
+
+  const handleCardClick = () => {
     if (tapDisplay.loading) {
-      return (
-        <Card className="action-card__container__loading">
-          <CardContent>
-            <div className="action-card__loading">
-              <Spinner />
-            </div>
-          </CardContent>
-        </Card>
-      );
+      return;
+    }
+    if (isShowingToken) {
+      copyToClipboard();
     } else {
-      return (
-        <Card
-          className="action-card__tap"
-          onClick={() => {
-            navigator.clipboard
-              .writeText(tapDisplay.value)
-              .then(() => {
-                toastSuccess("Copied to clipboard!", "");
-              })
-              .catch((error) => {
-                toastError(error);
-              });
-          }}
-        >
-          <CardContent className="action-card__tap_content no-select">
-            {tapDisplay.value}
-          </CardContent>
-        </Card>
-      );
+      createTAP();
     }
   };
 
-  return <div>{getCardContent()}</div>;
+  const cardClassName = [
+    "tap-action-card",
+    tapDisplay.loading ? "tap-action-card--loading" : "",
+    isShowingToken ? "tap-action-card--filled" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return (
+    <div>
+      <Card className={cardClassName} onClick={handleCardClick}>
+        <span className="tap-action-card__icon">
+          <img
+            src={isShowingToken ? CreateTapSvgIconFilled : CreateTapSvgIcon}
+            alt="CreateTapIcon"
+          />
+        </span>
+        <span className="tap-action-card__label">
+          Create Temporary Access Pass
+        </span>
+        <span className="tap-action-card__spinner-overlay">
+          <Spinner />
+        </span>
+        <span className="tap-action-card__token no-select">
+          {tapDisplay.value}
+        </span>
+        <button
+          className="tap-action-card__revoke"
+          onClick={(event) => {
+            event.stopPropagation();
+            handleRevokeTemporaryAccessPass();
+          }}
+          disabled={tapDisplay.revoking}
+          title="Revoke Temporary Access Pass"
+          tabIndex={isShowingToken ? 0 : -1}
+        >
+          <Trash2 size={22} />
+        </button>
+      </Card>
+    </div>
+  );
 };
