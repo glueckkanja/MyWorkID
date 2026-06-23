@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Graph;
+using Microsoft.Graph.Models.ODataErrors;
 using Microsoft.Identity.Web;
 using MyWorkID.Server.Common;
 using MyWorkID.Server.Filters;
@@ -36,12 +37,22 @@ namespace MyWorkID.Server.Features.GenerateTap.Commands
                     .Authentication.TemporaryAccessPassMethods[temporaryAccessPassId]
                     .DeleteAsync(cancellationToken: cancellationToken);
             }
-            catch
+            catch (ODataError e)
             {
-                return TypedResults.Problem(
-                    detail: Strings.ERROR_UNABLE_TO_REVOKE_TEMPORARY_ACCESS_PASS,
-                    statusCode: StatusCodes.Status500InternalServerError
-                );
+                if (e.ResponseStatusCode == StatusCodes.Status404NotFound)
+                {
+                    return TypedResults.NotFound();
+                }
+                if (e.ResponseStatusCode == StatusCodes.Status400BadRequest)
+                {
+                    return TypedResults.ValidationProblem(
+                        new Dictionary<string, string[]>
+                        {
+                            [nameof(temporaryAccessPassId)] = [e.Message],
+                        }
+                    );
+                }
+                throw;
             }
             return TypedResults.NoContent();
         }
