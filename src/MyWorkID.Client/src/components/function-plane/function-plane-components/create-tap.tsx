@@ -53,8 +53,8 @@ export const CreateTAP = (props: TFunctionProps) => {
         ) {
           setTapDisplay({
             visible: true,
-            value: result.data?.temporaryAccessPassword,
-            temporaryAccessPassId: result.data?.temporaryAccessPassId,
+            value: result.data.temporaryAccessPassword,
+            temporaryAccessPassId: result.data.temporaryAccessPassId,
             loading: false,
             revoking: false,
           });
@@ -112,7 +112,7 @@ export const CreateTAP = (props: TFunctionProps) => {
         toastSuccess("Copied to clipboard!", "");
       })
       .catch((error) => {
-        toastError(error);
+        toastException(error);
       });
   };
 
@@ -157,7 +157,9 @@ export const CreateTAP = (props: TFunctionProps) => {
           {tapDisplay.value}
         </span>
         <button
+          type="button"
           className="action-card-revoke__tap"
+          aria-label="Revoke Temporary Access Pass"
           onClick={(event) => {
             event.stopPropagation();
             handleRevokeTemporaryAccessPass();
