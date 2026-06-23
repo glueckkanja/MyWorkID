@@ -448,9 +448,9 @@ body {
 }
 .function-plane__container {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr; /* 1 item per row */
   grid-auto-rows: minmax(auto, max-content);
-  gap: 10px;
+  gap: 10px; /* Space between items */
   margin: auto;
   padding-left: 30px;
   padding-right: 30px;
