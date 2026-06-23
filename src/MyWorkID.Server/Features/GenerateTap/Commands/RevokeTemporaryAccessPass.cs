@@ -29,7 +29,7 @@ namespace MyWorkID.Server.Features.GenerateTap.Commands
             CancellationToken cancellationToken
         )
         {
-            var userId = user.GetObjectId();
+            string? userId = user.GetObjectId();
             try
             {
                 await graphClient

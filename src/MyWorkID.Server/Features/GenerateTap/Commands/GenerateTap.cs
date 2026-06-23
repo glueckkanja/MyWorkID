@@ -46,9 +46,10 @@ namespace MyWorkID.Server.Features.GenerateTap.Commands
             CancellationToken cancellationToken
         )
         {
-            var userId = user.GetObjectId();
-            var tapSettings = tapOptions.Value;
-            var tapRequest = new TemporaryAccessPassAuthenticationMethod();
+            string? userId = user.GetObjectId();
+            TapOptions tapSettings = tapOptions.Value;
+            TemporaryAccessPassAuthenticationMethod tapRequest =
+                new TemporaryAccessPassAuthenticationMethod();
 
             if (tapSettings.LifetimeInMinutes.HasValue)
             {
@@ -60,7 +61,7 @@ namespace MyWorkID.Server.Features.GenerateTap.Commands
                 tapRequest.IsUsableOnce = tapSettings.IsUsableOnce;
             }
 
-            var tapResponse = await graphClient
+            TemporaryAccessPassAuthenticationMethod? tapResponse = await graphClient
                 .Users[userId]
                 .Authentication.TemporaryAccessPassMethods.PostAsync(
                     tapRequest,
