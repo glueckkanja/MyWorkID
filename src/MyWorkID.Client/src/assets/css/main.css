@@ -262,7 +262,7 @@ body {
   font-weight: "700";
   color: var(--user-displayname);
 }
-.tap-action-card {
+.action-card__tap {
   position: relative;
   background-color: var(--tile-color);
   color: white;
@@ -273,10 +273,10 @@ body {
   overflow: hidden;
   transition: background-color 0.4s ease;
 }
-.tap-action-card--filled {
+.action-card-filled__tap {
   background-color: var(--action-card-activated-background);
 }
-.tap-action-card__icon {
+.action-card__tap_icon {
   position: absolute;
   top: 1.5rem;
   left: 1.5rem;
@@ -289,16 +289,16 @@ body {
   transition: top 0.4s ease, transform 0.4s ease, color 0.4s ease,
     opacity 0.3s ease;
 }
-.tap-action-card--loading .tap-action-card__icon {
+.action-card-loading__tap .action-card__tap_icon {
   opacity: 0;
 }
-.tap-action-card--filled .tap-action-card__icon {
+.action-card-filled__tap .action-card__tap_icon {
   top: 50%;
   left: 1.5rem;
   transform: translateY(-50%);
   color: var(--tile-color);
 }
-.tap-action-card__label {
+.action-card-label__tap {
   position: absolute;
   bottom: 1.5rem;
   left: 1.5rem;
@@ -312,11 +312,11 @@ body {
   pointer-events: none;
   transition: opacity 0.3s ease;
 }
-.tap-action-card--loading .tap-action-card__label,
-.tap-action-card--filled .tap-action-card__label {
+.action-card-loading__tap .action-card-label__tap,
+.action-card-filled__tap .action-card-label__tap {
   opacity: 0;
 }
-.tap-action-card__spinner-overlay {
+.action-card-spinner-overlay__tap {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -325,10 +325,10 @@ body {
   pointer-events: none;
   transition: opacity 0.3s ease;
 }
-.tap-action-card--loading .tap-action-card__spinner-overlay {
+.action-card-loading__tap .action-card-spinner-overlay__tap {
   opacity: 1;
 }
-.tap-action-card__token {
+.action-card-token__tap {
   position: absolute;
   top: 50%;
   left: 5.5rem;
@@ -345,11 +345,11 @@ body {
   pointer-events: none;
   transition: opacity 0.4s ease 0.15s;
 }
-.tap-action-card--filled .tap-action-card__token {
+.action-card-filled__tap .action-card-token__tap {
   opacity: 1;
   pointer-events: auto;
 }
-.tap-action-card__revoke {
+.action-card-revoke__tap {
   position: absolute;
   top: 50%;
   right: 0.5rem;
@@ -368,14 +368,14 @@ body {
   pointer-events: none;
   transition: opacity 0.4s ease 0.15s, background-color 0.15s ease;
 }
-.tap-action-card--filled .tap-action-card__revoke {
+.action-card-filled__tap .action-card-revoke__tap {
   opacity: 1;
   pointer-events: auto;
 }
-.tap-action-card__revoke:hover {
+.action-card-revoke__tap:hover {
   background-color: hsl(var(--destructive));
 }
-.tap-action-card__revoke:disabled {
+.action-card-revoke__tap:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

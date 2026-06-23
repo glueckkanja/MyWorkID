@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { TFunctionProps } from "../../../types";
-import { generateTAP, revokeTemporaryAccessPass } from "../../../services/api-service";
+import {
+  generateTAP,
+  revokeTemporaryAccessPass,
+} from "../../../services/api-service";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Spinner } from "@/components/ui/spinner";
@@ -127,9 +130,9 @@ export const CreateTAP = (props: TFunctionProps) => {
   };
 
   const cardClassName = [
-    "tap-action-card",
-    tapDisplay.loading ? "tap-action-card--loading" : "",
-    isShowingToken ? "tap-action-card--filled" : "",
+    "action-card__tap",
+    tapDisplay.loading ? "action-card-loading__tap" : "",
+    isShowingToken ? "action-card-filled__tap" : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -137,23 +140,23 @@ export const CreateTAP = (props: TFunctionProps) => {
   return (
     <div>
       <Card className={cardClassName} onClick={handleCardClick}>
-        <span className="tap-action-card__icon">
+        <span className="action-card__tap_icon">
           <img
             src={isShowingToken ? CreateTapSvgIconFilled : CreateTapSvgIcon}
             alt="CreateTapIcon"
           />
         </span>
-        <span className="tap-action-card__label">
+        <span className="action-card-label__tap">
           Create Temporary Access Pass
         </span>
-        <span className="tap-action-card__spinner-overlay">
+        <span className="action-card-spinner-overlay__tap">
           <Spinner />
         </span>
-        <span className="tap-action-card__token no-select">
+        <span className="action-card-token__tap no-select">
           {tapDisplay.value}
         </span>
         <button
-          className="tap-action-card__revoke"
+          className="action-card-revoke__tap"
           onClick={(event) => {
             event.stopPropagation();
             handleRevokeTemporaryAccessPass();
