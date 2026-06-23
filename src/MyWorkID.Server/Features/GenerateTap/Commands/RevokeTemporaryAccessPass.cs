@@ -11,7 +11,8 @@ namespace MyWorkID.Server.Features.GenerateTap.Commands
     {
         public static void MapEndpoint(IEndpointRouteBuilder endpoints)
         {
-            endpoints.MapDeleteWithOpenApi("api/me/tap/{temporaryAccessPassId}", HandleAsync)
+            endpoints
+                .MapDeleteWithOpenApi("api/me/tap/{temporaryAccessPassId}", HandleAsync)
                 .RequireAuthorization()
                 .AddEndpointFilter<CheckGenerateTapAppConfigurationEndpointFilter>()
                 .AddEndpointFilter<GenerateTapAuthContextEndpointFilter>()
@@ -20,16 +21,27 @@ namespace MyWorkID.Server.Features.GenerateTap.Commands
         }
 
         [Authorize(Roles = Strings.CREATE_TAP_ROLE)]
-        public static async Task<IResult> HandleAsync(string temporaryAccessPassId, ClaimsPrincipal user, GraphServiceClient graphClient, CancellationToken cancellationToken)
+        public static async Task<IResult> HandleAsync(
+            string temporaryAccessPassId,
+            ClaimsPrincipal user,
+            GraphServiceClient graphClient,
+            CancellationToken cancellationToken
+        )
         {
             var userId = user.GetObjectId();
             try
             {
-                await graphClient.Users[userId].Authentication.TemporaryAccessPassMethods[temporaryAccessPassId].DeleteAsync(cancellationToken: cancellationToken);
+                await graphClient
+                    .Users[userId]
+                    .Authentication.TemporaryAccessPassMethods[temporaryAccessPassId]
+                    .DeleteAsync(cancellationToken: cancellationToken);
             }
             catch
             {
-                return TypedResults.Problem(detail: Strings.ERROR_UNABLE_TO_REVOKE_TEMPORARY_ACCESS_PASS, statusCode: StatusCodes.Status500InternalServerError);
+                return TypedResults.Problem(
+                    detail: Strings.ERROR_UNABLE_TO_REVOKE_TEMPORARY_ACCESS_PASS,
+                    statusCode: StatusCodes.Status500InternalServerError
+                );
             }
             return TypedResults.NoContent();
         }

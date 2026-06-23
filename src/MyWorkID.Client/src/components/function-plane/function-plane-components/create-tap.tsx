@@ -129,6 +129,7 @@ export const CreateTAP = (props: TFunctionProps) => {
     }
   };
 
+  // three different TAP card states: unclicked, loading, showing token
   const cardClassName = [
     "action-card__tap",
     tapDisplay.loading ? "action-card-loading__tap" : "",
