@@ -455,7 +455,7 @@ body {
   padding-left: 30px;
   padding-right: 30px;
   padding-bottom: 58px;
-  max-width: 1400px;
+  max-width: 600px;
 }
 .userdisplay__risk-state {
   font-family: var(--font-family);
