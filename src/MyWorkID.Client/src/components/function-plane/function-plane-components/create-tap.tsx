@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { TFunctionProps } from "../../../types";
 import { generateTAP } from "../../../services/api-service";
 import { Card } from "@/components/ui/card";
@@ -50,14 +50,7 @@ export const CreateTAP = (props: TFunctionProps) => {
     },
   });
 
-  useEffect(() => {
-    if (props.comingFromRedirect) {
-      createTAP();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.comingFromRedirect]);
-
-  const createTAP = async () => {
+  const createTAP = useCallback(async () => {
     setTapDisplay({
       visible: true,
       value: "",
@@ -96,7 +89,13 @@ export const CreateTAP = (props: TFunctionProps) => {
           loading: false,
         });
       });
-  };
+  }, [toastError, toastException]);
+
+  useEffect(() => {
+    if (props.comingFromRedirect) {
+      createTAP();
+    }
+  }, [props.comingFromRedirect, createTAP]);
 
   const copyToClipboard = () => {
     navigator.clipboard
