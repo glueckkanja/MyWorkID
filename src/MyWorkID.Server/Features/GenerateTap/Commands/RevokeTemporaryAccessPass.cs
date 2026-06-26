@@ -41,7 +41,7 @@ namespace MyWorkID.Server.Features.GenerateTap.Commands
             {
                 if (e.ResponseStatusCode == StatusCodes.Status404NotFound)
                 {
-                    return TypedResults.NotFound();
+                    return TypedResults.NoContent();
                 }
                 if (e.ResponseStatusCode == StatusCodes.Status400BadRequest)
                 {
