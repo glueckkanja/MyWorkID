@@ -275,6 +275,7 @@ body {
 }
 .action-card-filled__tap {
   background-color: var(--action-card-activated-background);
+  touch-action: pan-y;
 }
 .action-card__tap_icon {
   position: absolute;
@@ -378,6 +379,22 @@ body {
 .action-card-revoke__tap:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+.action-card-swipe-overlay__tap {
+  position: absolute;
+  inset: 0;
+  background-color: hsl(var(--destructive));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+.action-card-swipe-overlay-label__tap {
+  font-family: var(--font-family);
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
 }
 .action-card__password-reset {
   background-color: var(--action-card-activated-background);

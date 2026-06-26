@@ -1,22 +1,19 @@
 import { useEffect, useState } from "react";
 import { TFunctionProps } from "../../../types";
-import {
-  generateTAP,
-  revokeTemporaryAccessPass,
-} from "../../../services/api-service";
+import { generateTAP } from "../../../services/api-service";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Spinner } from "@/components/ui/spinner";
 import { Trash2 } from "lucide-react";
 import CreateTapSvgIcon from "@/assets/svg/create-tap.svg";
 import CreateTapSvgIconFilled from "@/assets/svg/create-tap-filled.svg";
+import { useRevokeTemporaryAccessPass } from "./revoke-tap";
 
 type TAPDisplay = {
   visible: boolean;
   value: string;
   temporaryAccessPassId: string;
   loading: boolean;
-  revoking: boolean;
 };
 
 export const CreateTAP = (props: TFunctionProps) => {
@@ -25,9 +22,33 @@ export const CreateTAP = (props: TFunctionProps) => {
     value: "",
     temporaryAccessPassId: "",
     loading: false,
-    revoking: false,
   });
   const { toastException, toastError, toastSuccess } = useToast();
+
+  const isShowingToken = tapDisplay.visible && !tapDisplay.loading;
+
+  const {
+    revoking,
+    swipeProgress,
+    isSwipeGestureActive,
+    swipeStatus,
+    handleRevokeTemporaryAccessPass,
+    handleSwipePointerDown,
+    handleSwipePointerMove,
+    handleSwipePointerUp,
+    handleSwipePointerCancel,
+  } = useRevokeTemporaryAccessPass({
+    temporaryAccessPassId: tapDisplay.temporaryAccessPassId,
+    isShowingToken,
+    onRevoked: () => {
+      setTapDisplay({
+        visible: false,
+        value: "",
+        temporaryAccessPassId: "",
+        loading: false,
+      });
+    },
+  });
 
   useEffect(() => {
     if (props.comingFromRedirect) {
@@ -42,7 +63,6 @@ export const CreateTAP = (props: TFunctionProps) => {
       value: "",
       temporaryAccessPassId: "",
       loading: true,
-      revoking: false,
     });
     generateTAP()
       .then((result) => {
@@ -56,7 +76,6 @@ export const CreateTAP = (props: TFunctionProps) => {
             value: result.data.temporaryAccessPassword,
             temporaryAccessPassId: result.data.temporaryAccessPassId,
             loading: false,
-            revoking: false,
           });
         } else {
           setTapDisplay({
@@ -64,7 +83,6 @@ export const CreateTAP = (props: TFunctionProps) => {
             value: "",
             temporaryAccessPassId: "",
             loading: false,
-            revoking: false,
           });
           toastError();
         }
@@ -76,32 +94,7 @@ export const CreateTAP = (props: TFunctionProps) => {
           value: "",
           temporaryAccessPassId: "",
           loading: false,
-          revoking: false,
         });
-      });
-  };
-
-  const handleRevokeTemporaryAccessPass = async () => {
-    setTapDisplay((previous) => ({ ...previous, revoking: true }));
-    revokeTemporaryAccessPass(tapDisplay.temporaryAccessPassId)
-      .then((result) => {
-        if (result.status === "success") {
-          setTapDisplay({
-            visible: false,
-            value: "",
-            temporaryAccessPassId: "",
-            loading: false,
-            revoking: false,
-          });
-          toastSuccess("Temporary Access Pass revoked.", "");
-        } else {
-          setTapDisplay((previous) => ({ ...previous, revoking: false }));
-          toastError();
-        }
-      })
-      .catch((error) => {
-        toastException(error);
-        setTapDisplay((previous) => ({ ...previous, revoking: false }));
       });
   };
 
@@ -116,9 +109,11 @@ export const CreateTAP = (props: TFunctionProps) => {
       });
   };
 
-  const isShowingToken = tapDisplay.visible && !tapDisplay.loading;
-
   const handleCardClick = () => {
+    if (swipeStatus.current) {
+      swipeStatus.current = false;
+      return;
+    }
     if (tapDisplay.loading) {
       return;
     }
@@ -140,7 +135,14 @@ export const CreateTAP = (props: TFunctionProps) => {
 
   return (
     <div>
-      <Card className={cardClassName} onClick={handleCardClick}>
+      <Card
+        className={cardClassName}
+        onClick={handleCardClick}
+        onPointerDown={handleSwipePointerDown}
+        onPointerMove={handleSwipePointerMove}
+        onPointerUp={handleSwipePointerUp}
+        onPointerCancel={handleSwipePointerCancel}
+      >
         <span className="action-card__tap_icon">
           <img
             src={isShowingToken ? CreateTapSvgIconFilled : CreateTapSvgIcon}
@@ -164,12 +166,25 @@ export const CreateTAP = (props: TFunctionProps) => {
             event.stopPropagation();
             handleRevokeTemporaryAccessPass();
           }}
-          disabled={tapDisplay.revoking}
+          disabled={revoking}
           title="Revoke Temporary Access Pass"
           tabIndex={isShowingToken ? 0 : -1}
         >
           <Trash2 size={22} />
         </button>
+        <div
+          className="action-card-swipe-overlay__tap"
+          style={{
+            opacity: swipeProgress,
+            transition: isSwipeGestureActive ? "none" : "opacity 0.3s ease",
+          }}
+          aria-hidden="true"
+        >
+          <Trash2 size={22} color="white" />
+          <span className="action-card-swipe-overlay-label__tap">
+            Revoke Temporary Access Pass
+          </span>
+        </div>
       </Card>
     </div>
   );
