@@ -18,7 +18,7 @@ namespace MyWorkID.Server.Features.GenerateTap.Commands
                 .AddEndpointFilter<CheckGenerateTapAppConfigurationEndpointFilter>()
                 .AddEndpointFilter<GenerateTapAuthContextEndpointFilter>()
                 .AddEndpointFilter<CheckForObjectIdEndpointFilter>()
-                .WithTags("GenerateTap");
+                .WithTags("RevokeTemporaryAccessPass");
         }
 
         [Authorize(Roles = Strings.CREATE_TAP_ROLE)]
