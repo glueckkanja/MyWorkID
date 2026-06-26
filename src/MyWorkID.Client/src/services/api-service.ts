@@ -87,7 +87,7 @@ export const revokeTemporaryAccessPass = async (
 ): Promise<TFunctionResult<unknown>> => {
   return convertTFunctionResult(
     authenticateRequest(
-      `${backendApiUrl}/me/tap/${temporaryAccessPassId}`,
+      `${backendApiUrl}/me/tap/${encodeURIComponent(temporaryAccessPassId)}`,
       REQUEST_TYPE.DELETE,
       EApiFunctionTypes.CREATE_TAP
     ),
