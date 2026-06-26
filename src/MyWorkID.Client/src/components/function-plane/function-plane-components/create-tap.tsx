@@ -50,6 +50,9 @@ export const CreateTAP = (props: TFunctionProps) => {
     },
   });
 
+  const hasContent = (value: string | null | undefined): value is string =>
+    !!value && value.trim().length > 0;
+
   const createTAP = useCallback(async () => {
     setTapDisplay({
       visible: true,
@@ -61,8 +64,8 @@ export const CreateTAP = (props: TFunctionProps) => {
       .then((result) => {
         if (
           result.status === "success" &&
-          !!result.data?.temporaryAccessPassword &&
-          result.data?.temporaryAccessPassword.trim().length > 0
+          hasContent(result.data?.temporaryAccessPassword) &&
+          hasContent(result.data?.temporaryAccessPassId)
         ) {
           setTapDisplay({
             visible: true,
