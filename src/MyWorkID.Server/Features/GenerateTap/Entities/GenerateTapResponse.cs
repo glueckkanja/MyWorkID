@@ -3,7 +3,8 @@
 namespace MyWorkID.Server.Features.GenerateTap.Entities
 {
     /// <summary>
-    /// Represents the response containing the generated Temporary Access Pass (TAP).
+    /// Represents the response containing the generated Temporary Access Pass (TAP)
+    /// as well as the unique identifier of the TAP.
     /// </summary>
     public class GenerateTapResponse
     {
