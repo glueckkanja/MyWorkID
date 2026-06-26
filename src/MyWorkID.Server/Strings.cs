@@ -32,7 +32,7 @@
             "Missing or invalid configuration for VerifiedId.";
         public const string GRAPH_VERIFIED_ID_LICENSE_ERROR_MESSAGE =
             "Premium features cannot be used until billing is enabled by the admin.";
-        public const string PREIMUM_FEATURES_BILLING_MISSING_PROBLEM_DETAIL =
-            "Verfied Id premium features billing missing.";
+        public const string PREMIUM_FEATURES_BILLING_MISSING_PROBLEM_DETAIL =
+            "Verified ID premium features billing missing.";
     }
 }

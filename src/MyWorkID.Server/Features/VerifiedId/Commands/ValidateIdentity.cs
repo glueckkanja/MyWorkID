@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Identity.Web;
 using MyWorkID.Server.Common;
 using MyWorkID.Server.Features.VerifiedId.Exceptions;
 using MyWorkID.Server.Filters;
-using System.Security.Claims;
 
 namespace MyWorkID.Server.Features.VerifiedId.Commands
 {
@@ -18,7 +18,8 @@ namespace MyWorkID.Server.Features.VerifiedId.Commands
         /// <param name="endpoints">The endpoint route builder.</param>
         public static void MapEndpoint(IEndpointRouteBuilder endpoints)
         {
-            endpoints.MapPostWithCreatedOpenApi("api/me/verifiedId/verify", HandleAsync)
+            endpoints
+                .MapPostWithCreatedOpenApi("api/me/verifiedId/verify", HandleAsync)
                 .RequireAuthorization()
                 .AddEndpointFilter<CheckVerifiedIdAppConfigurationEndpointFilter>()
                 .AddEndpointFilter<CheckForObjectIdEndpointFilter>()
@@ -33,13 +34,19 @@ namespace MyWorkID.Server.Features.VerifiedId.Commands
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A result indicating the success or failure of the identity validation request.</returns>
         [Authorize(Roles = Strings.VALIDATE_IDENTITY_ROLE)]
-        public static async Task<IResult> HandleAsync(VerifiedIdService verifiedIdService, ClaimsPrincipal user,
-            CancellationToken cancellationToken)
+        public static async Task<IResult> HandleAsync(
+            VerifiedIdService verifiedIdService,
+            ClaimsPrincipal user,
+            CancellationToken cancellationToken
+        )
         {
             var userId = user.GetObjectId();
             try
             {
-                var response = await verifiedIdService.CreatePresentationRequest(userId!, cancellationToken);
+                var response = await verifiedIdService.CreatePresentationRequest(
+                    userId!,
+                    cancellationToken
+                );
                 return TypedResults.Created(string.Empty, response);
             }
             catch (CreatePresentationException)
@@ -48,7 +55,9 @@ namespace MyWorkID.Server.Features.VerifiedId.Commands
             }
             catch (PremiumFeatureBillingMissingException)
             {
-                return TypedResults.Problem(Strings.PREIMUM_FEATURES_BILLING_MISSING_PROBLEM_DETAIL);
+                return TypedResults.Problem(
+                    Strings.PREMIUM_FEATURES_BILLING_MISSING_PROBLEM_DETAIL
+                );
             }
         }
     }
