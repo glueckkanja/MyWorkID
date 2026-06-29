@@ -21,7 +21,7 @@ namespace MyWorkID.Server.Features.VerifiedId
         public static void ConfigureServices(IServiceCollection services, IConfigurationManager configurationManager, IWebHostEnvironment environment)
         {
             services.Configure<VerifiedIdOptions>(configurationManager.GetSection("VerifiedId"));
-            TokenCredential verifiedIdCredentials = new ManagedIdentityCredential();
+            TokenCredential verifiedIdCredentials = new ManagedIdentityCredential(ManagedIdentityId.SystemAssigned);
             if (environment.IsDevelopment())
             {
                 verifiedIdCredentials = new ClientSecretCredential(

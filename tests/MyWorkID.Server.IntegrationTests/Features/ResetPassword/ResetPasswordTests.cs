@@ -27,7 +27,7 @@ namespace MyWorkID.Server.IntegrationTests.Features.PasswordReset
         public async Task ResetPassword_WithoutAuth_Returns401()
         {
             var unauthenticatedClient = _testApplicationFactory.CreateDefaultClient();
-            var response = await unauthenticatedClient.PutAsync(_baseUrl, null);
+            var response = await unauthenticatedClient.PutAsync(_baseUrl, null, TestContext.Current.CancellationToken);
             response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         }
 
@@ -35,7 +35,7 @@ namespace MyWorkID.Server.IntegrationTests.Features.PasswordReset
         public async Task ResetPassword_WithWrongRole_Returns403()
         {
             var client = TestHelper.CreateClientWithRole(_testApplicationFactory, provider => provider.WithDismissUserRiskRole());
-            var response = await client.PutAsync(_baseUrl, null);
+            var response = await client.PutAsync(_baseUrl, null, TestContext.Current.CancellationToken);
             response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         }
 
@@ -44,9 +44,9 @@ namespace MyWorkID.Server.IntegrationTests.Features.PasswordReset
         {
             var testApp = new TestApplicationFactory();
             var client = TestHelper.CreateClientWithRole(testApp, provider => provider.WithResetPasswordRole());
-            var response = await client.PutAsync(_baseUrl, null);
+            var response = await client.PutAsync(_baseUrl, null, TestContext.Current.CancellationToken);
             response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
-            var problemDetails = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+            var problemDetails = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>(TestContext.Current.CancellationToken);
             problemDetails.Should().NotBeNull();
             problemDetails!.Detail.Should().Be(Strings.ERROR_MISSING_OR_INVALID_SETTINGS_RESET_PASSWORD);
         }
@@ -58,9 +58,9 @@ namespace MyWorkID.Server.IntegrationTests.Features.PasswordReset
             var testApp = new TestApplicationFactory();
             testApp.AddAuthContextConfig(AppFunctions.ResetPassword.ToString(), "invalid");
             var client = TestHelper.CreateClientWithRole(testApp, provider => provider.WithResetPasswordRole());
-            var response = await client.PutAsync(_baseUrl, null);
+            var response = await client.PutAsync(_baseUrl, null, TestContext.Current.CancellationToken);
             response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
-            var problemDetails = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+            var problemDetails = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>(TestContext.Current.CancellationToken);
             problemDetails.Should().NotBeNull();
             problemDetails!.Detail.Should().Be(Strings.ERROR_MISSING_OR_INVALID_SETTINGS_RESET_PASSWORD);
         }
@@ -72,7 +72,7 @@ namespace MyWorkID.Server.IntegrationTests.Features.PasswordReset
             testApp.AddAuthContextConfig(AppFunctions.ResetPassword.ToString(), "c1");
             var client = TestHelper.CreateClientWithRole(testApp,
                 provider => provider.WithResetPasswordRole().WithAuthContext("c2"));
-            var response = await client.PutAsync(_baseUrl, null);
+            var response = await client.PutAsync(_baseUrl, null, TestContext.Current.CancellationToken);
             response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             await CheckResponseHelper.CheckForInsuffienctClaimsResponse(response);
         }
@@ -82,7 +82,7 @@ namespace MyWorkID.Server.IntegrationTests.Features.PasswordReset
         {
             var client = TestHelper.CreateClientWithRole(_configuredTestApplicationFactory, provider => provider.WithResetPasswordRole());
             var pwRequest = new PasswordResetRequest();
-            var response = await client.PutAsJsonAsync(_baseUrl, pwRequest);
+            var response = await client.PutAsJsonAsync(_baseUrl, pwRequest, TestContext.Current.CancellationToken);
             response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             await CheckResponseHelper.CheckForInsuffienctClaimsResponse(response);
         }
@@ -93,7 +93,7 @@ namespace MyWorkID.Server.IntegrationTests.Features.PasswordReset
             var client = TestHelper.CreateClientWithRole(_configuredTestApplicationFactory,
                 provider => provider.WithResetPasswordRole().WithAuthContext(_validAuthContextId));
             var pwRequest = new PasswordResetRequest();
-            var response = await client.PutAsJsonAsync(_baseUrl, pwRequest);
+            var response = await client.PutAsJsonAsync(_baseUrl, pwRequest, TestContext.Current.CancellationToken);
             response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         }
 
@@ -103,9 +103,9 @@ namespace MyWorkID.Server.IntegrationTests.Features.PasswordReset
         {
             var client = TestHelper.CreateClientWithRole(_configuredTestApplicationFactory,
                 provider => provider.WithRandomSubAndOid().WithResetPasswordRole().WithAuthContext(_validAuthContextId));
-            var response = await client.PutAsJsonAsync(_baseUrl, request);
+            var response = await client.PutAsJsonAsync(_baseUrl, request, TestContext.Current.CancellationToken);
             response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-            var problemDetails = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+            var problemDetails = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>(TestContext.Current.CancellationToken);
             var error = Assert.Single(problemDetails!.Errors);
             validator(error);
         }
@@ -171,7 +171,7 @@ namespace MyWorkID.Server.IntegrationTests.Features.PasswordReset
         {
             var client = TestHelper.CreateClientWithRole(_configuredTestApplicationFactory,
                 provider => provider.WithRandomSubAndOid().WithResetPasswordRole().WithAuthContext(_validAuthContextId));
-            var response = await client.PutAsJsonAsync(_baseUrl, request);
+            var response = await client.PutAsJsonAsync(_baseUrl, request, TestContext.Current.CancellationToken);
             response.StatusCode.Should().Be(HttpStatusCode.OK);
         }
 
