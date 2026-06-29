@@ -8,6 +8,6 @@
         DismissUserRisk,
         GenerateTap,
         ResetPassword,
-        VerifiedId
+        VerifiedId,
     }
 }

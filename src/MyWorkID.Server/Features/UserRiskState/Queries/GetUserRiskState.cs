@@ -1,11 +1,11 @@
-﻿using MyWorkID.Server.Common;
-using MyWorkID.Server.Features.UserRiskState.Entities;
-using MyWorkID.Server.Filters;
+﻿using System.Security.Claims;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
 using Microsoft.Graph.Models.ODataErrors;
 using Microsoft.Identity.Web;
-using System.Security.Claims;
+using MyWorkID.Server.Common;
+using MyWorkID.Server.Features.UserRiskState.Entities;
+using MyWorkID.Server.Filters;
 
 namespace MyWorkID.Server.Features.UserRiskState.Queries
 {
@@ -21,8 +21,9 @@ namespace MyWorkID.Server.Features.UserRiskState.Queries
         /// <param name="endpoints">The endpoint route builder.</param>
         public static void MapEndpoint(IEndpointRouteBuilder endpoints)
         {
-            endpoints.MapGetWithOpenApi<GetRiskStateResponse>("/api/me/riskstate", HandleAsync)
-            .WithTags(Strings.USERRISKSTATE_OPENAPI_TAG)
+            endpoints
+                .MapGetWithOpenApi<GetRiskStateResponse>("/api/me/riskstate", HandleAsync)
+                .WithTags(Strings.USERRISKSTATE_OPENAPI_TAG)
                 .RequireAuthorization()
                 .AddEndpointFilter<CheckForObjectIdEndpointFilter>();
         }
@@ -34,14 +35,19 @@ namespace MyWorkID.Server.Features.UserRiskState.Queries
         /// <param name="graphClient">The Graph service client.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A result containing the user's risk state and risk level.</returns>
-        public static async Task<IResult> HandleAsync(ClaimsPrincipal user,
-            GraphServiceClient graphClient, CancellationToken cancellationToken)
+        public static async Task<IResult> HandleAsync(
+            ClaimsPrincipal user,
+            GraphServiceClient graphClient,
+            CancellationToken cancellationToken
+        )
         {
-            var userId = user.GetObjectId();
+            string? userId = user.GetObjectId();
             RiskyUser? riskyUser;
             try
             {
-                riskyUser = await graphClient.IdentityProtection.RiskyUsers[userId].GetAsync(cancellationToken: cancellationToken);
+                riskyUser = await graphClient
+                    .IdentityProtection.RiskyUsers[userId]
+                    .GetAsync(cancellationToken: cancellationToken);
             }
             catch (ODataError e)
             {
@@ -60,13 +66,15 @@ namespace MyWorkID.Server.Features.UserRiskState.Queries
             RiskLevel? riskLevel = null;
             RiskState riskState = riskyUser.RiskState ?? RiskState.None;
 
-            if (riskyUser.RiskState == RiskState.AtRisk || riskyUser.RiskState == RiskState.ConfirmedCompromised)
+            if (
+                riskyUser.RiskState == RiskState.AtRisk
+                || riskyUser.RiskState == RiskState.ConfirmedCompromised
+            )
             {
                 riskLevel = riskyUser.RiskLevel;
             }
 
             return TypedResults.Ok(new GetRiskStateResponse(riskState, riskLevel));
         }
-
     }
 }

@@ -11,6 +11,10 @@
         /// <param name="services">The service collection.</param>
         /// <param name="configurationManager">The configuration manager.</param>
         /// <param name="environment">The web host environment.</param>
-        static abstract void ConfigureServices(IServiceCollection services, IConfigurationManager configurationManager, IWebHostEnvironment environment);
+        static abstract void ConfigureServices(
+            IServiceCollection services,
+            IConfigurationManager configurationManager,
+            IWebHostEnvironment environment
+        );
     }
 }

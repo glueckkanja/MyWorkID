@@ -1,5 +1,5 @@
-﻿using MyWorkID.Server.Validation;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+using MyWorkID.Server.Validation;
 
 namespace MyWorkID.Server.Options
 {
@@ -9,8 +9,10 @@ namespace MyWorkID.Server.Options
 
         [Required]
         public string? Instance { get; set; }
+
         [Guid]
         public string? TenantId { get; set; }
+
         [Guid]
         public string? ClientId { get; set; }
     }

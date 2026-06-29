@@ -1,12 +1,11 @@
-﻿using MyWorkID.Server.Common;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using MyWorkID.Server.Common;
 
 namespace MyWorkID.Server.Filters
 {
     /// <summary>
     /// Abstract base class for endpoint filters that require authentication context.
     /// </summary>
-
     public abstract class AuthContextEndpointFilter : IEndpointFilter
     {
         private readonly AppFunctions _appFunction;
@@ -17,7 +16,10 @@ namespace MyWorkID.Server.Filters
         /// </summary>
         /// <param name="appFunction">The application function that requires authentication context.</param>
         /// <param name="authContextService">The authentication context service.</param>
-        protected AuthContextEndpointFilter(AppFunctions appFunction, IAuthContextService authContextService)
+        protected AuthContextEndpointFilter(
+            AppFunctions appFunction,
+            IAuthContextService authContextService
+        )
         {
             _appFunction = appFunction;
             _authContextService = authContextService;
@@ -29,27 +31,42 @@ namespace MyWorkID.Server.Filters
         /// <param name="context">The endpoint filter invocation context.</param>
         /// <param name="next">The next delegate to invoke.</param>
         /// <returns>The result of the filter invocation.</returns>
-        public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
+        public async ValueTask<object?> InvokeAsync(
+            EndpointFilterInvocationContext context,
+            EndpointFilterDelegate next
+        )
         {
-            var httpContext = context.HttpContext;
-            if (httpContext == null || httpContext.User == null || httpContext.User.Claims == null || !httpContext.User.Claims.Any())
+            HttpContext httpContext = context.HttpContext;
+            if (
+                httpContext == null
+                || httpContext.User == null
+                || httpContext.User.Claims == null
+                || !httpContext.User.Claims.Any()
+            )
             {
-                return Results.Problem(new ProblemDetails
-                {
-                    Detail = "No user or claims provided.",
-                    Status = StatusCodes.Status401Unauthorized,
-                });
+                return Results.Problem(
+                    new ProblemDetails
+                    {
+                        Detail = "No user or claims provided.",
+                        Status = StatusCodes.Status401Unauthorized,
+                    }
+                );
             }
-            string? claimsChallenge = _authContextService.CheckForRequiredAuthContext(httpContext, _appFunction);
+            string? claimsChallenge = _authContextService.CheckForRequiredAuthContext(
+                httpContext,
+                _appFunction
+            );
             if (!string.IsNullOrWhiteSpace(claimsChallenge))
             {
                 string? missingAuthContextId = _authContextService.GetAuthContextId(_appFunction);
                 if (string.IsNullOrWhiteSpace(missingAuthContextId))
                 {
-                    throw new InvalidOperationException($"Missing AuthContextId for {_appFunction}");
+                    throw new InvalidOperationException(
+                        $"Missing AuthContextId for {_appFunction}"
+                    );
                 }
                 _authContextService.AddClaimsChallengeHeader(httpContext, missingAuthContextId!);
-                var problemDetails = new ProblemDetails
+                ProblemDetails problemDetails = new ProblemDetails
                 {
                     Detail = _authContextService.GetClaimsChallengeMessage(),
                     Status = StatusCodes.Status401Unauthorized,
@@ -66,7 +83,8 @@ namespace MyWorkID.Server.Filters
     /// </summary>
     class GenerateTapAuthContextEndpointFilter : AuthContextEndpointFilter
     {
-        public GenerateTapAuthContextEndpointFilter(IAuthContextService authContextService) : base(AppFunctions.GenerateTap, authContextService) { }
+        public GenerateTapAuthContextEndpointFilter(IAuthContextService authContextService)
+            : base(AppFunctions.GenerateTap, authContextService) { }
     }
 
     /// <summary>
@@ -74,7 +92,8 @@ namespace MyWorkID.Server.Filters
     /// </summary>
     class ResetPasswordAuthContextEndpointFilter : AuthContextEndpointFilter
     {
-        public ResetPasswordAuthContextEndpointFilter(IAuthContextService authContextService) : base(AppFunctions.ResetPassword, authContextService) { }
+        public ResetPasswordAuthContextEndpointFilter(IAuthContextService authContextService)
+            : base(AppFunctions.ResetPassword, authContextService) { }
     }
 
     /// <summary>
@@ -82,6 +101,7 @@ namespace MyWorkID.Server.Filters
     /// </summary>
     class DismissUserRiskAuthContextEndpointFilter : AuthContextEndpointFilter
     {
-        public DismissUserRiskAuthContextEndpointFilter(IAuthContextService authContextService) : base(AppFunctions.DismissUserRisk, authContextService) { }
+        public DismissUserRiskAuthContextEndpointFilter(IAuthContextService authContextService)
+            : base(AppFunctions.DismissUserRisk, authContextService) { }
     }
 }

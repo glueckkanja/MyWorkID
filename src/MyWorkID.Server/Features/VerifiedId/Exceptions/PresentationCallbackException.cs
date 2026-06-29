@@ -9,8 +9,7 @@
         /// Initializes a new instance of the <see cref="PresentationCallbackException"/> class with a specified error message.
         /// </summary>
         /// <param name="message">The error message that explains the reason for the exception.</param>
-        public PresentationCallbackException(string? message) : base(message)
-        {
-        }
+        public PresentationCallbackException(string? message)
+            : base(message) { }
     }
 }

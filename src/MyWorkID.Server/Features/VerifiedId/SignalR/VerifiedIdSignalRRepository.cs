@@ -27,7 +27,10 @@ namespace MyWorkID.Server.Features.VerifiedId.SignalR
         /// <param name="userId">The ID of the user.</param>
         /// <param name="connections">The set of connection IDs associated with the user.</param>
         /// <returns>True if the user has connections; otherwise, false.</returns>
-        bool TryGetConnections(string userId, [MaybeNullWhen(false)] out HashSet<string> connections);
+        bool TryGetConnections(
+            string userId,
+            [MaybeNullWhen(false)] out HashSet<string> connections
+        );
     }
 
     /// <summary>
@@ -44,7 +47,7 @@ namespace MyWorkID.Server.Features.VerifiedId.SignalR
         /// <param name="connectionId">The connection ID to add.</param>
         public void AddUser(string userId, string connectionId)
         {
-            if (!_connections.TryGetValue(userId, out var connectionsOfUser))
+            if (!_connections.TryGetValue(userId, out HashSet<string>? connectionsOfUser))
             {
                 connectionsOfUser = new HashSet<string>();
                 _connections.Add(userId, connectionsOfUser);
@@ -60,13 +63,16 @@ namespace MyWorkID.Server.Features.VerifiedId.SignalR
         /// <param name="connectionId">The connection ID to remove.</param>
         public void RemoveUser(string? userId, string connectionId)
         {
-            if (userId != null && _connections.TryGetValue(userId, out var connectionsOfUser))
+            if (
+                userId != null
+                && _connections.TryGetValue(userId, out HashSet<string>? connectionsOfUser)
+            )
             {
                 connectionsOfUser.Remove(connectionId);
             }
             else // This should never happen but if the userId is lost (e.g. disconnect without userToken) we will remove the connectionId from all users
             {
-                foreach (var connections in _connections.Values)
+                foreach (HashSet<string> connections in _connections.Values)
                 {
                     connections.Remove(connectionId);
                 }
@@ -79,7 +85,10 @@ namespace MyWorkID.Server.Features.VerifiedId.SignalR
         /// <param name="userId">The ID of the user.</param>
         /// <param name="connections">The set of connection IDs associated with the user.</param>
         /// <returns>True if the user has connections; otherwise, false.</returns>
-        public bool TryGetConnections(string userId, [MaybeNullWhen(false)] out HashSet<string> connections)
+        public bool TryGetConnections(
+            string userId,
+            [MaybeNullWhen(false)] out HashSet<string> connections
+        )
         {
             return _connections.TryGetValue(userId, out connections);
         }

@@ -14,7 +14,11 @@ namespace MyWorkID.Server.Features.Configuration
         /// <param name="services">The service collection to add services to.</param>
         /// <param name="configurationManager">The configuration manager to retrieve configuration settings from.</param>
         /// <param name="environment">The web host environment.</param>
-        public static void ConfigureServices(IServiceCollection services, IConfigurationManager configurationManager, IWebHostEnvironment environment)
+        public static void ConfigureServices(
+            IServiceCollection services,
+            IConfigurationManager configurationManager,
+            IWebHostEnvironment environment
+        )
         {
             // Configures FrontendOptions using the "Frontend" section from the configuration
             services.Configure<FrontendOptions>(configurationManager.GetSection("Frontend"));

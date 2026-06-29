@@ -3,8 +3,5 @@
     /// <summary>
     /// Used for test projects.
     /// </summary>
-    public interface IApiAssemblyMarker
-    {
-
-    }
+    public interface IApiAssemblyMarker { }
 }

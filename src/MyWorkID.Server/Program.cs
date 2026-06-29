@@ -1,14 +1,15 @@
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http.Json;
 using MyWorkID.Server;
 using MyWorkID.Server.Common;
 using MyWorkID.Server.Features.VerifiedId.SignalR;
 using MyWorkID.Server.Kernel;
 
-var appAssembly = Assembly.GetExecutingAssembly();
-var builder = WebApplication.CreateBuilder(args);
+Assembly appAssembly = Assembly.GetExecutingAssembly();
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // see https://github.com/dotnet/aspnetcore/issues/37680#issuecomment-1331559463
 builder.Configuration.AddTestConfiguration();
@@ -38,7 +39,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddCors();
 builder.Services.ConfigureModules(builder.Configuration, builder.Environment, appAssembly);
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
@@ -47,8 +48,8 @@ app.UseExceptionHandler(exceptionHandlerApp =>
 {
     exceptionHandlerApp.Run(async context =>
     {
-        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
-        var exceptionHandlerPathFeature =
+        ILogger<Program> logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+        IExceptionHandlerPathFeature? exceptionHandlerPathFeature =
             context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerPathFeature>();
         if (exceptionHandlerPathFeature?.Error != null)
         {
