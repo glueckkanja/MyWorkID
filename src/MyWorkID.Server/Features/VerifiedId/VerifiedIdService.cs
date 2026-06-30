@@ -117,9 +117,10 @@ namespace MyWorkID.Server.Features.VerifiedId
             }
             catch (HttpRequestException e)
             {
-                string responseContent = await response!.Content.ReadAsStringAsync(
-                    cancellationToken
-                );
+                string responseContent = response?.Content is null
+                    ? "No response body"
+                    : await response.Content.ReadAsStringAsync(cancellationToken);
+
                 _logger.LogError(
                     e,
                     "Failed to create presentation request. Response: {ResponseContent}",
