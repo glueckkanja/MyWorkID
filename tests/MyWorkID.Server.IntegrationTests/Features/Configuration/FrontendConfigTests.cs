@@ -17,9 +17,9 @@ namespace MyWorkID.Server.IntegrationTests.Features.Configuration
         public async Task GetConfig_WithoutAuth_ReturnsCorrectFrontendConfig()
         {
             var unauthenticatedClient = _testApplicationFactory.CreateDefaultClient();
-            var response = await unauthenticatedClient.GetAsync(_baseUrl);
+            var response = await unauthenticatedClient.GetAsync(_baseUrl, TestContext.Current.CancellationToken);
             response.StatusCode.Should().Be(HttpStatusCode.OK);
-            var frontendOptions = await response.Content.ReadFromJsonAsync<FrontendOptions>();
+            var frontendOptions = await response.Content.ReadFromJsonAsync<FrontendOptions>(TestContext.Current.CancellationToken);
             frontendOptions.Should().NotBeNull();
             var frontendAppSettings = _testApplicationFactory.Services.GetRequiredService<IOptions<FrontendOptions>>().Value;
             frontendAppSettings.BackendClientId.Should().Be(frontendOptions!.BackendClientId);
@@ -39,9 +39,9 @@ namespace MyWorkID.Server.IntegrationTests.Features.Configuration
                             ["Frontend:HelpUrl"] = "https://example.com/help"
                         })))
                 .CreateDefaultClient();
-            var response = await client.GetAsync(_baseUrl);
+            var response = await client.GetAsync(_baseUrl, TestContext.Current.CancellationToken);
             response.StatusCode.Should().Be(HttpStatusCode.OK);
-            var frontendOptions = await response.Content.ReadFromJsonAsync<FrontendOptions>();
+            var frontendOptions = await response.Content.ReadFromJsonAsync<FrontendOptions>(TestContext.Current.CancellationToken);
             frontendOptions.Should().NotBeNull();
             frontendOptions!.HelpUrl.Should().Be("https://example.com/help");
         }

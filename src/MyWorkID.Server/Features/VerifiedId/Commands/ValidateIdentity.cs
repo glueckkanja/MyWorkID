@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Identity.Web;
 using MyWorkID.Server.Common;
+using MyWorkID.Server.Features.VerifiedId.Entities;
 using MyWorkID.Server.Features.VerifiedId.Exceptions;
 using MyWorkID.Server.Filters;
 
@@ -40,13 +41,11 @@ namespace MyWorkID.Server.Features.VerifiedId.Commands
             CancellationToken cancellationToken
         )
         {
-            var userId = user.GetObjectId();
+            string? userId = user.GetObjectId();
             try
             {
-                var response = await verifiedIdService.CreatePresentationRequest(
-                    userId!,
-                    cancellationToken
-                );
+                CreatePresentationResponse? response =
+                    await verifiedIdService.CreatePresentationRequest(userId!, cancellationToken);
                 return TypedResults.Created(string.Empty, response);
             }
             catch (CreatePresentationException)

@@ -18,7 +18,7 @@ permissions:
 
 env:
   PROJECT_ROOT_DIRECTORY: "./src/MyWorkID.Server"
-  DOTNET_VERSION: "8.0.x"
+  DOTNET_VERSION: "10.0.x"
 
 jobs:
   build:
@@ -27,11 +27,11 @@ jobs:
       run:
         working-directory: ${{env.PROJECT_ROOT_DIRECTORY}}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       # Load NuGetCache
       - name: Restore NuGet Cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles(env.PROJECT_ROOT_DIRECTORY) }}

@@ -13,9 +13,12 @@ namespace MyWorkID.Server.Filters
         /// <param name="context">The endpoint filter invocation context.</param>
         /// <param name="next">The next delegate to invoke.</param>
         /// <returns>The result of the filter invocation.</returns>
-        public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
+        public async ValueTask<object?> InvokeAsync(
+            EndpointFilterInvocationContext context,
+            EndpointFilterDelegate next
+        )
         {
-            var userId = context.HttpContext.User.GetObjectId();
+            string? userId = context.HttpContext.User.GetObjectId();
             if (userId == null)
             {
                 return Results.Unauthorized();

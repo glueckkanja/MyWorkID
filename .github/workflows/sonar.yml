@@ -14,7 +14,7 @@ permissions:
 
 env:
   CONFIGURATION: Release
-  DOTNET_CORE_VERSION: 8.0.x
+  DOTNET_CORE_VERSION: 10.0.x
   WORKING_DIRECTORY: ./
 
 jobs:
@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.repository.fork == false
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Set up JDK
@@ -37,7 +37,7 @@ jobs:
           dotnet-version: ${{ env.DOTNET_CORE_VERSION }}
       - name: Cache SonarQube scanner
         id: cache-sonar-scanner
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: .\.sonar\scanner
           key: ${{ runner.os }}-sonar-scanner

@@ -1,7 +1,7 @@
-﻿using MyWorkID.Server.Options;
-using Microsoft.Extensions.Options;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using System.Text;
+using Microsoft.Extensions.Options;
+using MyWorkID.Server.Options;
 
 namespace MyWorkID.Server.Common
 {
@@ -27,9 +27,15 @@ namespace MyWorkID.Server.Common
         /// <param name="services">The service collection.</param>
         /// <param name="configurationManager">The configuration manager.</param>
         /// <param name="environment">The web host environment.</param>
-        public static void ConfigureServices(IServiceCollection services, IConfigurationManager configurationManager, IWebHostEnvironment environment)
+        public static void ConfigureServices(
+            IServiceCollection services,
+            IConfigurationManager configurationManager,
+            IWebHostEnvironment environment
+        )
         {
-            services.Configure<AppFunctionsOptions>(configurationManager.GetSection("AppFunctions"));
+            services.Configure<AppFunctionsOptions>(
+                configurationManager.GetSection("AppFunctions")
+            );
             services.AddScoped<IAuthContextService, AuthContextService>();
         }
 
@@ -40,9 +46,23 @@ namespace MyWorkID.Server.Common
         /// <param name="authContextId">Id of authentication context required for authorization.</param>
         public void AddClaimsChallengeHeader(HttpContext httpContext, string authContextId)
         {
-            var base64str = Convert.ToBase64String(Encoding.UTF8.GetBytes("{\"access_token\":{\"acrs\":{\"essential\":true,\"value\":\"" + authContextId + "\"}}}"));
-            httpContext.Response.Headers.Append("WWW-Authenticate", $"Bearer realm=\"\", authorization_uri=\"https://login.microsoftonline.com/common/oauth2/authorize\", error=\"insufficient_claims\", claims=\"" + base64str + "\"");
-            httpContext.Response.Headers.Append("Access-Control-Expose-Headers", "WWW-Authenticate");
+            string base64str = Convert.ToBase64String(
+                Encoding.UTF8.GetBytes(
+                    "{\"access_token\":{\"acrs\":{\"essential\":true,\"value\":\""
+                        + authContextId
+                        + "\"}}}"
+                )
+            );
+            httpContext.Response.Headers.Append(
+                "WWW-Authenticate",
+                $"Bearer realm=\"\", authorization_uri=\"https://login.microsoftonline.com/common/oauth2/authorize\", error=\"insufficient_claims\", claims=\""
+                    + base64str
+                    + "\""
+            );
+            httpContext.Response.Headers.Append(
+                "Access-Control-Expose-Headers",
+                "WWW-Authenticate"
+            );
         }
 
         /// <summary>
@@ -58,11 +78,16 @@ namespace MyWorkID.Server.Common
 
             if (!string.IsNullOrEmpty(authContextId))
             {
-                Claim? acrsClaim = context.User.FindAll("acrs").FirstOrDefault(x => x.Value == authContextId);
+                Claim? acrsClaim = context
+                    .User.FindAll("acrs")
+                    .FirstOrDefault(x => x.Value == authContextId);
 
                 if (acrsClaim?.Value != authContextId)
                 {
-                    claimsChallenge = "{\"id_token\":{\"acrs\":{\"essential\":true,\"value\":\"" + authContextId + "\"}}}";
+                    claimsChallenge =
+                        "{\"id_token\":{\"acrs\":{\"essential\":true,\"value\":\""
+                        + authContextId
+                        + "\"}}}";
                 }
             }
 

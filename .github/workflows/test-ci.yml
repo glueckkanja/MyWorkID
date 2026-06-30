@@ -8,7 +8,7 @@ permissions:
   checks: write
   
 env:
-  DOTNET_CORE_VERSION: 8.0.x
+  DOTNET_CORE_VERSION: 10.0.x
 
 jobs:
   run-tests:
@@ -16,9 +16,9 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Restore NuGet Cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('src/MyWorkID.Server') }}

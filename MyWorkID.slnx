@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MyWorkID.Client/MyWorkID.Client.esproj">
+      <Build />
+      <Deploy />
+    </Project>
+    <Project Path="src/MyWorkID.Server/MyWorkID.Server.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MyWorkID.Server.IntegrationTests/MyWorkID.Server.IntegrationTests.csproj" />
+    <Project Path="tests/MyWorkID.Server.UnitTests/MyWorkID.Server.UnitTests.csproj" />
+  </Folder>
+</Solution>

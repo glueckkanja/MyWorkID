@@ -1,8 +1,9 @@
-﻿using MyWorkID.Server.Common;
+﻿using System.Security.Claims;
+using MyWorkID.Server.Common;
+using MyWorkID.Server.Features.VerifiedId.Entities;
 using MyWorkID.Server.Features.VerifiedId.Exceptions;
 using MyWorkID.Server.Features.VerifiedId.Extensions;
 using MyWorkID.Server.Filters;
-using System.Security.Claims;
 
 namespace MyWorkID.Server.Features.VerifiedId.Commands
 {
@@ -17,7 +18,8 @@ namespace MyWorkID.Server.Features.VerifiedId.Commands
         /// <param name="endpoints">The endpoint route builder.</param>
         public static void MapEndpoint(IEndpointRouteBuilder endpoints)
         {
-            endpoints.MapPostWithUpdatedOpenApi("api/me/verifiedid/callback", HandleAsync)
+            endpoints
+                .MapPostWithUpdatedOpenApi("api/me/verifiedid/callback", HandleAsync)
                 .RequireAuthorization(Strings.VERIFIED_ID_CALLBACK_POLICY)
                 .AddEndpointFilter<CheckVerifiedIdAppConfigurationEndpointFilter>()
                 .AddEndpointFilter<CheckForUserIdEndpointFilter>()
@@ -36,13 +38,15 @@ namespace MyWorkID.Server.Features.VerifiedId.Commands
             VerifiedIdService verifiedIdService,
             ClaimsPrincipal user,
             HttpContext context,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken
+        )
         {
-            var userId = user.GetUserId();
+            string? userId = user.GetUserId();
             await verifiedIdService.HideQrCodeForUser(userId!);
             try
             {
-                var parsedBody = await verifiedIdService.ParseCreatePresentationRequestCallback(context);
+                CreatePresentationRequestCallback parsedBody =
+                    await verifiedIdService.ParseCreatePresentationRequestCallback(context);
                 await verifiedIdService.HandlePresentationCallback(userId!, parsedBody);
                 return TypedResults.NoContent();
             }

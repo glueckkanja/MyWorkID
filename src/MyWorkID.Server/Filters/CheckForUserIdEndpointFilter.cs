@@ -1,4 +1,6 @@
-﻿namespace MyWorkID.Server.Filters
+﻿using System.Security.Claims;
+
+namespace MyWorkID.Server.Filters
 {
     /// <summary>
     /// Endpoint filter that checks for the presence of a user ID in the user's claims.
@@ -11,9 +13,12 @@
         /// <param name="context">The endpoint filter invocation context.</param>
         /// <param name="next">The next delegate to invoke.</param>
         /// <returns>The result of the filter invocation.</returns>
-        public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
+        public async ValueTask<object?> InvokeAsync(
+            EndpointFilterInvocationContext context,
+            EndpointFilterDelegate next
+        )
         {
-            var userId = context.HttpContext.User.FindFirst("userId");
+            Claim? userId = context.HttpContext.User.FindFirst("userId");
             if (string.IsNullOrWhiteSpace(userId?.Value))
             {
                 return Results.Unauthorized();

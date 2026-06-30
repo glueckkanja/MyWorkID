@@ -1,11 +1,11 @@
-﻿using AutoFixture;
+﻿using System.Net;
+using System.Net.Http.Json;
+using AutoFixture;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using MyWorkID.Server.Features.VerifiedId.Entities;
 using MyWorkID.Server.IntegrationTests.Authentication;
-using System.Net;
-using System.Net.Http.Json;
 
 namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
 {
@@ -17,7 +17,9 @@ namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
 
         public ValidateIdentityTests(TestApplicationFactory testApplicationFactory)
         {
-            testApplicationFactory.ConfigureConfiguration(cb => cb.AddInMemoryCollection(TestHelper.GetValidVerifiedIdSettings()));
+            testApplicationFactory.ConfigureConfiguration(cb =>
+                cb.AddInMemoryCollection(TestHelper.GetValidVerifiedIdSettings())
+            );
             _testApplicationFactory = testApplicationFactory;
         }
 
@@ -25,7 +27,11 @@ namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
         public async Task ValidateIdentity_WithoutAuth_Returns401()
         {
             var unauthenticatedClient = _testApplicationFactory.CreateDefaultClient();
-            var response = await unauthenticatedClient.PostAsync(_baseUrl, null);
+            var response = await unauthenticatedClient.PostAsync(
+                _baseUrl,
+                null,
+                TestContext.Current.CancellationToken
+            );
             response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         }
 
@@ -34,7 +40,11 @@ namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
         {
             var provider = new TestClaimsProvider().WithResetPasswordRole();
             var client = _testApplicationFactory.CreateClientWithTestAuth(provider);
-            var response = await client.PostAsync(_baseUrl, null);
+            var response = await client.PostAsync(
+                _baseUrl,
+                null,
+                TestContext.Current.CancellationToken
+            );
             response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         }
 
@@ -44,11 +54,19 @@ namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
             var provider = new TestClaimsProvider().WithValidateIdentityRole();
             var testApp = new TestApplicationFactory();
             var client = testApp.WithAuthenticationVerifiedId(provider).CreateClient();
-            var response = await client.PostAsync(_baseUrl, null);
+            var response = await client.PostAsync(
+                _baseUrl,
+                null,
+                TestContext.Current.CancellationToken
+            );
             response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
-            var problemDetails = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+            var problemDetails = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>(
+                TestContext.Current.CancellationToken
+            );
             problemDetails.Should().NotBeNull();
-            problemDetails!.Detail.Should().Contain(Strings.ERROR_MISSING_OR_INVALID_SETTINGS_VERIFIED_ID);
+            problemDetails!
+                .Detail.Should()
+                .Contain(Strings.ERROR_MISSING_OR_INVALID_SETTINGS_VERIFIED_ID);
         }
 
         [Fact]
@@ -56,7 +74,11 @@ namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
         {
             var provider = new TestClaimsProvider().WithValidateIdentityRole();
             var client = _testApplicationFactory.CreateClientWithTestAuth(provider);
-            var response = await client.PostAsync(_baseUrl, null);
+            var response = await client.PostAsync(
+                _baseUrl,
+                null,
+                TestContext.Current.CancellationToken
+            );
             response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         }
 
@@ -67,15 +89,29 @@ namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
                 requestId: Guid.NewGuid().ToString(),
                 expiryDate: DateTimeOffset.UtcNow.ToUnixTimeSeconds() + 3600,
                 qrCodeBase64: _fixture.Create<string>(),
-                url: _fixture.Create<string>());
+                url: _fixture.Create<string>()
+            );
 
             var handler = new MockHttpMessageHandler(HttpStatusCode.OK, expectedPresentation);
-            var provider = new TestClaimsProvider().WithValidateIdentityRole().WithRandomSubAndOid();
-            var client = _testApplicationFactory.WithHttpMock(handler).CreateClientWithTestAuth(provider);
-            var response = await client.PostAsync(_baseUrl, null);
+            var provider = new TestClaimsProvider()
+                .WithValidateIdentityRole()
+                .WithRandomSubAndOid();
+            var client = _testApplicationFactory
+                .WithHttpMock(handler)
+                .CreateClientWithTestAuth(provider);
+            var response = await client.PostAsync(
+                _baseUrl,
+                null,
+                TestContext.Current.CancellationToken
+            );
             response.StatusCode.Should().Be(HttpStatusCode.Created);
-            var createPresentationResponse = await response.Content.ReadFromJsonAsync<CreatePresentationResponse>();
-            ConvertUnixEpochToDateTime((long)createPresentationResponse!.ExpiryDate!).Should().BeAfter(DateTime.UtcNow);
+            var createPresentationResponse =
+                await response.Content.ReadFromJsonAsync<CreatePresentationResponse>(
+                    TestContext.Current.CancellationToken
+                );
+            ConvertUnixEpochToDateTime((long)createPresentationResponse!.ExpiryDate!)
+                .Should()
+                .BeAfter(DateTime.UtcNow);
             createPresentationResponse.QrCodeBase64.Should().Be(expectedPresentation.QrCodeBase64);
             createPresentationResponse.RequestId.Should().Be(expectedPresentation.RequestId);
             createPresentationResponse.Url.Should().Be(expectedPresentation.Url);
@@ -86,22 +122,46 @@ namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
         public async Task ValidateIdentity_Returns500_WithoutPresentation()
         {
             var handler = new MockHttpMessageHandler(HttpStatusCode.OK, null);
-            var provider = new TestClaimsProvider().WithValidateIdentityRole().WithRandomSubAndOid();
-            var client = _testApplicationFactory.WithHttpMock(handler).CreateClientWithTestAuth(provider);
-            var response = await client.PostAsync(_baseUrl, null);
+            var provider = new TestClaimsProvider()
+                .WithValidateIdentityRole()
+                .WithRandomSubAndOid();
+            var client = _testApplicationFactory
+                .WithHttpMock(handler)
+                .CreateClientWithTestAuth(provider);
+            var response = await client.PostAsync(
+                _baseUrl,
+                null,
+                TestContext.Current.CancellationToken
+            );
             response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
         }
 
         [Fact]
         public async Task ValidateIdentity_Returns500_IfLicenseMissingGraphApiError()
         {
-            var handler = new MockHttpMessageHandler(HttpStatusCode.InternalServerError, Strings.GRAPH_VERIFIED_ID_LICENSE_ERROR_MESSAGE);
-            var provider = new TestClaimsProvider().WithValidateIdentityRole().WithRandomSubAndOid();
-            var client = _testApplicationFactory.WithHttpMock(handler).CreateClientWithTestAuth(provider);
-            var response = await client.PostAsync(_baseUrl, null);
+            var handler = new MockHttpMessageHandler(
+                HttpStatusCode.InternalServerError,
+                Strings.GRAPH_VERIFIED_ID_LICENSE_ERROR_MESSAGE
+            );
+            var provider = new TestClaimsProvider()
+                .WithValidateIdentityRole()
+                .WithRandomSubAndOid();
+            var client = _testApplicationFactory
+                .WithHttpMock(handler)
+                .CreateClientWithTestAuth(provider);
+            var response = await client.PostAsync(
+                _baseUrl,
+                null,
+                TestContext.Current.CancellationToken
+            );
             response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
-            ProblemDetails? validateIdentityResponse = await response.Content.ReadFromJsonAsync<ProblemDetails>();
-            validateIdentityResponse!.Detail.Should().Be(Strings.PREIMUM_FEATURES_BILLING_MISSING_PROBLEM_DETAIL);
+            ProblemDetails? validateIdentityResponse =
+                await response.Content.ReadFromJsonAsync<ProblemDetails>(
+                    TestContext.Current.CancellationToken
+                );
+            validateIdentityResponse!
+                .Detail.Should()
+                .Be(Strings.PREMIUM_FEATURES_BILLING_MISSING_PROBLEM_DETAIL);
         }
 
         private static DateTime ConvertUnixEpochToDateTime(long unixTime)

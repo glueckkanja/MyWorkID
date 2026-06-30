@@ -23,9 +23,8 @@ namespace MyWorkID.Server.Common
             services.AddSingleton(
                 new GraphServiceClient(
                     new ChainedTokenCredential(
-                        new AzureCliCredential(),
-                        new DefaultAzureCredential(),
-                        new ManagedIdentityCredential()
+                        new ManagedIdentityCredential(ManagedIdentityId.SystemAssigned),
+                        new DefaultAzureCredential()
                     )
                 )
             );

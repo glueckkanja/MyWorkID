@@ -1,4 +1,4 @@
-using Xunit.Abstractions;
+using Xunit.Sdk;
 
 namespace MyWorkID.Server.UnitTests.TestModels;
 
@@ -55,8 +55,8 @@ public class TestConfigurationSection : IXunitSerializable
 
     public void Deserialize(IXunitSerializationInfo info)
     {
-        var keys = info.GetValue<string[]>("Keys");
-        var values = info.GetValue<string[]>("Values");
+        var keys = info.GetValue<string[]>("Keys")!;
+        var values = info.GetValue<string[]>("Values")!;
         _entries = keys.Select((key, index) => new KeyValuePair<string, string?>(key, values[index])).ToList();
     }
 }

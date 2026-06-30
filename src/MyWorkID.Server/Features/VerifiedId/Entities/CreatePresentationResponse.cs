@@ -39,7 +39,12 @@ namespace MyWorkID.Server.Features.VerifiedId.Entities
         /// <param name="expiryDate">The expiry date of the presentation request in Unix time.</param>
         /// <param name="qrCodeBase64">The QR code for the presentation request in Base64 format.</param>
         [JsonConstructor]
-        public CreatePresentationResponse(string? requestId, string? url, long? expiryDate, string? qrCodeBase64)
+        public CreatePresentationResponse(
+            string? requestId,
+            string? url,
+            long? expiryDate,
+            string? qrCodeBase64
+        )
         {
             RequestId = requestId;
             Url = url;

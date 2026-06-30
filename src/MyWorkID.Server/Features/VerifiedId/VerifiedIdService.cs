@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using System.Text.Json;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Options;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
@@ -6,7 +7,6 @@ using MyWorkID.Server.Features.VerifiedId.Entities;
 using MyWorkID.Server.Features.VerifiedId.Exceptions;
 using MyWorkID.Server.Features.VerifiedId.SignalR;
 using MyWorkID.Server.Options;
-using System.Text.Json;
 
 namespace MyWorkID.Server.Features.VerifiedId
 {
@@ -37,7 +37,8 @@ namespace MyWorkID.Server.Features.VerifiedId
             GraphServiceClient graphClient,
             IVerifiedIdSignalRRepository verifiedIdSignalRRepository,
             IHubContext<VerifiedIdHub, IVerifiedIdHub> hubContext,
-            ILogger<VerifiedIdService> logger)
+            ILogger<VerifiedIdService> logger
+        )
         {
             _verifiedIdClient = verifiedIdClient;
             _verifiedIdOptions = verifiedIdOptions.Value;
@@ -53,52 +54,93 @@ namespace MyWorkID.Server.Features.VerifiedId
         /// <param name="userId">The ID of the user.</param>
         /// <returns>The response of the create presentation request.</returns>
         /// <exception cref="CreatePresentationException">Thrown when the presentation request fails.</exception>
-        public async Task<CreatePresentationResponse?> CreatePresentationRequest(string userId, CancellationToken cancellationToken)
+        public async Task<CreatePresentationResponse?> CreatePresentationRequest(
+            string userId,
+            CancellationToken cancellationToken
+        )
         {
-            RequestRegistration requestRegistration = new(clientName: "MyWorkID", purpose: "Verify your identity");
-            var jwtSigningKey = _verifiedIdOptions.JwtSigningKey!;
+            RequestRegistration requestRegistration = new(
+                clientName: "MyWorkID",
+                purpose: "Verify your identity"
+            );
+            string jwtSigningKey = _verifiedIdOptions.JwtSigningKey!;
             Callback callback = new(
                 url: $"{_verifiedIdOptions.BackendUrl}/api/me/verifiedid/callback",
                 state: userId,
-                headers: new Dictionary<string, string>() { { "Authorization", $"Bearer {JwtTokenProvider.GenerateToken(userId, jwtSigningKey)}" } });
+                headers: new Dictionary<string, string>()
+                {
+                    {
+                        "Authorization",
+                        $"Bearer {JwtTokenProvider.GenerateToken(userId, jwtSigningKey)}"
+                    },
+                }
+            );
 
-            FaceCheck faceCheck = new(sourcePhotoClaimName: "photo", _verifiedIdOptions.FaceMatchConfidenceThreshold);
+            FaceCheck faceCheck = new(
+                sourcePhotoClaimName: "photo",
+                _verifiedIdOptions.FaceMatchConfidenceThreshold
+            );
 
-            Entities.Validation validation = new(allowRevoked: false, validateLinkedDomain: true, faceCheck: faceCheck);
+            Entities.Validation validation = new(
+                allowRevoked: false,
+                validateLinkedDomain: true,
+                faceCheck: faceCheck
+            );
 
             List<RequestCredential> credentialList = new()
             {
                 new RequestCredential(
                     type: "VerifiedEmployee",
                     purpose: "Verify users identity",
-                    configuration: new Entities.Configuration(validation))
+                    configuration: new Entities.Configuration(validation)
+                ),
             };
 
-            var request = new CreatePresentationRequest(
+            CreatePresentationRequest request = new CreatePresentationRequest(
                 authority: _verifiedIdOptions.DecentralizedIdentifier!,
                 registration: requestRegistration,
                 callback: callback,
                 requestedCredentials: credentialList,
                 includeQRCode: true,
-                includeReceipt: false);
+                includeReceipt: false
+            );
 
             HttpResponseMessage? response = null;
             try
             {
-                response = await _verifiedIdClient.PostAsJsonAsync(_verifiedIdOptions.CreatePresentationRequestUri, request, cancellationToken);
+                response = await _verifiedIdClient.PostAsJsonAsync(
+                    _verifiedIdOptions.CreatePresentationRequestUri,
+                    request,
+                    cancellationToken
+                );
                 response.EnsureSuccessStatusCode();
             }
             catch (HttpRequestException e)
             {
-                var responseContent = await response!.Content.ReadAsStringAsync(cancellationToken);
-                _logger.LogError(e, "Failed to create presentation request. Response: {ResponseContent}", responseContent);
-                if (responseContent.Contains(Strings.GRAPH_VERIFIED_ID_LICENSE_ERROR_MESSAGE, StringComparison.OrdinalIgnoreCase))
+                string responseContent = response?.Content is null
+                    ? "No response body"
+                    : await response.Content.ReadAsStringAsync(cancellationToken);
+
+                _logger.LogError(
+                    e,
+                    "Failed to create presentation request. Response: {ResponseContent}",
+                    responseContent
+                );
+                if (
+                    responseContent.Contains(
+                        Strings.GRAPH_VERIFIED_ID_LICENSE_ERROR_MESSAGE,
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                )
                 {
                     throw new PremiumFeatureBillingMissingException(responseContent, e);
                 }
                 throw new CreatePresentationException(e.Message, e);
             }
-            var createPresentationResponse = await response.Content.ReadFromJsonAsync<CreatePresentationResponse>(cancellationToken);
+            CreatePresentationResponse? createPresentationResponse =
+                await response.Content.ReadFromJsonAsync<CreatePresentationResponse>(
+                    cancellationToken
+                );
             if (createPresentationResponse == null)
             {
                 _logger.LogError("Failed to create presentation request. Parsed response is null.");
@@ -113,7 +155,13 @@ namespace MyWorkID.Server.Features.VerifiedId
         /// <param name="userId">The ID of the user.</param>
         public async Task HideQrCodeForUser(string userId)
         {
-            if (!_verifiedIdOptions.DisableQrCodeHide && _verifiedIdSignalRRepository.TryGetConnections(userId, out var connections))
+            if (
+                !_verifiedIdOptions.DisableQrCodeHide
+                && _verifiedIdSignalRRepository.TryGetConnections(
+                    userId,
+                    out HashSet<string>? connections
+                )
+            )
             {
                 await _hubContext.Clients.Clients(connections).HideQrCode();
             }
@@ -125,16 +173,20 @@ namespace MyWorkID.Server.Features.VerifiedId
         /// <param name="context">The HTTP context.</param>
         /// <returns>The parsed create presentation request callback.</returns>
         /// <exception cref="CreatePresentationException">Thrown when the callback parsing fails.</exception>
-        public async Task<CreatePresentationRequestCallback> ParseCreatePresentationRequestCallback(HttpContext context)
+        public async Task<CreatePresentationRequestCallback> ParseCreatePresentationRequestCallback(
+            HttpContext context
+        )
         {
             using StreamReader streamReader = new StreamReader(context.Request.Body);
-            var callbackBody = await streamReader.ReadToEndAsync();
+            string callbackBody = await streamReader.ReadToEndAsync();
 
             CreatePresentationRequestCallback? parsedBody = null;
 
             try
             {
-                parsedBody = JsonSerializer.Deserialize<CreatePresentationRequestCallback>(callbackBody);
+                parsedBody = JsonSerializer.Deserialize<CreatePresentationRequestCallback>(
+                    callbackBody
+                );
             }
             catch (Exception e) when (e is JsonException || e is ArgumentNullException)
             {
@@ -144,7 +196,10 @@ namespace MyWorkID.Server.Features.VerifiedId
 
             if (parsedBody == null)
             {
-                _logger.LogWarning("Parsed presentation callback is null. {CallbackBody}", callbackBody);
+                _logger.LogWarning(
+                    "Parsed presentation callback is null. {CallbackBody}",
+                    callbackBody
+                );
                 throw new CreatePresentationException();
             }
 
@@ -158,7 +213,10 @@ namespace MyWorkID.Server.Features.VerifiedId
         /// <param name="callbackBody">The callback body.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
         /// <exception cref="PresentationCallbackException">Thrown when the callback handling fails.</exception>
-        public async Task HandlePresentationCallback(string userId, CreatePresentationRequestCallback callbackBody)
+        public async Task HandlePresentationCallback(
+            string userId,
+            CreatePresentationRequestCallback callbackBody
+        )
         {
             if (callbackBody.RequestStatus == "request_retrieved")
             {
@@ -167,7 +225,10 @@ namespace MyWorkID.Server.Features.VerifiedId
 
             if (callbackBody.RequestStatus == "presentation_error" || callbackBody.Error != null)
             {
-                await NotifyVerificationFailed(userId, callbackBody.Error?.Message ?? "Verification failed");
+                await NotifyVerificationFailed(
+                    userId,
+                    callbackBody.Error?.Message ?? "Verification failed"
+                );
                 return;
             }
 
@@ -175,10 +236,14 @@ namespace MyWorkID.Server.Features.VerifiedId
             {
                 if (!string.Equals(callbackBody.State, userId, StringComparison.OrdinalIgnoreCase))
                 {
-                    throw new PresentationCallbackException($"Invalid state. Expected {userId} but state is {callbackBody.State}.");
+                    throw new PresentationCallbackException(
+                        $"Invalid state. Expected {userId} but state is {callbackBody.State}."
+                    );
                 }
 
-                User requestBody = CreateSetTargetSecurityAttributeRequestBody(DateTime.UtcNow.ToString("O"));
+                User requestBody = CreateSetTargetSecurityAttributeRequestBody(
+                    DateTime.UtcNow.ToString("O")
+                );
 
                 await _graphClient.Users[userId].PatchAsync(requestBody);
                 await NotifyVerificationSuccess(userId);
@@ -191,7 +256,12 @@ namespace MyWorkID.Server.Features.VerifiedId
         /// <param name="userId">The ID of the user.</param>
         private async Task NotifyVerificationSuccess(string userId)
         {
-            if (_verifiedIdSignalRRepository.TryGetConnections(userId, out var connections))
+            if (
+                _verifiedIdSignalRRepository.TryGetConnections(
+                    userId,
+                    out HashSet<string>? connections
+                )
+            )
             {
                 await _hubContext.Clients.Clients(connections).VerificationSuccess();
             }
@@ -204,7 +274,12 @@ namespace MyWorkID.Server.Features.VerifiedId
         /// <param name="errorMessage">The error message.</param>
         private async Task NotifyVerificationFailed(string userId, string errorMessage)
         {
-            if (_verifiedIdSignalRRepository.TryGetConnections(userId, out var connections))
+            if (
+                _verifiedIdSignalRRepository.TryGetConnections(
+                    userId,
+                    out HashSet<string>? connections
+                )
+            )
             {
                 await _hubContext.Clients.Clients(connections).VerificationFailed(errorMessage);
             }
@@ -222,18 +297,23 @@ namespace MyWorkID.Server.Features.VerifiedId
                 CustomSecurityAttributes = new CustomSecurityAttributeValue
                 {
                     AdditionalData = new Dictionary<string, object>
+                    {
                         {
+                            _verifiedIdOptions.TargetSecurityAttributeSet!,
+                            new CustomSecurityAttributeValue()
                             {
-                                _verifiedIdOptions.TargetSecurityAttributeSet!, new CustomSecurityAttributeValue()
+                                OdataType =
+                                    "#Microsoft.DirectoryServices.CustomSecurityAttributeValue",
+                                AdditionalData = new Dictionary<string, object>
                                 {
-                                    OdataType = "#Microsoft.DirectoryServices.CustomSecurityAttributeValue",
-                                    AdditionalData = new Dictionary<string, object>
                                     {
-                                        { _verifiedIdOptions.TargetSecurityAttribute!, targetSecurityAttributeValue }
-                                    }
-                                }
-                            },
+                                        _verifiedIdOptions.TargetSecurityAttribute!,
+                                        targetSecurityAttributeValue
+                                    },
+                                },
+                            }
                         },
+                    },
                 },
             };
         }

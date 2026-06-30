@@ -11,21 +11,16 @@
         /// Initializes a new instance of the <see cref="CreatePresentationException"/> class with a default error message.
         /// </summary>
         public CreatePresentationException()
-        : base(DEFAULT_MESSAGE)
-        {
-        }
+            : base(DEFAULT_MESSAGE) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CreatePresentationException"/> class with a specified error message.
         /// </summary>
         /// <param name="message">The error message that explains the reason for the exception.</param>
         public CreatePresentationException(string message)
-         : base(string.IsNullOrEmpty(message) ? DEFAULT_MESSAGE : message)
-        {
-        }
+            : base(string.IsNullOrEmpty(message) ? DEFAULT_MESSAGE : message) { }
 
-        public CreatePresentationException(string? message, Exception? innerException) : base(message, innerException)
-        {
-        }
+        public CreatePresentationException(string? message, Exception? innerException)
+            : base(message, innerException) { }
     }
 }

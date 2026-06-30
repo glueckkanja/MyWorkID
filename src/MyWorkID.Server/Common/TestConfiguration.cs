@@ -10,7 +10,9 @@
         /// </summary>
         /// <param name="configurationBuilder">The configuration builder</param>
         /// <returns>The modified <see cref="IConfigurationBuilder"/></returns>
-        public static IConfigurationBuilder AddTestConfiguration(this IConfigurationBuilder configurationBuilder)
+        public static IConfigurationBuilder AddTestConfiguration(
+            this IConfigurationBuilder configurationBuilder
+        )
         {
             if (_current.Value is { } configure)
             {

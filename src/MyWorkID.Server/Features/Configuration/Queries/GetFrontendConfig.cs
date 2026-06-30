@@ -1,7 +1,7 @@
-﻿using MyWorkID.Server.Common;
-using MyWorkID.Server.Options;
+﻿using System.Security.Claims;
 using Microsoft.Extensions.Options;
-using System.Security.Claims;
+using MyWorkID.Server.Common;
+using MyWorkID.Server.Options;
 
 namespace MyWorkID.Server.Features.Configuration.Queries
 {
@@ -16,8 +16,9 @@ namespace MyWorkID.Server.Features.Configuration.Queries
         /// <param name="endpoints">The endpoint route builder.</param>
         public static void MapEndpoint(IEndpointRouteBuilder endpoints)
         {
-            endpoints.MapGetWithOpenApi<FrontendOptions>("/api/config/frontend", Handle)
-            .WithTags(nameof(GetFrontendConfig));
+            endpoints
+                .MapGetWithOpenApi<FrontendOptions>("/api/config/frontend", Handle)
+                .WithTags(nameof(GetFrontendConfig));
         }
 
         /// <summary>
@@ -27,8 +28,11 @@ namespace MyWorkID.Server.Features.Configuration.Queries
         /// <param name="frontendOptions">The frontend options.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The frontend configuration settings.</returns>
-        public static IResult Handle(ClaimsPrincipal user, IOptions<FrontendOptions> frontendOptions,
-            CancellationToken cancellationToken)
+        public static IResult Handle(
+            ClaimsPrincipal user,
+            IOptions<FrontendOptions> frontendOptions,
+            CancellationToken cancellationToken
+        )
         {
             return TypedResults.Ok(frontendOptions.Value);
         }

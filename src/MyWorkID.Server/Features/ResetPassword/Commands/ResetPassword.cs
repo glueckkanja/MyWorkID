@@ -22,7 +22,8 @@ namespace MyWorkID.Server.Features.ResetPassword.Commands
         /// <param name="endpoints">The endpoint route builder.</param>
         public static void MapEndpoint(IEndpointRouteBuilder endpoints)
         {
-            endpoints.MapPutWithOpenApi("api/me/resetPassword", HandleAsync)
+            endpoints
+                .MapPutWithOpenApi("api/me/resetPassword", HandleAsync)
                 .RequireAuthorization()
                 .AddEndpointFilter<CheckResetPasswordAppConfigurationEndpointFilter>()
                 .AddEndpointFilter<ResetPasswordAuthContextEndpointFilter>()
@@ -40,20 +41,27 @@ namespace MyWorkID.Server.Features.ResetPassword.Commands
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A result indicating the success of the password reset operation.</returns>
         [Authorize(Roles = Strings.RESET_PASSWORD_ROLE)]
-        public static async Task<IResult> HandleAsync([FromBody] PasswordResetRequest passwordResetRequest,
-            ClaimsPrincipal user, GraphServiceClient graphClient, CancellationToken cancellationToken)
+        public static async Task<IResult> HandleAsync(
+            [FromBody] PasswordResetRequest passwordResetRequest,
+            ClaimsPrincipal user,
+            GraphServiceClient graphClient,
+            CancellationToken cancellationToken
+        )
         {
             string userId = user.GetObjectId()!;
-            await graphClient.Users[userId].PatchAsync(
-                new User
-                {
-                    PasswordProfile = new PasswordProfile
+            await graphClient
+                .Users[userId]
+                .PatchAsync(
+                    new User
                     {
-                        Password = passwordResetRequest.NewPassword,
-                        ForceChangePasswordNextSignIn = false
-                    }
-                },
-                cancellationToken: cancellationToken);
+                        PasswordProfile = new PasswordProfile
+                        {
+                            Password = passwordResetRequest.NewPassword,
+                            ForceChangePasswordNextSignIn = false,
+                        },
+                    },
+                    cancellationToken: cancellationToken
+                );
             return TypedResults.Ok();
         }
     }
