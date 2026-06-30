@@ -14,8 +14,9 @@ namespace MyWorkID.Server.Features.Health.Queries
         /// <param name="endpoints">The endpoint route builder.</param>
         public static void MapEndpoint(IEndpointRouteBuilder endpoints)
         {
-            endpoints.MapGetWithOpenApi<FrontendOptions>("/api/general", HandleAsync)
-            .WithTags(nameof(CheckHealth));
+            endpoints
+                .MapGetWithOpenApi<FrontendOptions>("/api/general", HandleAsync)
+                .WithTags(nameof(CheckHealth));
         }
 
         /// <summary>

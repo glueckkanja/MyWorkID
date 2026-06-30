@@ -1,5 +1,5 @@
-﻿using MyWorkID.Server.Common;
-using System.Reflection;
+﻿using System.Reflection;
+using MyWorkID.Server.Common;
 
 namespace MyWorkID.Server.Kernel
 {
@@ -16,18 +16,24 @@ namespace MyWorkID.Server.Kernel
         /// <param name="endpoints">The endpoint route builder.</param>
         /// <param name="assemblies">The assemblies to search for endpoints.</param>
         /// <exception cref="ArgumentException">Thrown when no assemblies are provided.</exception>
-        public static void RegisterEndpoints(this IEndpointRouteBuilder endpoints, params Assembly[] assemblies)
+        public static void RegisterEndpoints(
+            this IEndpointRouteBuilder endpoints,
+            params Assembly[] assemblies
+        )
         {
             if (assemblies.Length == 0)
             {
-                throw new ArgumentException("At least one assembly must be provided.", nameof(assemblies));
+                throw new ArgumentException(
+                    "At least one assembly must be provided.",
+                    nameof(assemblies)
+                );
             }
 
-            var endpointTypes = GetEndpointTypes(assemblies);
+            IEnumerable<Type> endpointTypes = GetEndpointTypes(assemblies);
 
-            foreach (var type in endpointTypes)
+            foreach (Type type in endpointTypes)
             {
-                var method = GetMapEndpointMethod(type);
+                MethodInfo? method = GetMapEndpointMethod(type);
                 method?.Invoke(null, new object[] { endpoints });
             }
         }
@@ -39,9 +45,12 @@ namespace MyWorkID.Server.Kernel
         /// <returns>A collection of types that implement the <see cref="IEndpoint"/> interface.</returns>
         private static IEnumerable<Type> GetEndpointTypes(params Assembly[] assemblies)
         {
-            return assemblies.SelectMany(x => x.GetTypes())
-                .Where(x => _endpointType.IsAssignableFrom(x) &&
-                            x is { IsInterface: false, IsAbstract: false });
+            return assemblies
+                .SelectMany(x => x.GetTypes())
+                .Where(x =>
+                    _endpointType.IsAssignableFrom(x)
+                    && x is { IsInterface: false, IsAbstract: false }
+                );
         }
 
         /// <summary>
@@ -51,8 +60,10 @@ namespace MyWorkID.Server.Kernel
         /// <returns>The method info for the map endpoint method, or null if not found.</returns>
         private static MethodInfo? GetMapEndpointMethod(Type type)
         {
-            return type.GetMethod(nameof(IEndpoint.MapEndpoint),
-                BindingFlags.Static | BindingFlags.Public);
+            return type.GetMethod(
+                nameof(IEndpoint.MapEndpoint),
+                BindingFlags.Static | BindingFlags.Public
+            );
         }
     }
 }

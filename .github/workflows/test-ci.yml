@@ -8,7 +8,7 @@ permissions:
   checks: write
   
 env:
-  DOTNET_CORE_VERSION: 8.0.x
+  DOTNET_CORE_VERSION: 10.0.x
 
 jobs:
   run-tests:

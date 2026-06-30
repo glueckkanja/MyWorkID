@@ -26,7 +26,7 @@ namespace MyWorkID.Server.IntegrationTests.Features.UserRiskState
         public async Task GetUserRisk_WithoutAuth_Returns401()
         {
             var unauthenticatedClient = _testApplicationFactory.CreateDefaultClient();
-            var response = await unauthenticatedClient.GetAsync(_baseUrl);
+            var response = await unauthenticatedClient.GetAsync(_baseUrl, TestContext.Current.CancellationToken);
             response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         }
 
@@ -35,7 +35,7 @@ namespace MyWorkID.Server.IntegrationTests.Features.UserRiskState
         {
             var provider = new TestClaimsProvider();
             var client = _testApplicationFactory.CreateClientWithTestAuth(provider);
-            var response = await client.GetAsync(_baseUrl);
+            var response = await client.GetAsync(_baseUrl, TestContext.Current.CancellationToken);
             response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         }
 
@@ -43,7 +43,7 @@ namespace MyWorkID.Server.IntegrationTests.Features.UserRiskState
         public async Task GetUserRisk_GraphDoesNotReturnRiskyUser_Returns404()
         {
             var client = TestHelper.CreateClientWithRole(_testApplicationFactory, provider => provider.WithRandomSubAndOid());
-            var response = await client.GetAsync(_baseUrl);
+            var response = await client.GetAsync(_baseUrl, TestContext.Current.CancellationToken);
             response.StatusCode.Should().Be(HttpStatusCode.NotFound);
         }
 
@@ -54,9 +54,9 @@ namespace MyWorkID.Server.IntegrationTests.Features.UserRiskState
             IRequestAdapter requestAdapter = GetGraphRequestAdapterForRiskyUser(riskyUser);
             var client = TestHelper.CreateClientWithRole(_testApplicationFactory,
                 provider => provider.WithRandomSubAndOid(), requestAdapter);
-            var response = await client.GetAsync(_baseUrl);
+            var response = await client.GetAsync(_baseUrl, TestContext.Current.CancellationToken);
             response.StatusCode.Should().Be(HttpStatusCode.OK);
-            var getRiskStateResponse = await response.Content.ReadFromJsonAsync<GetRiskStateTestResponse>();
+            var getRiskStateResponse = await response.Content.ReadFromJsonAsync<GetRiskStateTestResponse>(TestContext.Current.CancellationToken);
             getRiskStateResponse?.RiskState.Should().Be(RiskState.None.ToString());
             getRiskStateResponse?.RiskLevel.Should().BeNull();
         }
@@ -71,9 +71,9 @@ namespace MyWorkID.Server.IntegrationTests.Features.UserRiskState
             };
             IRequestAdapter requestAdapter = GetGraphRequestAdapterForRiskyUser(riskyUser);
             var client = TestHelper.CreateClientWithRole(_testApplicationFactory, provider => provider.WithRandomSubAndOid(), requestAdapter);
-            var response = await client.GetAsync(_baseUrl);
+            var response = await client.GetAsync(_baseUrl, TestContext.Current.CancellationToken);
             response.StatusCode.Should().Be(HttpStatusCode.OK);
-            var getRiskStateResponse = await response.Content.ReadFromJsonAsync<GetRiskStateTestResponse>();
+            var getRiskStateResponse = await response.Content.ReadFromJsonAsync<GetRiskStateTestResponse>(TestContext.Current.CancellationToken);
             getRiskStateResponse?.RiskState.Should().Be(RiskState.AtRisk.ToString());
             getRiskStateResponse?.RiskLevel.Should().Be(RiskLevel.Medium.ToString());
         }
@@ -88,9 +88,9 @@ namespace MyWorkID.Server.IntegrationTests.Features.UserRiskState
             };
             IRequestAdapter requestAdapter = GetGraphRequestAdapterForRiskyUser(riskyUser);
             var client = TestHelper.CreateClientWithRole(_testApplicationFactory, provider => provider.WithRandomSubAndOid(), requestAdapter);
-            var response = await client.GetAsync(_baseUrl);
+            var response = await client.GetAsync(_baseUrl, TestContext.Current.CancellationToken);
             response.StatusCode.Should().Be(HttpStatusCode.OK);
-            var getRiskStateResponse = await response.Content.ReadFromJsonAsync<GetRiskStateTestResponse>();
+            var getRiskStateResponse = await response.Content.ReadFromJsonAsync<GetRiskStateTestResponse>(TestContext.Current.CancellationToken);
             getRiskStateResponse?.RiskState.Should().Be(RiskState.ConfirmedCompromised.ToString());
             getRiskStateResponse?.RiskLevel.Should().Be(RiskLevel.High.ToString());
         }
@@ -104,7 +104,7 @@ namespace MyWorkID.Server.IntegrationTests.Features.UserRiskState
             };
             IRequestAdapter requestAdapter = GetGraphRequestAdapterForException(oDataError);
             var client = TestHelper.CreateClientWithRole(_testApplicationFactory, provider => provider.WithRandomSubAndOid(), requestAdapter);
-            var response = await client.GetAsync(_baseUrl);
+            var response = await client.GetAsync(_baseUrl, TestContext.Current.CancellationToken);
             response.StatusCode.Should().Be(HttpStatusCode.NotFound);
         }
 
@@ -113,7 +113,7 @@ namespace MyWorkID.Server.IntegrationTests.Features.UserRiskState
         {
             IRequestAdapter requestAdapter = GetGraphRequestAdapterForException(new ODataError());
             var client = TestHelper.CreateClientWithRole(_testApplicationFactory, provider => provider.WithRandomSubAndOid(), requestAdapter);
-            var response = await client.GetAsync(_baseUrl);
+            var response = await client.GetAsync(_baseUrl, TestContext.Current.CancellationToken);
             response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
         }
 

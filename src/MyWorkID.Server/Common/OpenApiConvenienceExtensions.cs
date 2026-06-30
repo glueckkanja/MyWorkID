@@ -28,9 +28,8 @@
         public static RouteHandlerBuilder MapGetWithOpenApi<T>(
             this IEndpointRouteBuilder endpoints,
             string pattern,
-            Delegate handler) =>
-            endpoints.MapGet(pattern, handler)
-                .ProducesGet<T>();
+            Delegate handler
+        ) => endpoints.MapGet(pattern, handler).ProducesGet<T>();
 
         /// <summary>
         /// Configures the response types for POST endpoints that create a single item.
@@ -52,8 +51,10 @@
         public static RouteHandlerBuilder MapPostWithCreatedOpenApi(
             this IEndpointRouteBuilder endpoints,
             string pattern,
-            Delegate handler) =>
-            endpoints.MapPost(pattern, handler)
+            Delegate handler
+        ) =>
+            endpoints
+                .MapPost(pattern, handler)
                 .ProducesPost()
                 .Produces(StatusCodes.Status201Created);
 
@@ -67,8 +68,10 @@
         public static RouteHandlerBuilder MapPostWithUpdatedOpenApi(
             this IEndpointRouteBuilder endpoints,
             string pattern,
-            Delegate handler) =>
-            endpoints.MapPost(pattern, handler)
+            Delegate handler
+        ) =>
+            endpoints
+                .MapPost(pattern, handler)
                 .ProducesPost()
                 .Produces(StatusCodes.Status204NoContent);
 
@@ -94,9 +97,8 @@
         public static RouteHandlerBuilder MapPutWithOpenApi(
             this IEndpointRouteBuilder endpoints,
             string pattern,
-            Delegate handler) =>
-            endpoints.MapPut(pattern, handler)
-                .ProducesPut();
+            Delegate handler
+        ) => endpoints.MapPut(pattern, handler).ProducesPut();
 
         /// <summary>
         /// Configures the response types for DELETE endpoints that delete a single item.
@@ -120,8 +122,7 @@
         public static RouteHandlerBuilder MapDeleteWithOpenApi(
             this IEndpointRouteBuilder endpoints,
             string pattern,
-            Delegate handler) =>
-            endpoints.MapDelete(pattern, handler)
-                .ProducesDelete();
+            Delegate handler
+        ) => endpoints.MapDelete(pattern, handler).ProducesDelete();
     }
 }

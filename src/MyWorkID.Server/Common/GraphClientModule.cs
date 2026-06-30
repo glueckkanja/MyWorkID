@@ -14,9 +14,20 @@ namespace MyWorkID.Server.Common
         /// <param name="services">The service collection.</param>
         /// <param name="configurationManager">The configuration manager.</param>
         /// <param name="environment">The web host environment.</param>
-        public static void ConfigureServices(IServiceCollection services, IConfigurationManager configurationManager, IWebHostEnvironment environment)
+        public static void ConfigureServices(
+            IServiceCollection services,
+            IConfigurationManager configurationManager,
+            IWebHostEnvironment environment
+        )
         {
-            services.AddSingleton(new GraphServiceClient(new ChainedTokenCredential(new ManagedIdentityCredential(), new DefaultAzureCredential())));
+            services.AddSingleton(
+                new GraphServiceClient(
+                    new ChainedTokenCredential(
+                        new ManagedIdentityCredential(ManagedIdentityId.SystemAssigned),
+                        new DefaultAzureCredential()
+                    )
+                )
+            );
         }
     }
 }

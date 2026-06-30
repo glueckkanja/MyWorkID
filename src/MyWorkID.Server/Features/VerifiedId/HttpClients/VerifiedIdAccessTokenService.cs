@@ -9,7 +9,10 @@ namespace MyWorkID.Server.Features.VerifiedId.HttpClients
     {
         private AccessToken? _cachedAccessToken;
         private readonly TokenCredential _tokenCredential;
-        private static readonly string[] scopes = new[] { "3db474b9-6a0c-4840-96ac-1fceb342124f/.default" };
+        private static readonly string[] scopes = new[]
+        {
+            "3db474b9-6a0c-4840-96ac-1fceb342124f/.default",
+        };
 
         /// <summary>
         /// Initializes a new instance of the <see cref="VerifiedIdAccessTokenService"/> class with the specified token credential.
@@ -25,11 +28,19 @@ namespace MyWorkID.Server.Features.VerifiedId.HttpClients
         /// </summary>
         /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
         /// <returns>The access token.</returns>
-        public async Task<AccessToken> GetAccessTokenAsync(CancellationToken cancellationToken = default)
+        public async Task<AccessToken> GetAccessTokenAsync(
+            CancellationToken cancellationToken = default
+        )
         {
-            if (!_cachedAccessToken.HasValue || (_cachedAccessToken.Value.ExpiresOn - DateTimeOffset.Now).TotalMinutes < 5)
+            if (
+                !_cachedAccessToken.HasValue
+                || (_cachedAccessToken.Value.ExpiresOn - DateTimeOffset.Now).TotalMinutes < 5
+            )
             {
-                _cachedAccessToken = await _tokenCredential.GetTokenAsync(new TokenRequestContext(scopes), cancellationToken);
+                _cachedAccessToken = await _tokenCredential.GetTokenAsync(
+                    new TokenRequestContext(scopes),
+                    cancellationToken
+                );
             }
 
             return _cachedAccessToken.Value;

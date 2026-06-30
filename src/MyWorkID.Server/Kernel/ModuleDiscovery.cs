@@ -1,5 +1,5 @@
-﻿using MyWorkID.Server.Common;
-using System.Reflection;
+﻿using System.Reflection;
+using MyWorkID.Server.Common;
 
 namespace MyWorkID.Server.Kernel
 {
@@ -18,18 +18,26 @@ namespace MyWorkID.Server.Kernel
         /// <param name="environment">The web host environment.</param>
         /// <param name="assemblies">The assemblies to search for modules.</param>
         /// <exception cref="ArgumentException">Thrown when no assemblies are provided.</exception>
-        public static void ConfigureModules(this IServiceCollection services, IConfigurationManager configurationManager, IWebHostEnvironment environment, params Assembly[] assemblies)
+        public static void ConfigureModules(
+            this IServiceCollection services,
+            IConfigurationManager configurationManager,
+            IWebHostEnvironment environment,
+            params Assembly[] assemblies
+        )
         {
             if (assemblies.Length == 0)
             {
-                throw new ArgumentException("At least one assembly must be provided.", nameof(assemblies));
+                throw new ArgumentException(
+                    "At least one assembly must be provided.",
+                    nameof(assemblies)
+                );
             }
 
-            var moduleTypes = GetModuleTypes(assemblies);
+            IEnumerable<Type> moduleTypes = GetModuleTypes(assemblies);
 
-            foreach (var type in moduleTypes)
+            foreach (Type type in moduleTypes)
             {
-                var method = GetModuleConfigureMethod(type);
+                MethodInfo? method = GetModuleConfigureMethod(type);
                 method?.Invoke(null, new object[] { services, configurationManager, environment });
             }
         }
@@ -41,9 +49,12 @@ namespace MyWorkID.Server.Kernel
         /// <returns>A collection of types that implement the <see cref="IModule"/> interface.</returns>
         private static IEnumerable<Type> GetModuleTypes(params Assembly[] assemblies)
         {
-            return assemblies.SelectMany(x => x.GetTypes())
-                .Where(x => _moduleType.IsAssignableFrom(x) &&
-                            x is { IsInterface: false, IsAbstract: false });
+            return assemblies
+                .SelectMany(x => x.GetTypes())
+                .Where(x =>
+                    _moduleType.IsAssignableFrom(x)
+                    && x is { IsInterface: false, IsAbstract: false }
+                );
         }
 
         /// <summary>
@@ -53,8 +64,10 @@ namespace MyWorkID.Server.Kernel
         /// <returns>The method info for the configure method, or null if not found.</returns>
         private static MethodInfo? GetModuleConfigureMethod(Type type)
         {
-            return type.GetMethod(nameof(IModule.ConfigureServices),
-                BindingFlags.Static | BindingFlags.Public);
+            return type.GetMethod(
+                nameof(IModule.ConfigureServices),
+                BindingFlags.Static | BindingFlags.Public
+            );
         }
     }
 }

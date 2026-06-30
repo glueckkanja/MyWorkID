@@ -31,9 +31,9 @@ namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
             var provider = new TestClaimsProvider();
             var testApp = new TestApplicationFactory();
             var client = testApp.WithAuthenticationVerifiedId(provider).CreateClient();
-            var response = await client.PostAsync(_baseUrl, null);
+            var response = await client.PostAsync(_baseUrl, null, TestContext.Current.CancellationToken);
             response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
-            var problemDetails = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+            var problemDetails = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>(TestContext.Current.CancellationToken);
             problemDetails.Should().NotBeNull();
             problemDetails!.Detail.Should().Contain(Strings.ERROR_MISSING_OR_INVALID_SETTINGS_VERIFIED_ID);
         }
@@ -108,9 +108,9 @@ namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
         {
             testApp.ConfigureConfiguration(cb => cb.AddInMemoryCollection(validSettings));
             var client = testApp.WithAuthenticationVerifiedId(provider).CreateClient();
-            var response = await client.PostAsync(_baseUrl, null);
+            var response = await client.PostAsync(_baseUrl, null, TestContext.Current.CancellationToken);
             response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
-            var problemDetails = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+            var problemDetails = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>(TestContext.Current.CancellationToken);
             problemDetails.Should().NotBeNull();
             return problemDetails!;
         }
@@ -120,7 +120,7 @@ namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
         {
             var provider = new TestClaimsProvider();
             var client = _testApplicationFactory.WithAuthenticationVerifiedId(provider).CreateClient();
-            var response = await client.PostAsync(_baseUrl, null);
+            var response = await client.PostAsync(_baseUrl, null, TestContext.Current.CancellationToken);
             response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         }
 
@@ -136,7 +136,7 @@ namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
                 provider,
                 verifiedIdSignalRRepository,
                 hubContext).CreateClient();
-            var response = await client.PostAsync(_baseUrl, null);
+            var response = await client.PostAsync(_baseUrl, null, TestContext.Current.CancellationToken);
 
             response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         }
@@ -157,7 +157,7 @@ namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
             {
                 RequestStatus = "request_retrieved"
             };
-            var response = await client.PostAsJsonAsync(_baseUrl, createPresentationRequestCallback);
+            var response = await client.PostAsJsonAsync(_baseUrl, createPresentationRequestCallback, TestContext.Current.CancellationToken);
 
             response.StatusCode.Should().Be(HttpStatusCode.NoContent);
         }
@@ -179,7 +179,7 @@ namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
                 RequestStatus = "presentation_error",
 
             };
-            var response = await client.PostAsJsonAsync(_baseUrl, createPresentationRequestCallback);
+            var response = await client.PostAsJsonAsync(_baseUrl, createPresentationRequestCallback, TestContext.Current.CancellationToken);
 
             response.StatusCode.Should().Be(HttpStatusCode.NoContent);
         }
@@ -202,7 +202,7 @@ namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
                 RequestStatus = "presentation_verified",
                 State = Guid.NewGuid().ToString(),
             };
-            var response = await client.PostAsJsonAsync(_baseUrl, createPresentationRequestCallback);
+            var response = await client.PostAsJsonAsync(_baseUrl, createPresentationRequestCallback, TestContext.Current.CancellationToken);
 
             response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
         }
@@ -230,7 +230,7 @@ namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
 
             CreatePresentationRequestCallback createPresentationRequestCallback = GetValidPresentationRequestCallback(userId);
 
-            var response = await client.PostAsJsonAsync(_baseUrl, createPresentationRequestCallback);
+            var response = await client.PostAsJsonAsync(_baseUrl, createPresentationRequestCallback, TestContext.Current.CancellationToken);
 
             response.StatusCode.Should().Be(HttpStatusCode.NoContent);
 

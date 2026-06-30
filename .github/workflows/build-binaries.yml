@@ -18,7 +18,7 @@ permissions:
 
 env:
   PROJECT_ROOT_DIRECTORY: "./src/MyWorkID.Server"
-  DOTNET_VERSION: "8.0.x"
+  DOTNET_VERSION: "10.0.x"
 
 jobs:
   build:

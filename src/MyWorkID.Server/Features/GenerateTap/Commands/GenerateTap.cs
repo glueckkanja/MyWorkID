@@ -22,7 +22,8 @@ namespace MyWorkID.Server.Features.GenerateTap.Commands
         /// <param name="endpoints">The endpoint route builder.</param>
         public static void MapEndpoint(IEndpointRouteBuilder endpoints)
         {
-            endpoints.MapPutWithOpenApi("api/me/generatetap", HandleAsync)
+            endpoints
+                .MapPutWithOpenApi("api/me/generatetap", HandleAsync)
                 .RequireAuthorization()
                 .AddEndpointFilter<CheckGenerateTapAppConfigurationEndpointFilter>()
                 .AddEndpointFilter<GenerateTapAuthContextEndpointFilter>()
@@ -38,12 +39,17 @@ namespace MyWorkID.Server.Features.GenerateTap.Commands
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The generated TAP or an error response.</returns>
         [Authorize(Roles = Strings.CREATE_TAP_ROLE)]
-        public static async Task<IResult> HandleAsync(ClaimsPrincipal user, GraphServiceClient graphClient,
-            IOptions<TapOptions> tapOptions, CancellationToken cancellationToken)
+        public static async Task<IResult> HandleAsync(
+            ClaimsPrincipal user,
+            GraphServiceClient graphClient,
+            IOptions<TapOptions> tapOptions,
+            CancellationToken cancellationToken
+        )
         {
-            var userId = user.GetObjectId();
-            var tapSettings = tapOptions.Value;
-            var tapRequest = new TemporaryAccessPassAuthenticationMethod();
+            string? userId = user.GetObjectId();
+            TapOptions tapSettings = tapOptions.Value;
+            TemporaryAccessPassAuthenticationMethod tapRequest =
+                new TemporaryAccessPassAuthenticationMethod();
 
             if (tapSettings.LifetimeInMinutes.HasValue)
             {
@@ -55,12 +61,18 @@ namespace MyWorkID.Server.Features.GenerateTap.Commands
                 tapRequest.IsUsableOnce = tapSettings.IsUsableOnce;
             }
 
-            var tapResponse = await graphClient.Users[userId].Authentication.TemporaryAccessPassMethods.PostAsync(
-                tapRequest,
-                cancellationToken: cancellationToken);
+            TemporaryAccessPassAuthenticationMethod? tapResponse = await graphClient
+                .Users[userId]
+                .Authentication.TemporaryAccessPassMethods.PostAsync(
+                    tapRequest,
+                    cancellationToken: cancellationToken
+                );
             if (tapResponse?.TemporaryAccessPass == null)
             {
-                return TypedResults.Problem(detail: Strings.ERROR_UNABLE_TO_GENERATE_TAP, statusCode: StatusCodes.Status500InternalServerError);
+                return TypedResults.Problem(
+                    detail: Strings.ERROR_UNABLE_TO_GENERATE_TAP,
+                    statusCode: StatusCodes.Status500InternalServerError
+                );
             }
             return TypedResults.Ok(new GenerateTapResponse(tapResponse.TemporaryAccessPass));
         }

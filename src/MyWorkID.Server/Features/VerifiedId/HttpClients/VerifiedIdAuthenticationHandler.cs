@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using Azure.Core;
 
 namespace MyWorkID.Server.Features.VerifiedId.HttpClients
 {
@@ -13,7 +14,9 @@ namespace MyWorkID.Server.Features.VerifiedId.HttpClients
         /// Initializes a new instance of the <see cref="VerifiedIdAuthenticationHandler"/> class with the specified access token service.
         /// </summary>
         /// <param name="verifiedIdAccessTokenService">The service used to retrieve access tokens.</param>
-        public VerifiedIdAuthenticationHandler(VerifiedIdAccessTokenService verifiedIdAccessTokenService)
+        public VerifiedIdAuthenticationHandler(
+            VerifiedIdAccessTokenService verifiedIdAccessTokenService
+        )
         {
             _verifiedIdAccessTokenService = verifiedIdAccessTokenService;
         }
@@ -24,12 +27,20 @@ namespace MyWorkID.Server.Features.VerifiedId.HttpClients
         /// <param name="request">The HTTP request message to send.</param>
         /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
         /// <returns>The HTTP response message.</returns>
-        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        protected override async Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken
+        )
         {
             if (!request.Headers.Contains(HttpRequestHeader.Authorization.ToString()))
             {
-                var token = await _verifiedIdAccessTokenService.GetAccessTokenAsync(cancellationToken);
-                request.Headers.Add(HttpRequestHeader.Authorization.ToString(), $"Bearer {token.Token}");
+                AccessToken token = await _verifiedIdAccessTokenService.GetAccessTokenAsync(
+                    cancellationToken
+                );
+                request.Headers.Add(
+                    HttpRequestHeader.Authorization.ToString(),
+                    $"Bearer {token.Token}"
+                );
             }
 
             return await base.SendAsync(request, cancellationToken);

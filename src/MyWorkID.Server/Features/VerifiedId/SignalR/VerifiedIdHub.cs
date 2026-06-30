@@ -24,8 +24,11 @@ namespace MyWorkID.Server.Features.VerifiedId.SignalR
         /// <returns>A task that represents the asynchronous operation.</returns>
         public override Task OnConnectedAsync()
         {
-            var httpContext = Context.GetHttpContext();
-            if (httpContext == null || !httpContext.Request.Query.TryGetValue("access_token", out var userObjectId))
+            HttpContext? httpContext = Context.GetHttpContext();
+            if (
+                httpContext == null
+                || !httpContext.Request.Query.TryGetValue("access_token", out var userObjectId)
+            )
             {
                 throw new InvalidOperationException("User object id is missing");
             }
@@ -43,7 +46,10 @@ namespace MyWorkID.Server.Features.VerifiedId.SignalR
         {
             var httpContext = Context.GetHttpContext();
             string? userObjectId = null;
-            if (httpContext != null && httpContext.Request.Query.TryGetValue("access_token", out var userObjectIdRaw))
+            if (
+                httpContext != null
+                && httpContext.Request.Query.TryGetValue("access_token", out var userObjectIdRaw)
+            )
             {
                 userObjectId = userObjectIdRaw.ToString();
             }

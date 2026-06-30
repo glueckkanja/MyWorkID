@@ -39,7 +39,12 @@ namespace MyWorkID.Server.Features.VerifiedId.Entities
         /// <param name="logoUrl">The URL of the client's logo.</param>
         /// <param name="termsOfServiceUrl">The URL of the terms of service.</param>
         [JsonConstructor]
-        public RequestRegistration(string clientName, string? purpose = null, string? logoUrl = null, string? termsOfServiceUrl = null)
+        public RequestRegistration(
+            string clientName,
+            string? purpose = null,
+            string? logoUrl = null,
+            string? termsOfServiceUrl = null
+        )
         {
             ClientName = clientName;
             Purpose = purpose;
@@ -47,6 +52,7 @@ namespace MyWorkID.Server.Features.VerifiedId.Entities
             TermsOfServiceUrl = termsOfServiceUrl;
         }
     }
+
     /// <summary>
     /// Represents the callback details for a presentation request.
     /// </summary>
@@ -84,6 +90,7 @@ namespace MyWorkID.Server.Features.VerifiedId.Entities
             Headers = headers;
         }
     }
+
     /// <summary>
     /// Represents the face check details for a presentation request.
     /// </summary>
@@ -144,7 +151,11 @@ namespace MyWorkID.Server.Features.VerifiedId.Entities
         /// <param name="validateLinkedDomain">Indicates whether to validate the linked domain.</param>
         /// <param name="faceCheck">The face check details.</param>
         [JsonConstructor]
-        public Validation(bool? allowRevoked = false, bool? validateLinkedDomain = false, FaceCheck? faceCheck = null)
+        public Validation(
+            bool? allowRevoked = false,
+            bool? validateLinkedDomain = false,
+            FaceCheck? faceCheck = null
+        )
         {
             AllowRevoked = allowRevoked;
             ValidateLinkedDomain = validateLinkedDomain;
@@ -211,7 +222,12 @@ namespace MyWorkID.Server.Features.VerifiedId.Entities
         /// <param name="contains">The substring that the claim must contain.</param>
         /// <param name="startsWith">The prefix that the claim must start with.</param>
         [JsonConstructor]
-        public Constraints(string claimName, IEnumerable<string>? values = null, string? contains = null, string? startsWith = null)
+        public Constraints(
+            string claimName,
+            IEnumerable<string>? values = null,
+            string? contains = null,
+            string? startsWith = null
+        )
         {
             ClaimName = claimName;
             Values = values;
@@ -219,6 +235,7 @@ namespace MyWorkID.Server.Features.VerifiedId.Entities
             StartsWith = startsWith;
         }
     }
+
     /// <summary>
     /// Represents the details of a credential requested in a presentation request.
     /// </summary>
@@ -263,7 +280,13 @@ namespace MyWorkID.Server.Features.VerifiedId.Entities
         /// <param name="configuration">The configuration details for the requested credential.</param>
         /// <param name="constraints">The constraints for the requested credential.</param>
         [JsonConstructor]
-        public RequestCredential(string type, string? purpose = null, IEnumerable<string>? acceptedIssuers = null, Configuration? configuration = null, Constraints? constraints = null)
+        public RequestCredential(
+            string type,
+            string? purpose = null,
+            IEnumerable<string>? acceptedIssuers = null,
+            Configuration? configuration = null,
+            Constraints? constraints = null
+        )
         {
             Type = type;
             Purpose = purpose;
@@ -326,7 +349,14 @@ namespace MyWorkID.Server.Features.VerifiedId.Entities
         /// <param name="includeQRCode">Indicates whether to include a QR code in the presentation request.</param>
         /// <param name="includeReceipt">Indicates whether to include a receipt in the presentation request.</param>
         [JsonConstructor]
-        public CreatePresentationRequest(string authority, RequestRegistration registration, Callback callback, IEnumerable<RequestCredential> requestedCredentials, bool? includeQRCode = true, bool? includeReceipt = false)
+        public CreatePresentationRequest(
+            string authority,
+            RequestRegistration registration,
+            Callback callback,
+            IEnumerable<RequestCredential> requestedCredentials,
+            bool? includeQRCode = true,
+            bool? includeReceipt = false
+        )
         {
             IncludeQRCode = includeQRCode;
             IncludeReceipt = includeReceipt;

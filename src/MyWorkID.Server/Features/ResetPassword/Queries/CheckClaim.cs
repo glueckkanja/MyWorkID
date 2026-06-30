@@ -1,6 +1,6 @@
-﻿using MyWorkID.Server.Common;
+﻿using Microsoft.AspNetCore.Authorization;
+using MyWorkID.Server.Common;
 using MyWorkID.Server.Filters;
-using Microsoft.AspNetCore.Authorization;
 
 namespace MyWorkID.Server.Features.ResetPassword.Queries
 {
@@ -15,7 +15,8 @@ namespace MyWorkID.Server.Features.ResetPassword.Queries
         /// <param name="endpoints">The endpoint route builder.</param>
         public static void MapEndpoint(IEndpointRouteBuilder endpoints)
         {
-            endpoints.MapGetWithOpenApi<IResult>("/api/me/resetPassword/checkClaim", Handle)
+            endpoints
+                .MapGetWithOpenApi<IResult>("/api/me/resetPassword/checkClaim", Handle)
                 .RequireAuthorization()
                 .AddEndpointFilter<CheckResetPasswordAppConfigurationEndpointFilter>()
                 .AddEndpointFilter<ResetPasswordAuthContextEndpointFilter>()

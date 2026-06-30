@@ -26,7 +26,7 @@ namespace MyWorkID.Server.IntegrationTests.Features.GenerateTap
         public async Task GenerateTap_WithoutAuth_Returns401()
         {
             var unauthenticatedClient = _testApplicationFactory.CreateDefaultClient();
-            var response = await unauthenticatedClient.PutAsync(_baseUrl, null);
+            var response = await unauthenticatedClient.PutAsync(_baseUrl, null, TestContext.Current.CancellationToken);
             response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         }
 
@@ -34,7 +34,7 @@ namespace MyWorkID.Server.IntegrationTests.Features.GenerateTap
         public async Task GenerateTap_WithWrongRole_Returns403()
         {
             var client = TestHelper.CreateClientWithRole(_testApplicationFactory, provider => provider.WithResetPasswordRole());
-            var response = await client.PutAsync(_baseUrl, null);
+            var response = await client.PutAsync(_baseUrl, null, TestContext.Current.CancellationToken);
             response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         }
 
@@ -43,9 +43,9 @@ namespace MyWorkID.Server.IntegrationTests.Features.GenerateTap
         {
             var testApp = new TestApplicationFactory();
             var client = TestHelper.CreateClientWithRole(testApp, provider => provider.WithGenerateTapRole());
-            var response = await client.PutAsync(_baseUrl, null);
+            var response = await client.PutAsync(_baseUrl, null, TestContext.Current.CancellationToken);
             response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
-            var problemDetails = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+            var problemDetails = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>(TestContext.Current.CancellationToken);
             problemDetails.Should().NotBeNull();
             problemDetails!.Detail.Should().Be(Strings.ERROR_MISSING_OR_INVALID_SETTINGS_GENERATE_TAP);
         }
@@ -57,9 +57,9 @@ namespace MyWorkID.Server.IntegrationTests.Features.GenerateTap
             var testApp = new TestApplicationFactory();
             testApp.AddAuthContextConfig(AppFunctions.GenerateTap.ToString(), "invalid");
             var client = TestHelper.CreateClientWithRole(testApp, provider => provider.WithGenerateTapRole());
-            var response = await client.PutAsync(_baseUrl, null);
+            var response = await client.PutAsync(_baseUrl, null, TestContext.Current.CancellationToken);
             response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
-            var problemDetails = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+            var problemDetails = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>(TestContext.Current.CancellationToken);
             problemDetails.Should().NotBeNull();
             problemDetails!.Detail.Should().Be(Strings.ERROR_MISSING_OR_INVALID_SETTINGS_GENERATE_TAP);
         }
@@ -68,7 +68,7 @@ namespace MyWorkID.Server.IntegrationTests.Features.GenerateTap
         public async Task GenerateTap_WithAuth_WithoutAuthContext_Returns401WithMessage()
         {
             var client = TestHelper.CreateClientWithRole(_configuredTestApplicationFactory, provider => provider.WithGenerateTapRole());
-            var response = await client.PutAsync(_baseUrl, null);
+            var response = await client.PutAsync(_baseUrl, null, TestContext.Current.CancellationToken);
             response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             await CheckResponseHelper.CheckForInsuffienctClaimsResponse(response);
         }
@@ -80,7 +80,7 @@ namespace MyWorkID.Server.IntegrationTests.Features.GenerateTap
             testApp.AddAuthContextConfig(AppFunctions.GenerateTap.ToString(), "c1");
             var client = TestHelper.CreateClientWithRole(testApp,
                 provider => provider.WithGenerateTapRole().WithAuthContext("c2"));
-            var response = await client.PutAsync(_baseUrl, null);
+            var response = await client.PutAsync(_baseUrl, null, TestContext.Current.CancellationToken);
             response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             await CheckResponseHelper.CheckForInsuffienctClaimsResponse(response);
         }
@@ -90,7 +90,7 @@ namespace MyWorkID.Server.IntegrationTests.Features.GenerateTap
         {
             var client = TestHelper.CreateClientWithRole(_configuredTestApplicationFactory,
                 provider => provider.WithGenerateTapRole().WithAuthContext(_validAuthContextId));
-            var response = await client.PutAsync(_baseUrl, null);
+            var response = await client.PutAsync(_baseUrl, null, TestContext.Current.CancellationToken);
             response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         }
 
@@ -99,9 +99,9 @@ namespace MyWorkID.Server.IntegrationTests.Features.GenerateTap
         {
             var client = TestHelper.CreateClientWithRole(_configuredTestApplicationFactory,
                 provider => provider.WithGenerateTapRole().WithRandomSubAndOid().WithAuthContext(_validAuthContextId));
-            var response = await client.PutAsync(_baseUrl, null);
+            var response = await client.PutAsync(_baseUrl, null, TestContext.Current.CancellationToken);
             response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
-            var problemDetails = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+            var problemDetails = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>(TestContext.Current.CancellationToken);
             problemDetails.Should().NotBeNull();
             problemDetails!.Detail.Should().Be(Strings.ERROR_UNABLE_TO_GENERATE_TAP);
         }

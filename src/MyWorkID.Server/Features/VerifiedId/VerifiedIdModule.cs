@@ -18,20 +18,29 @@ namespace MyWorkID.Server.Features.VerifiedId
         /// <param name="services">The service collection to add services to.</param>
         /// <param name="configurationManager">The configuration manager to retrieve settings from.</param>
         /// <param name="environment">The web host environment.</param>
-        public static void ConfigureServices(IServiceCollection services, IConfigurationManager configurationManager, IWebHostEnvironment environment)
+        public static void ConfigureServices(
+            IServiceCollection services,
+            IConfigurationManager configurationManager,
+            IWebHostEnvironment environment
+        )
         {
             services.Configure<VerifiedIdOptions>(configurationManager.GetSection("VerifiedId"));
-            TokenCredential verifiedIdCredentials = new ManagedIdentityCredential();
+            TokenCredential verifiedIdCredentials = new ManagedIdentityCredential(
+                ManagedIdentityId.SystemAssigned
+            );
             if (environment.IsDevelopment())
             {
                 verifiedIdCredentials = new ClientSecretCredential(
                     configurationManager.GetValue<string>("LocalDevSettings:VerifiedIdTenantId"),
                     configurationManager.GetValue<string>("LocalDevSettings:VerifiedIdClientId"),
-                    configurationManager.GetValue<string>("LocalDevSettings:VerifiedIdSecret"));
+                    configurationManager.GetValue<string>("LocalDevSettings:VerifiedIdSecret")
+                );
             }
             services.AddTransient<VerifiedIdAuthenticationHandler>();
             services.AddSingleton(new VerifiedIdAccessTokenService(verifiedIdCredentials));
-            services.AddHttpClient<VerifiedIdService>().AddHttpMessageHandler<VerifiedIdAuthenticationHandler>();
+            services
+                .AddHttpClient<VerifiedIdService>()
+                .AddHttpMessageHandler<VerifiedIdAuthenticationHandler>();
             services.AddSingleton<IVerifiedIdSignalRRepository, VerifiedIdSignalRRepository>();
         }
     }
