@@ -131,7 +131,7 @@
     --chart-5: 340 75% 55%;
     --tile-color: #003c73;
     --background-color: #000520;
-    --background-header-footer: #0072c633;
+    --background-header-footer: #001b41;
     --user-displayname: #ffffff;
     --footer-text-color: #ffffff;
     --footer-svg-color: #ffffff;
@@ -263,13 +263,138 @@ body {
   color: var(--user-displayname);
 }
 .action-card__tap {
-  background-color: var(--action-card-activated-background);
+  position: relative;
+  background-color: var(--tile-color);
+  color: white;
   border-radius: 24px;
   height: 100%;
+  min-height: 137px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: background-color 0.4s ease;
+}
+.action-card-filled__tap {
+  background-color: var(--action-card-activated-background);
+  touch-action: pan-y;
+}
+.action-card__tap_icon {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  transform: none;
+  width: 52px;
+  height: 44px;
+  color: white;
+  display: block;
+  opacity: 1;
+  transition: top 0.4s ease, transform 0.4s ease, color 0.4s ease,
+    opacity 0.3s ease;
+}
+.action-card-loading__tap .action-card__tap_icon {
+  opacity: 0;
+}
+.action-card-filled__tap .action-card__tap_icon {
+  top: 50%;
+  left: 1.5rem;
+  transform: translateY(-50%);
+  color: var(--tile-color);
+}
+.action-card-label__tap {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 1.5rem;
+  right: 1.5rem;
+  text-align: left;
+  font-family: var(--font-family);
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
+  opacity: 1;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.action-card-loading__tap .action-card-label__tap,
+.action-card-filled__tap .action-card-label__tap {
+  opacity: 0;
+}
+.action-card-spinner-overlay__tap {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.action-card-loading__tap .action-card-spinner-overlay__tap {
+  opacity: 1;
+}
+.action-card-token__tap {
+  position: absolute;
+  top: 50%;
+  left: 5.5rem;
+  right: 5.5rem;
+  transform: translateY(-50%);
+  text-align: center;
+  font-family: var(--font-family);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--user-displayname);
+  word-break: break-all;
+  overflow-wrap: break-word;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease 0.15s;
+}
+.action-card-filled__tap .action-card-token__tap {
+  opacity: 1;
+  pointer-events: auto;
+}
+.action-card-revoke__tap {
+  position: absolute;
+  top: 50%;
+  right: 0.5rem;
+  transform: translateY(-50%);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: var(--tile-color);
+  color: #ffffff;
+  border: none;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease 0.15s, background-color 0.15s ease;
+}
+.action-card-filled__tap .action-card-revoke__tap {
+  opacity: 1;
+  pointer-events: auto;
+}
+.action-card-revoke__tap:hover {
+  background-color: hsl(var(--destructive));
+}
+.action-card-revoke__tap:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.action-card-swipe-overlay__tap {
+  position: absolute;
+  inset: 0;
+  background-color: hsl(var(--destructive));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+.action-card-swipe-overlay-label__tap {
+  font-family: var(--font-family);
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
 }
 .action-card__password-reset {
   background-color: var(--action-card-activated-background);
@@ -297,22 +422,6 @@ body {
   min-height: 137px; /* Adjust based on default tile height*/
 }
 
-.action-card__tap_content {
-  color: var(--user-displayname);
-  text-align: center;
-  font-feature-settings: "liga" off, "clig" off;
-  font-family: var(--font-family);
-  font-size: 32px;
-  font-style: normal;
-  font-weight: 700;
-  line-height: normal;
-  align-self: center;
-  padding: 1rem;
-  word-break: break-all;
-  overflow-wrap: break-word;
-  max-width: 100%;
-  cursor: pointer;
-}
 .action-card__pasword-reset__submit-button {
   display: flex;
   height: 50px;
@@ -350,19 +459,20 @@ body {
   line-height: normal;
 }
 .userdisplay__avatar {
-  width: 100px;
-  height: 100px;
-  border-radius: 32px;
+  width: 80px;
+  height: 80px;
+  border-radius: 26px;
 }
 .function-plane__container {
   display: grid;
-  grid-template-columns: repeat(2, 1fr) /* 2 items per row */;
+  grid-template-columns: 1fr; /* 1 item per row */
   grid-auto-rows: minmax(auto, max-content);
-  gap: 10px /* Space between items */;
+  gap: 10px; /* Space between items */
   margin: auto;
   padding-left: 30px;
   padding-right: 30px;
-  max-width: 1400px;
+  padding-bottom: 58px;
+  max-width: 600px;
 }
 .userdisplay__risk-state {
   font-family: var(--font-family);
@@ -379,9 +489,9 @@ body {
 .userdisplay {
   display: flex;
   justify-content: center;
-  margin-bottom: 28px;
+  margin-bottom: 14px;
   flex-direction: column;
-  padding-top: 41px;
+  padding-top: 20px;
   align-items: center;
 }
 .action-card__pasword-reser__input-container {

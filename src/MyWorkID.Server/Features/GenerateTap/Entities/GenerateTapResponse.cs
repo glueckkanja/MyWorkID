@@ -3,22 +3,20 @@
 namespace MyWorkID.Server.Features.GenerateTap.Entities
 {
     /// <summary>
-    /// Represents the response containing the generated Temporary Access Pass (TAP).
+    /// Represents the response containing the generated Temporary Access Pass (TAP)
+    /// as well as the unique identifier of the TAP.
     /// </summary>
     public class GenerateTapResponse
     {
-        /// <summary>
-        /// Gets or sets the generated Temporary Access Pass.
-        /// </summary>
+        [JsonPropertyName("temporaryAccessPassId")]
+        public string TemporaryAccessPassId { get; set; }
+
         [JsonPropertyName("temporaryAccessPassword")]
         public string TemporaryAccessPassword { get; set; }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="GenerateTapResponse"/> class.
-        /// </summary>
-        /// <param name="temporaryAccessPassword">The generated Temporary Access Pass.</param>
-        public GenerateTapResponse(string temporaryAccessPassword)
+        public GenerateTapResponse(string temporaryAccessPassId, string temporaryAccessPassword)
         {
+            TemporaryAccessPassId = temporaryAccessPassId;
             TemporaryAccessPassword = temporaryAccessPassword;
         }
     }

@@ -83,6 +83,8 @@ export const sendAxiosRequest = async <T, D = unknown>(
       return await axios.post<T>(url, body, { headers: header });
     case REQUEST_TYPE.PUT:
       return await axios.put<T>(url, body, { headers: header });
+    case REQUEST_TYPE.DELETE:
+      return await axios.delete<T>(url, { headers: header });
     default:
       throw new Error("Invalid request type");
   }

@@ -2,6 +2,7 @@ export enum REQUEST_TYPE {
   GET,
   POST,
   PUT,
+  DELETE,
 }
 
 export type TWWWAuthenticateHeader = {
@@ -46,6 +47,7 @@ export type User = {
 };
 
 export type TGenerateTapResponse = {
+  temporaryAccessPassId: string;
   temporaryAccessPassword: string;
 };
 

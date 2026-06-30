@@ -67,14 +67,16 @@ namespace MyWorkID.Server.Features.GenerateTap.Commands
                     tapRequest,
                     cancellationToken: cancellationToken
                 );
-            if (tapResponse?.TemporaryAccessPass == null)
+            if (tapResponse?.TemporaryAccessPass == null || tapResponse?.Id == null)
             {
                 return TypedResults.Problem(
                     detail: Strings.ERROR_UNABLE_TO_GENERATE_TAP,
                     statusCode: StatusCodes.Status500InternalServerError
                 );
             }
-            return TypedResults.Ok(new GenerateTapResponse(tapResponse.TemporaryAccessPass));
+            return TypedResults.Ok(
+                new GenerateTapResponse(tapResponse.Id, tapResponse.TemporaryAccessPass)
+            );
         }
     }
 }
