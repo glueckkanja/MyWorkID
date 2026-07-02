@@ -62,7 +62,7 @@ resource "azurerm_linux_web_app" "backend" {
 
   site_config {
     application_stack {
-      dotnet_version = "8.0"
+      dotnet_version = "10.0"
     }
     minimum_tls_version = "1.2"
     always_on           = true
@@ -286,7 +286,7 @@ resource "azurerm_key_vault" "backend_secrets" {
   tenant_id                   = local.tenant_id
   soft_delete_retention_days  = 7
   purge_protection_enabled    = false
-  enable_rbac_authorization   = true
+  rbac_authorization_enabled  = true
   sku_name                    = "standard"
   lifecycle {
     ignore_changes = [
