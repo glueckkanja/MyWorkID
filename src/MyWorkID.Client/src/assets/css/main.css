@@ -923,6 +923,15 @@
   color: var(--risk-high);
 }
 
+.confirm-box--neutral {
+  background: var(--surface-hover);
+  border-color: var(--surface-border);
+}
+
+.confirm-box--neutral strong {
+  color: var(--text-primary);
+}
+
 /* ─── Validate identity illustration ─── */
 .verify-illustration {
   width: 100%;

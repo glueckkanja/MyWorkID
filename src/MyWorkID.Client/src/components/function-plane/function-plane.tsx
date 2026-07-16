@@ -211,6 +211,8 @@ const FunctionPlane = () => {
             redirectAction === EApiFunctionTypes.DISMISS_USER_RISK
           }
           onDismissed={profile.refreshRiskState}
+          riskLevel={profile.riskLevel}
+          riskLabel={profile.riskLabel}
         />
       )}
       {canValidateIdentity && (

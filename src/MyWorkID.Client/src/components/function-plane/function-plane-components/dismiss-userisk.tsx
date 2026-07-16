@@ -3,12 +3,52 @@ import { Panel } from "../../panel";
 import { dismissUserRisk } from "../../../services/api-service";
 import { useToast } from "@/hooks/use-toast";
 import { Spinner } from "@/components/ui/spinner";
+import { RiskLevel } from "@/hooks/use-user-profile";
 
 type DismissUserRiskPanelProps = {
   open: boolean;
   onClose: () => void;
   comingFromRedirect: boolean;
   onDismissed?: () => void;
+  riskLevel: RiskLevel;
+  riskLabel: string;
+};
+
+const renderConfirmationBody = (riskLevel: RiskLevel, riskLabel: string) => {
+  if (riskLevel === "high" || riskLevel === "medium" || riskLevel === "low") {
+    return {
+      variant: "danger" as const,
+      content: (
+        <>
+          Your account is currently flagged with{" "}
+          <strong>{riskLabel}</strong>. By dismissing, you confirm this was
+          expected behavior (e.g. travel, new device). All active sessions will
+          be revoked.
+        </>
+      ),
+    };
+  }
+  if (riskLevel === "none") {
+    return {
+      variant: "neutral" as const,
+      content: (
+        <>
+          Your account currently has <strong>no active risk</strong>. You can
+          still confirm your account is safe — all active sessions will be
+          revoked.
+        </>
+      ),
+    };
+  }
+  return {
+    variant: "neutral" as const,
+    content: (
+      <>
+        Your current risk state could not be retrieved. Dismissing will still
+        confirm your account is safe. All active sessions will be revoked.
+      </>
+    ),
+  };
 };
 
 export const DismissUserRiskPanel = ({
@@ -16,7 +56,10 @@ export const DismissUserRiskPanel = ({
   onClose,
   comingFromRedirect,
   onDismissed,
+  riskLevel,
+  riskLabel,
 }: DismissUserRiskPanelProps) => {
+  const confirmation = renderConfirmationBody(riskLevel, riskLabel);
   const [submitting, setSubmitting] = useState(false);
   const { toastException, toastSuccess } = useToast();
 
@@ -65,10 +108,14 @@ export const DismissUserRiskPanel = ({
         </div>
       ) : (
         <>
-          <div className="confirm-box">
-            Your account is flagged as <strong>at risk</strong>. By dismissing,
-            you confirm this was expected behavior (e.g. travel, new device).
-            All active sessions will be revoked.
+          <div
+            className={
+              confirmation.variant === "neutral"
+                ? "confirm-box confirm-box--neutral"
+                : "confirm-box"
+            }
+          >
+            {confirmation.content}
           </div>
           <button
             type="button"
