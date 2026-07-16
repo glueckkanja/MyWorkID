@@ -2,6 +2,7 @@ export enum REQUEST_TYPE {
   GET,
   POST,
   PUT,
+  DELETE,
 }
 
 export type TWWWAuthenticateHeader = {
@@ -43,9 +44,12 @@ export type ActionResultProps<T> = {
 
 export type User = {
   displayName: string;
+  mail?: string;
+  userPrincipalName?: string;
 };
 
 export type TGenerateTapResponse = {
+  temporaryAccessPassId: string;
   temporaryAccessPassword: string;
 };
 

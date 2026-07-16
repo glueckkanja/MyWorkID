@@ -1,132 +1,60 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  getUser,
-  getUserImage,
-  getUserRiskState,
-} from "../../services/api-service";
-import { TGetRiskStateResponse, User } from "../../types";
-import { useTheme } from "@mui/material";
-import AvatarPlaceholderSvg from "@/assets/svg/avatar-placeholder.svg";
+import { RiskLevel, UserProfile } from "@/hooks/use-user-profile";
 
-type RiskUserState = {
-  loading: boolean;
-  data?: TGetRiskStateResponse;
-  displayValue?: string;
+const getInitials = (displayName: string | undefined): string => {
+  if (!displayName) {
+    return "";
+  }
+  const parts = displayName.trim().split(/\s+/);
+  if (parts.length === 1) {
+    return parts[0].substring(0, 2).toUpperCase();
+  }
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 };
 
-const RISK_STATE_UPDATE_POLLING_INTERVAL_IN_MILLISECONDS = 30000000; // 30 seconds
+const getBadgeClass = (riskLevel: RiskLevel, riskLoading: boolean): string => {
+  if (riskLoading) {
+    return "risk-badge risk-badge--loading";
+  }
+  if (riskLevel === "high") {
+    return "risk-badge risk-badge--high";
+  }
+  if (riskLevel === "medium") {
+    return "risk-badge risk-badge--medium";
+  }
+  if (riskLevel === "unknown") {
+    return "risk-badge risk-badge--unknown";
+  }
+  return "risk-badge risk-badge--dismissed";
+};
 
-export const UserDisplay = () => {
-  const theme = useTheme();
-  const [user, setUser] = useState<User>();
-  const [userImage, setUserImage] = useState<string>();
-  const [riskUserState, setRiskUserState] = useState<RiskUserState>({
-    loading: true,
-    data: undefined,
-  });
+type UserDisplayProps = {
+  profile: UserProfile;
+};
 
-  const riskStatePollingIntervalRef = useRef<NodeJS.Timeout>();
-
-  const updateRiskState = useCallback(() => {
-    getUserRiskState()
-      .then((result) => {
-        setRiskUserState({
-          loading: false,
-          data: result,
-          displayValue: result?.riskLevel ?? result?.riskState ?? "None",
-        });
-      })
-      .catch((e) => {
-        console.error("Could not get risk state", e);
-        setRiskUserState({
-          loading: false,
-          data: undefined,
-          displayValue: "Unknown",
-        });
-      });
-  }, [setRiskUserState]);
-
-  useEffect(() => {
-    getUser().then((usr) => {
-      setUser(usr);
-    });
-    getUserImage()
-      .then((imgBlob) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(imgBlob);
-        reader.onloadend = () => {
-          const base64String = reader.result?.toString();
-          setUserImage(base64String);
-        };
-      })
-      .catch(() => {
-        // Ignore - this is thrown if no image is set
-      });
-
-    updateRiskState();
-  }, [updateRiskState]);
-
-  useEffect(() => {
-    riskStatePollingIntervalRef.current = setInterval(
-      updateRiskState,
-      RISK_STATE_UPDATE_POLLING_INTERVAL_IN_MILLISECONDS
-    );
-    return () => {
-      if (riskStatePollingIntervalRef.current) {
-        clearInterval(riskStatePollingIntervalRef.current);
-      }
-    };
-  }, [updateRiskState]);
-
-  const getRiskStateColor = useCallback(
-    (value?: string) => {
-      switch (value?.toLocaleLowerCase()) {
-        case "none":
-        case "low":
-          return theme.palette.success.main;
-        case "medium":
-          return theme.palette.warning.main;
-        case "high":
-          return theme.palette.error.main;
-        case "unknown":
-          return theme.palette.grey[500];
-        case undefined:
-        case null:
-        default:
-          return theme.palette.info.main;
-      }
-    },
-    [theme]
-  );
+export const UserDisplay = ({ profile }: UserDisplayProps) => {
+  const { user, userImage, riskLoading, riskLevel, riskLabel } = profile;
+  const displayName = user?.displayName;
+  const email = user?.mail ?? user?.userPrincipalName;
+  const initials = getInitials(displayName);
 
   return (
-    <div className="userdisplay">
-      <Avatar className="userdisplay__avatar">
-        <AvatarImage src={userImage} />
-        <AvatarFallback>
-          <img src={AvatarPlaceholderSvg} alt="AvatarPlaceholder" />
-        </AvatarFallback>
-      </Avatar>
-      <div>
-        <div style={{ textAlign: "center" }}>
-          <span className="userdisplay__username">{user?.displayName}</span>
-          <div className="userdisplay__container">
-            <div className="userdisplay__risk-state">Risk State:</div>
-            <div
-              style={{ color: getRiskStateColor(riskUserState.displayValue) }}
-            >
-              {riskUserState.loading && (
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-[200px]" />
-                  <Skeleton className="h-4 w-[200px]" />
-                </div>
-              )}
-              {riskUserState.displayValue}
-            </div>
-          </div>
+    <div className="user-card">
+      <div className="user-card__top">
+        <div className="user-card__avatar" aria-hidden="true">
+          {userImage ? (
+            <img src={userImage} alt="" />
+          ) : (
+            <span>{initials || "?"}</span>
+          )}
         </div>
+        <div>
+          <h2 className="user-card__name">{displayName ?? " "}</h2>
+          {email && <p className="user-card__email">{email}</p>}
+        </div>
+      </div>
+      <div className={getBadgeClass(riskLevel, riskLoading)}>
+        <span className="risk-badge__dot" />
+        {riskLoading ? "Checking risk…" : riskLabel}
       </div>
     </div>
   );
