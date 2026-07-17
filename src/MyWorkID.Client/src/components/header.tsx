@@ -3,7 +3,13 @@ import { useMsal } from "@azure/msal-react";
 import { useToast } from "@/hooks/use-toast";
 import { getFrontendOptions } from "@/services/frontend-options-service";
 import { useTheme } from "./use-theme";
+
+// Import Icons
 import HeaderLogoSvg from "../assets/svg/header-logo.svg";
+import { CrescentMoonIcon } from "@/components/ui/icons/crescent-moon-icon";
+import { HelpCircleIcon } from "@/components/ui/icons/help-circle-icon";
+import { LogoutArrowIcon } from "@/components/ui/icons/logout-arrow-icon";
+import { SettingsGearIcon } from "@/components/ui/icons/settings-gear-icon";
 
 enum ColorTheme {
   Light = "light",
@@ -19,7 +25,7 @@ export const Header = () => {
   const [helpUrl, setHelpUrl] = useState<string | undefined>(undefined);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(
-    () => (localStorage.getItem(STORAGE_KEY) as ColorTheme) === ColorTheme.Dark
+    () => (localStorage.getItem(STORAGE_KEY) as ColorTheme) === ColorTheme.Dark,
   );
 
   useEffect(() => {
@@ -87,19 +93,7 @@ export const Header = () => {
             aria-label="Help"
             title="Help"
           >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-              <path d="M12 17h.01" />
-            </svg>
+            <HelpCircleIcon />
           </a>
         )}
 
@@ -112,27 +106,16 @@ export const Header = () => {
           title="Settings"
           onClick={() => setSettingsOpen((open) => !open)}
         >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-          >
-            <circle cx="12" cy="12" r="3" />
-            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
-          </svg>
+          <SettingsGearIcon />
         </button>
 
         {settingsOpen && (
           <>
-            <div
+            <button
+              type="button"
               className="settings-backdrop"
+              aria-label="Close settings menu"
               onClick={() => setSettingsOpen(false)}
-              role="presentation"
-              aria-hidden="true"
             />
             <div className="settings-dropdown" role="menu">
               <div className="settings-dropdown__header">
@@ -145,17 +128,7 @@ export const Header = () => {
                 <div className="settings-item">
                   <div className="settings-item__left">
                     <div className="settings-item__icon">
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.8"
-                        strokeLinecap="round"
-                      >
-                        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
-                      </svg>
+                      <CrescentMoonIcon />
                     </div>
                     <div>
                       <div className="settings-item__label">Dark Mode</div>
@@ -181,19 +154,7 @@ export const Header = () => {
                   className="settings-logout"
                   onClick={handleLogoutClick}
                 >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  >
-                    <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
-                    <polyline points="16 17 21 12 16 7" />
-                    <line x1="21" y1="12" x2="9" y2="12" />
-                  </svg>
+                  <LogoutArrowIcon />
                   Log Out
                 </button>
               </div>

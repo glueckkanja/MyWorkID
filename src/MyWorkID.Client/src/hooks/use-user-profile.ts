@@ -23,14 +23,15 @@ const toRiskLevel = (
   riskState: TGetRiskStateResponse | undefined
 ): { level: RiskLevel; label: string } => {
   const rawLevel = riskState?.riskLevel?.toLowerCase();
-  if (rawLevel === "high") {
-    return { level: "high", label: "Risk Level: High" };
-  }
-  if (rawLevel === "medium") {
-    return { level: "medium", label: "Risk Level: Medium" };
-  }
-  if (rawLevel === "low") {
-    return { level: "low", label: "Risk Level: Low" };
+  switch (rawLevel) {
+    case "high":
+      return { level: "high", label: "Risk Level: High" };
+    case "medium":
+      return { level: "medium", label: "Risk Level: Medium" };
+    case "low":
+      return { level: "low", label: "Risk Level: Low" };
+    default:
+      break;
   }
   const rawState = riskState?.riskState?.toLowerCase();
   if (
@@ -74,7 +75,10 @@ export const useUserProfile = (): UserProfile => {
       .then((profile) => {
         setUser(profile);
       })
-      .catch(() => {
+      .catch((error) => {
+        if (import.meta.env.DEV) {
+          console.debug("User profile request failed", error);
+        }
         // ignore — user card gracefully degrades
       });
 
@@ -87,7 +91,10 @@ export const useUserProfile = (): UserProfile => {
         };
         reader.readAsDataURL(imageBlob);
       })
-      .catch(() => {
+      .catch((error) => {
+        if (import.meta.env.DEV) {
+          console.debug("User profile image request failed", error);
+        }
         // ignore — no profile image
       });
 

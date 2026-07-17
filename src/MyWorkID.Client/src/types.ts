@@ -29,6 +29,7 @@ export type TFunctionResult<T = undefined> = {
 export enum EApiFunctionTypes {
   DISMISS_USER_RISK = "dismissUserRisk",
   CREATE_TAP = "createTap",
+  REVOKE_TAP = "revokeTap",
   PASSWORD_RESET = "passwordReset",
   VALIDATE_IDENTITY = "validateIdentity",
   UNKNOWN = "unknown",

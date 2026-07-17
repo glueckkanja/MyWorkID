@@ -7,6 +7,11 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Spinner } from "@/components/ui/spinner";
 
+// Import Icons
+import { EyeIcon } from "@/components/ui/icons/eye-icon";
+import { EyeOffIcon } from "@/components/ui/icons/eye-off-icon";
+import { InformationCircleIcon } from "@/components/ui/icons/information-circle-icon";
+
 type PasswordResetPanelProps = {
   open: boolean;
   onClose: () => void;
@@ -38,37 +43,6 @@ const getIsPasswordValid = (password: string) => {
   }
   return satisfied >= 3;
 };
-
-const EyeSvg = () => (
-  <svg
-    width="18"
-    height="18"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.8"
-    strokeLinecap="round"
-  >
-    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-    <circle cx="12" cy="12" r="3" />
-  </svg>
-);
-
-const EyeOffSvg = () => (
-  <svg
-    width="18"
-    height="18"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.8"
-    strokeLinecap="round"
-  >
-    <path d="M17.94 17.94A10.94 10.94 0 0112 20c-7 0-11-8-11-8a19.77 19.77 0 015.06-5.94" />
-    <path d="M9.9 4.24A10.94 10.94 0 0112 4c7 0 11 8 11 8a19.85 19.85 0 01-4.19 5.19" />
-    <line x1="1" y1="1" x2="23" y2="23" />
-  </svg>
-);
 
 export const PasswordResetPanel = ({
   open,
@@ -128,7 +102,7 @@ export const PasswordResetPanel = ({
       .then(() => {
         toastSuccess(
           "Password Changed",
-          "Your new password is active. Use it the next time you sign in."
+          "Your new password is active. Use it the next time you sign in.",
         );
         onClose();
       })
@@ -174,11 +148,9 @@ export const PasswordResetPanel = ({
                 type="button"
                 className="form-toggle-visibility"
                 onClick={() => setShowPassword((value) => !value)}
-                aria-label={
-                  showPassword ? "Hide password" : "Show password"
-                }
+                aria-label={showPassword ? "Hide password" : "Show password"}
               >
-                {showPassword ? <EyeOffSvg /> : <EyeSvg />}
+                {showPassword ? <EyeOffIcon /> : <EyeIcon />}
               </button>
             </div>
           </div>
@@ -204,23 +176,12 @@ export const PasswordResetPanel = ({
                   showConfirmPassword ? "Hide password" : "Show password"
                 }
               >
-                {showConfirmPassword ? <EyeOffSvg /> : <EyeSvg />}
+                {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
               </button>
             </div>
           </div>
           <div className="form-hint">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 16v-4M12 8h.01" />
-            </svg>
+            <InformationCircleIcon />
             <span>
               At least 10 characters (24 for admin accounts) including uppercase
               and lowercase letters, a number, and a symbol.

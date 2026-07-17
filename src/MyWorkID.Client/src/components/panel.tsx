@@ -1,5 +1,6 @@
 import { ReactNode, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { CloseXIcon } from "@/components/ui/icons/close-x-icon";
 
 type PanelProps = {
   open: boolean;
@@ -35,13 +36,13 @@ export const Panel = ({
 
   return createPortal(
     <>
-      <div
+      <button
+        type="button"
         className="panel-overlay"
+        aria-label="Close panel"
         onClick={onClose}
-        role="presentation"
-        aria-hidden="true"
       />
-      <div className="panel" role="dialog" aria-modal="true" aria-label={title}>
+      <dialog className="panel" open aria-label={title}>
         <div className="panel__handle" />
         <div className="panel__header">
           <div>
@@ -54,22 +55,12 @@ export const Panel = ({
             onClick={onClose}
             aria-label="Close"
           >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-            >
-              <path d="M18 6L6 18M6 6l12 12" />
-            </svg>
+            <CloseXIcon />
           </button>
         </div>
         <div className="panel__body">{children}</div>
-      </div>
+      </dialog>
     </>,
-    document.body
+    document.body,
   );
 };

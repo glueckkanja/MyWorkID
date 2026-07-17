@@ -201,6 +201,8 @@ export const getPendingAction = (
         return EApiFunctionTypes.DISMISS_USER_RISK;
       case EApiFunctionTypes.CREATE_TAP:
         return EApiFunctionTypes.CREATE_TAP;
+      case EApiFunctionTypes.REVOKE_TAP:
+        return EApiFunctionTypes.REVOKE_TAP;
       case EApiFunctionTypes.PASSWORD_RESET:
         return EApiFunctionTypes.PASSWORD_RESET;
       default:

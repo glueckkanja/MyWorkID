@@ -89,9 +89,9 @@ export const revokeTemporaryAccessPass = async (
     authenticateRequest(
       `${backendApiUrl}/me/tap/${encodeURIComponent(temporaryAccessPassId)}`,
       REQUEST_TYPE.DELETE,
-      EApiFunctionTypes.CREATE_TAP
+      EApiFunctionTypes.REVOKE_TAP
     ),
-    EApiFunctionTypes.CREATE_TAP
+    EApiFunctionTypes.REVOKE_TAP
   );
 };
 

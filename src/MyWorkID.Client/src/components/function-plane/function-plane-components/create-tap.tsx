@@ -7,6 +7,13 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Spinner } from "@/components/ui/spinner";
 
+// Import Icons
+import { CircleXIcon } from "@/components/ui/icons/circle-x-icon";
+import { CheckmarkIcon } from "@/components/ui/icons/checkmark-icon";
+import { CopyDocumentIcon } from "@/components/ui/icons/copy-document-icon";
+import { RefreshArrowIcon } from "@/components/ui/icons/refresh-arrow-icon";
+import { InformationCircleIcon } from "@/components/ui/icons/information-circle-icon";
+
 type CreateTapPanelProps = {
   open: boolean;
   onClose: () => void;
@@ -25,7 +32,7 @@ export const CreateTapPanel = ({
   comingFromRedirect,
 }: CreateTapPanelProps) => {
   const [tap, setTap] = useState<TapState>({ status: "empty" });
-  const [justCopied, setJustCopied] = useState(false);
+  const [copiedTap, setCopiedTap] = useState(false);
   const { toastError, toastException } = useToast();
 
   const createTap = () => {
@@ -80,14 +87,15 @@ export const CreateTapPanel = ({
     navigator.clipboard
       .writeText(tap.password)
       .then(() => {
-        setJustCopied(true);
-        window.setTimeout(() => setJustCopied(false), 2000);
+        setCopiedTap(true);
+        window.setTimeout(() => setCopiedTap(false), 2000);
       })
       .catch((error) => {
         toastException(error);
       });
   };
 
+  // auto start TAP creation if coming from redirect
   useEffect(() => {
     if (open && comingFromRedirect) {
       createTap();
@@ -95,10 +103,11 @@ export const CreateTapPanel = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, comingFromRedirect]);
 
+  // clear TAP state when panel is closed
   useEffect(() => {
     if (!open) {
       setTap({ status: "empty" });
-      setJustCopied(false);
+      setCopiedTap(false);
     }
   }, [open]);
 
@@ -115,18 +124,7 @@ export const CreateTapPanel = ({
       return (
         <>
           <div className="form-hint">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 16v-4M12 8h.01" />
-            </svg>
+            <InformationCircleIcon />
             <span>
               Generate a one-time code to sign in on a new device without your
               regular credentials.
@@ -151,59 +149,27 @@ export const CreateTapPanel = ({
           <button
             type="button"
             className={
-              justCopied
+              copiedTap
                 ? "tap-copy-button tap-copy-button--copied"
                 : "tap-copy-button"
             }
             onClick={copyCode}
           >
-            {justCopied ? (
+            {copiedTap ? (
               <>
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                >
-                  <path d="M20 6L9 17l-5-5" />
-                </svg>
+                <CheckmarkIcon strokeWidth={2.5} />
                 Copied!
               </>
             ) : (
               <>
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                >
-                  <rect x="9" y="9" width="13" height="13" rx="2" />
-                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-                </svg>
+                <CopyDocumentIcon />
                 Copy Code
               </>
             )}
           </button>
         </div>
         <div className="form-hint">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          >
-            <circle cx="12" cy="12" r="10" />
-            <path d="M12 16v-4M12 8h.01" />
-          </svg>
+          <InformationCircleIcon />
           <span>
             Use this code to sign in on your new device. Once expired, you can
             generate a new pass.
@@ -214,19 +180,7 @@ export const CreateTapPanel = ({
           className="panel-secondary-button"
           onClick={createTap}
         >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <polyline points="23 4 23 10 17 10" />
-            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-          </svg>
+          <RefreshArrowIcon />
           Create New Pass
         </button>
         <button
@@ -234,18 +188,7 @@ export const CreateTapPanel = ({
           className="panel-secondary-button panel-secondary-button--danger"
           onClick={revoke}
         >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          >
-            <circle cx="12" cy="12" r="10" />
-            <path d="M15 9l-6 6M9 9l6 6" />
-          </svg>
+          <CircleXIcon />
           Revoke Access Pass
         </button>
       </>

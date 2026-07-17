@@ -6,6 +6,11 @@ import { getVerifiedIdConnection } from "../../../services/signal-r-service";
 import { useToast } from "@/hooks/use-toast";
 import { Spinner } from "@/components/ui/spinner";
 
+// Import Icons
+import { FaceCheckCameraIcon } from "@/components/ui/icons/face-check-camera-icon";
+import { InformationCircleIcon } from "@/components/ui/icons/information-circle-icon";
+import { VerifiedIdentityIllustrationIcon } from "@/components/ui/icons/verified-identity-illustration-icon";
+
 type ValidateIdentityPanelProps = {
   open: boolean;
   onClose: () => void;
@@ -36,7 +41,7 @@ export const ValidateIdentityPanel = ({
           setVerifyState({ status: "idle" });
           toastSuccess(
             "Identity Verified",
-            "Your identity has been successfully verified."
+            "Your identity has been successfully verified.",
           );
           onClose();
         });
@@ -44,7 +49,7 @@ export const ValidateIdentityPanel = ({
         connection.on("VerificationFailed", (errorMessage: string) => {
           setVerifyState({ status: "idle" });
           toastError(
-            errorMessage || "Identity verification failed. Please try again."
+            errorMessage || "Identity verification failed. Please try again.",
           );
         });
 
@@ -97,18 +102,7 @@ export const ValidateIdentityPanel = ({
             />
           </div>
           <div className="form-hint">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 16v-4M12 8h.01" />
-            </svg>
+            <InformationCircleIcon />
             <span>
               Scan this QR code with the Microsoft Authenticator app to present
               your Verified ID credential.
@@ -121,35 +115,10 @@ export const ValidateIdentityPanel = ({
     return (
       <>
         <div className="verify-illustration">
-          <svg
-            width="80"
-            height="80"
-            viewBox="0 0 80 80"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            className="verify-illustration__icon"
-          >
-            <rect x="8" y="8" width="64" height="64" rx="16" />
-            <circle cx="40" cy="34" r="10" />
-            <path d="M24 62c0-8.837 7.163-16 16-16s16 7.163 16 16" />
-            <path d="M58 16l6-6M16 16l-6-6M58 64l6 6M16 64l-6 6" />
-          </svg>
+          <VerifiedIdentityIllustrationIcon className="verify-illustration__icon" />
         </div>
         <div className="form-hint">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          >
-            <circle cx="12" cy="12" r="10" />
-            <path d="M12 16v-4M12 8h.01" />
-          </svg>
+          <InformationCircleIcon />
           <span>
             You'll be asked to take a real-time selfie. The system matches it
             against your Microsoft Entra ID photo. Results are stored securely.
@@ -160,18 +129,7 @@ export const ValidateIdentityPanel = ({
           className="panel-primary-button"
           onClick={startVerification}
         >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          >
-            <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
-            <circle cx="12" cy="13" r="4" />
-          </svg>
+          <FaceCheckCameraIcon />
           Start Face Check
         </button>
       </>

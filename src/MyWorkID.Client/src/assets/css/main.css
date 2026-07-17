@@ -171,7 +171,6 @@
   }
 }
 
-/* ─── App shell ─── */
 .app-shell {
   min-height: 100vh;
   display: flex;
@@ -186,7 +185,6 @@
   padding: 32px 20px 80px;
 }
 
-/* ─── Header ─── */
 .app-header {
   position: sticky;
   top: 0;
@@ -260,7 +258,6 @@
   color: var(--text-primary);
 }
 
-/* ─── Settings dropdown ─── */
 .settings-dropdown {
   position: absolute;
   top: calc(100% + 8px);
@@ -410,9 +407,12 @@
   position: fixed;
   inset: 0;
   z-index: 99;
+  border: none;
+  padding: 0;
+  margin: 0;
+  background: transparent;
 }
 
-/* ─── User card ─── */
 .user-card {
   background: var(--surface);
   border: 1px solid var(--surface-border);
@@ -507,7 +507,6 @@
   background: currentColor;
 }
 
-/* ─── Sections ─── */
 .section-label {
   font-size: 12px;
   font-weight: 600;
@@ -525,7 +524,6 @@
   margin-bottom: 28px;
 }
 
-/* ─── Action card ─── */
 .action-card {
   background: var(--surface);
   border: 1px solid var(--surface-border);
@@ -614,10 +612,12 @@
   color: var(--brand-primary);
 }
 
-/* ─── Panel (bottom sheet / modal) ─── */
 .panel-overlay {
   position: fixed;
   inset: 0;
+  border: none;
+  padding: 0;
+  margin: 0;
   background: rgba(15, 23, 42, 0.3);
   backdrop-filter: blur(4px);
   z-index: 200;
@@ -629,6 +629,9 @@
   bottom: 0;
   left: 0;
   right: 0;
+  border: none;
+  padding: 0;
+  margin: 0;
   max-height: 90vh;
   background: var(--surface);
   border-radius: 20px 20px 0 0;
@@ -701,7 +704,6 @@
   padding: 24px;
 }
 
-/* ─── Panel forms ─── */
 .form-group {
   margin-bottom: 18px;
 }
@@ -850,7 +852,6 @@
   background: var(--risk-high-bg);
 }
 
-/* ─── TAP result ─── */
 .tap-result {
   background: var(--brand-primary-subtle);
   border: 1px solid var(--brand-primary);
@@ -907,7 +908,6 @@
   color: white;
 }
 
-/* ─── Confirmation box ─── */
 .confirm-box {
   background: var(--risk-high-bg);
   border: 1px solid var(--risk-high-border);
@@ -932,7 +932,6 @@
   color: var(--text-primary);
 }
 
-/* ─── Validate identity illustration ─── */
 .verify-illustration {
   width: 100%;
   padding: 32px;
@@ -955,7 +954,6 @@
   height: auto;
 }
 
-/* ─── Loading indicator inside panels ─── */
 .panel-loading {
   display: flex;
   align-items: center;
@@ -963,7 +961,6 @@
   padding: 32px;
 }
 
-/* ─── Footer ─── */
 .app-footer {
   display: flex;
   align-items: center;
@@ -1002,7 +999,7 @@
   display: block;
 }
 
-/* ─── Animations ─── */
+/* Animations */
 @keyframes fadeUp {
   from {
     opacity: 0;
@@ -1065,7 +1062,7 @@
   animation-delay: 0.2s;
 }
 
-/* ─── Action-card text stays selectable even though the wrapper is a <button> ─── */
+/* Action-card text stays selectable even though the wrapper is a <button> */
 .action-card__content,
 .action-card__content * {
   user-select: text;

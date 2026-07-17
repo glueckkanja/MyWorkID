@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { RightChevronIcon } from "../ui/icons/right-chevron-icon";
 
 type ActionCardProps = {
   icon: ReactNode;
@@ -31,17 +32,7 @@ export const ActionCard = ({
         <span className="action-card__desc">{description}</span>
       </span>
       <span className="action-card__arrow" aria-hidden="true">
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-        >
-          <path d="M9 18l6-6-6-6" />
-        </svg>
+        <RightChevronIcon />
       </span>
     </button>
   );
