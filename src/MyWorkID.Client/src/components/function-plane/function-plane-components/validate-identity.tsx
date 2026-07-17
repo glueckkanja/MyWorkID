@@ -9,7 +9,7 @@ import { Spinner } from "@/components/ui/spinner";
 // Import Icons
 import { FaceCheckCameraIcon } from "@/components/ui/icons/face-check-camera-icon";
 import { InformationCircleIcon } from "@/components/ui/icons/information-circle-icon";
-import { VerifiedIdentityIllustrationIcon } from "@/components/ui/icons/verified-identity-illustration-icon";
+import VerifiedIdentityIllustrationSvg from "../../../assets/svg/verified-identity-illustration.svg";
 
 type ValidateIdentityPanelProps = {
   open: boolean;
@@ -115,7 +115,12 @@ export const ValidateIdentityPanel = ({
     return (
       <>
         <div className="verify-illustration">
-          <VerifiedIdentityIllustrationIcon className="verify-illustration__icon" />
+          <img
+            src={VerifiedIdentityIllustrationSvg}
+            alt=""
+            aria-hidden="true"
+            className="verify-illustration__icon"
+          />
         </div>
         <div className="form-hint">
           <InformationCircleIcon />
