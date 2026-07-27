@@ -201,11 +201,10 @@
 .app-header__logo {
   display: flex;
   align-items: center;
-  gap: 10px;
 }
 
 .app-header__logo-mark {
-  height: 32px;
+  height: 38px;
   width: auto;
   flex-shrink: 0;
   display: block;
@@ -216,6 +215,8 @@
   font-size: 20px;
   letter-spacing: 0.4px;
   font-family: "Miriam Libre", "DM Sans", sans-serif;
+  line-height: 1;
+  margin-left: -6px;
 }
 
 .app-header__logo-text--work {
