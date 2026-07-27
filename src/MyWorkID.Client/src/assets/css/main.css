@@ -743,6 +743,12 @@
   box-shadow: var(--shadow-focus);
 }
 
+/* Hide the password reveal button in input fields */
+.form-input::-ms-reveal,
+.form-input::-webkit-password-toggle-button {
+  display: none;
+}
+
 .form-toggle-visibility {
   position: absolute;
   right: 4px;
