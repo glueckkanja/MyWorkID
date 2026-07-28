@@ -28,17 +28,14 @@ export const ValidateIdentityPanel = ({
   const [verifyState, setVerifyState] = useState<VerifyState>({
     status: "idle",
   });
-  const { toast, toastError, toastException, toastSuccess } = useToast();
+  const { toastError, toastException, toastInfo, toastSuccess } = useToast();
 
   useEffect(() => {
     getVerifiedIdConnection().then((connection) => {
       if (connection.state === HubConnectionState.Disconnected) {
         connection.on("HideQrCode", () => {
           setVerifyState({ status: "idle" });
-          toast({
-            title: "QR code scanned",
-            description: "Please continue on your mobile device.",
-          });
+          toastInfo("QR code scanned", "Please continue on your mobile device.");
           onClose();
         });
 
@@ -61,7 +58,7 @@ export const ValidateIdentityPanel = ({
         connection.start();
       }
     });
-  }, [toast, toastError, toastSuccess, onClose]);
+  }, [toastError, toastInfo, toastSuccess, onClose]);
 
   useEffect(() => {
     if (!open) {

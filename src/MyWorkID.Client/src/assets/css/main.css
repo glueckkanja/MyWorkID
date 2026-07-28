@@ -168,6 +168,8 @@
     color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
     min-height: 100vh;
+    user-select: none;
+    -webkit-user-select: none;
   }
 }
 
@@ -883,7 +885,6 @@
   font-weight: 500;
   letter-spacing: 4px;
   color: var(--text-primary);
-  user-select: all;
   word-break: break-all;
 }
 
@@ -1069,9 +1070,3 @@
   animation-delay: 0.2s;
 }
 
-/* Action-card text stays selectable even though the wrapper is a <button> */
-.action-card__content,
-.action-card__content * {
-  user-select: text;
-  -webkit-user-select: text;
-}
