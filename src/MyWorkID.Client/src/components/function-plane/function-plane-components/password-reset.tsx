@@ -23,7 +23,7 @@ const PASSWORD_MUST_CONTAIN_ERROR_TEXT =
 const PASSWORD_MUST_BE_SAME_ERROR_TEXT =
   "Password must be the same in both fields.";
 
-const getIsPasswordValid = (password: string) => {
+const isPasswordValid = (password: string) => {
   if (password.length < 8 || password.length > 255) {
     return false;
   }
@@ -56,12 +56,7 @@ export const PasswordResetPanel = ({
   const [submitting, setSubmitting] = useState(false);
   const { toastError, toastException, toastSuccess } = useToast();
 
-  useEffect(() => {
-    if (open && comingFromRedirect) {
-      // No-op: we arrived here already authenticated with the right claims.
-    }
-  }, [open, comingFromRedirect]);
-
+  // Reset state when the panel is closed
   useEffect(() => {
     if (!open) {
       setPassword("");
@@ -72,23 +67,23 @@ export const PasswordResetPanel = ({
     }
   }, [open]);
 
-  const handleOpen = () => {
+  const checkResetPasswordClaimOnOpen = () => {
     if (!comingFromRedirect) {
-      checkResetPasswordClaim().catch(() => {
-        // Redirect happens via authenticateRequest — no need to surface here.
-      });
+      // check authorization of current user
+      checkResetPasswordClaim().catch(() => undefined);
     }
   };
 
+  // Handle the case where the panel is opened via a redirect
   useEffect(() => {
     if (open) {
-      handleOpen();
+      checkResetPasswordClaimOnOpen();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   const handleSubmit = () => {
-    if (!getIsPasswordValid(password)) {
+    if (!isPasswordValid(password)) {
       toastError(PASSWORD_MUST_CONTAIN_ERROR_TEXT);
       return;
     }

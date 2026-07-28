@@ -54,7 +54,6 @@
 
 @layer base {
   :root {
-    /* shadcn base tokens (still used by shared UI primitives like Toaster/Skeleton) */
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;
     --card: 0 0% 100%;
@@ -746,7 +745,7 @@
   box-shadow: var(--shadow-focus);
 }
 
-/* Hide the password reveal button in input fields */
+/* Hide the default password reveal button in input fields */
 .form-input::-ms-reveal,
 .form-input::-webkit-password-toggle-button {
   display: none;

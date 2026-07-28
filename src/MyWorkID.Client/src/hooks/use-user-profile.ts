@@ -79,15 +79,15 @@ export const useUserProfile = (): UserProfile => {
         if (import.meta.env.DEV) {
           console.debug("User profile request failed", error);
         }
-        // ignore — user card gracefully degrades
       });
 
     getUserImage()
       .then((imageBlob) => {
         const reader = new FileReader();
         reader.onloadend = () => {
-          const base64 = reader.result?.toString();
-          setUserImage(base64);
+          if (typeof reader.result === "string") {
+            setUserImage(reader.result);
+          }
         };
         reader.readAsDataURL(imageBlob);
       })
@@ -95,7 +95,6 @@ export const useUserProfile = (): UserProfile => {
         if (import.meta.env.DEV) {
           console.debug("User profile image request failed", error);
         }
-        // ignore — no profile image
       });
 
     refreshRiskState();

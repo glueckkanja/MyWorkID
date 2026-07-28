@@ -59,7 +59,7 @@ export const CreateTapPanel = ({
       });
   };
 
-  const revoke = () => {
+  const revokeTap = () => {
     if (tap.status !== "ready") {
       return;
     }
@@ -80,7 +80,7 @@ export const CreateTapPanel = ({
       });
   };
 
-  const copyCode = () => {
+  const copyTap = () => {
     if (tap.status !== "ready") {
       return;
     }
@@ -153,7 +153,7 @@ export const CreateTapPanel = ({
                 ? "tap-copy-button tap-copy-button--copied"
                 : "tap-copy-button"
             }
-            onClick={copyCode}
+            onClick={copyTap}
           >
             {copiedTap ? (
               <>
@@ -186,7 +186,7 @@ export const CreateTapPanel = ({
         <button
           type="button"
           className="panel-secondary-button panel-secondary-button--danger"
-          onClick={revoke}
+          onClick={revokeTap}
         >
           <CircleXIcon />
           Revoke Access Pass
