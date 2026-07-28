@@ -51,28 +51,34 @@ const FunctionPlane = () => {
   const profile = useUserProfile();
 
   useEffect(() => {
-    handleRedirectPromise().then((authenticationResult) => {
-      if (!authenticationResult) {
-        return;
-      }
-      try {
-        const action = getPendingAction(authenticationResult);
-        setRedirectAction(action);
-        const panel = PANEL_BY_ACTION[action];
-        if (panel) {
-          setActivePanel(panel);
+    handleRedirectPromise()
+      .then((authenticationResult) => {
+        if (!authenticationResult) {
+          return;
         }
-      } catch (error) {
-        // ignore - no valid pending action
+        try {
+          const action = getPendingAction(authenticationResult);
+          setRedirectAction(action);
+          const panel = PANEL_BY_ACTION[action];
+          if (panel) {
+            setActivePanel(panel);
+          }
+        } catch (error) {
+          // ignore - no valid pending action
+          if (import.meta.env.DEV) {
+            // Log only for debugging purposes in dev mode
+            console.debug(
+              "No valid pending action found in redirect result",
+              error,
+            );
+          }
+        }
+      })
+      .catch((error) => {
         if (import.meta.env.DEV) {
-          // Log only for debugging purposes in dev mode
-          console.debug(
-            "No valid pending action found in redirect result",
-            error,
-          );
+          console.debug("handleRedirectPromise failed", error);
         }
-      }
-    });
+      });
   }, []);
 
   const hasRole = (role: string) => !!signedInUserInfo?.roles?.includes(role);
