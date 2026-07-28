@@ -614,30 +614,25 @@
   color: var(--brand-primary);
 }
 
-.panel-overlay {
-  position: fixed;
-  inset: 0;
-  border: none;
-  padding: 0;
-  margin: 0;
+.panel::backdrop {
   background: rgba(15, 23, 42, 0.3);
   backdrop-filter: blur(4px);
-  z-index: 200;
   animation: fadeIn 0.2s ease;
 }
 
 .panel {
   position: fixed;
+  top: auto;
   bottom: 0;
   left: 0;
   right: 0;
   border: none;
   padding: 0;
   margin: 0;
+  max-width: none;
   max-height: 90vh;
   background: var(--surface);
   border-radius: 20px 20px 0 0;
-  z-index: 201;
   animation: slideUpMobile 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   overflow-y: auto;
 }
