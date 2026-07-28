@@ -24,7 +24,7 @@ const PASSWORD_MUST_BE_SAME_ERROR_TEXT =
   "Password must be the same in both fields.";
 
 const isPasswordValid = (password: string) => {
-  if (password.length < 8 || password.length > 255) {
+  if (password.length < 10 || password.length > 255) {
     return false;
   }
 
