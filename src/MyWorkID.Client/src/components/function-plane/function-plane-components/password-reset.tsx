@@ -18,16 +18,11 @@ type PasswordResetPanelProps = {
   comingFromRedirect: boolean;
 };
 
-const PASSWORD_MUST_CONTAIN_ERROR_TEXT =
-  "Please use characters from at least 3 of these groups: lowercase, uppercase, digits, special symbols.";
-const PASSWORD_MUST_BE_SAME_ERROR_TEXT =
-  "Password must be the same in both fields.";
+const isPasswordLengthValid = (password: string) => {
+  return password.length >= 10 && password.length <= 255;
+};
 
-const isPasswordValid = (password: string) => {
-  if (password.length < 10 || password.length > 255) {
-    return false;
-  }
-
+const isPasswordComplexityValid = (password: string) => {
   const passwordRequirements: RegExp[] = [
     /[A-Z]/,
     /[a-z]/,
@@ -83,12 +78,20 @@ export const PasswordResetPanel = ({
   }, [open]);
 
   const handleSubmit = () => {
-    if (!isPasswordValid(password)) {
-      toastError(PASSWORD_MUST_CONTAIN_ERROR_TEXT);
+    if (!isPasswordLengthValid(password)) {
+      toastError("Password must be at least 10 characters long.");
       return;
     }
+
+    if (!isPasswordComplexityValid(password)) {
+      toastError(
+        "Please use characters from at least 3 of these groups: lowercase, uppercase, digits, special symbols.",
+      );
+      return;
+    }
+
     if (password !== confirmPassword) {
-      toastError(PASSWORD_MUST_BE_SAME_ERROR_TEXT);
+      toastError("Password must be the same in both fields.");
       return;
     }
 
