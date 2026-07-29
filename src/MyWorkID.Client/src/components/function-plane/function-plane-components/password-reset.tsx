@@ -19,7 +19,7 @@ type PasswordResetPanelProps = {
 };
 
 const isPasswordLengthValid = (password: string) => {
-  return password.length >= 10 && password.length <= 255;
+  return password.length >= 8 && password.length <= 255;
 };
 
 const isPasswordComplexityValid = (password: string) => {
@@ -79,7 +79,7 @@ export const PasswordResetPanel = ({
 
   const handleSubmit = () => {
     if (!isPasswordLengthValid(password)) {
-      toastError("Password must be at least 10 characters long.");
+      toastError("Password must be at least 8 characters long.");
       return;
     }
 
@@ -181,7 +181,7 @@ export const PasswordResetPanel = ({
           <div className="form-hint">
             <InformationCircleIcon />
             <span>
-              At least 10 characters (24 for admin accounts) including uppercase
+              At least 8 characters (24 for admin accounts) including uppercase
               and lowercase letters, a number, and a symbol.
             </span>
           </div>
