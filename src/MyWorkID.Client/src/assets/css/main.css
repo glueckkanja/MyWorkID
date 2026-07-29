@@ -612,10 +612,19 @@
   color: var(--brand-primary);
 }
 
-.panel::backdrop {
+.panel-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
   background: rgba(15, 23, 42, 0.3);
   backdrop-filter: blur(4px);
   animation: fadeIn 0.2s ease;
+  border: none;
+  margin: 0;
+  padding: 0;
+  display: block;
+  appearance: none;
+  font: inherit;
 }
 
 .panel {
@@ -624,6 +633,7 @@
   bottom: 0;
   left: 0;
   right: 0;
+  z-index: 510;
   border: none;
   padding: 0;
   margin: 0;
