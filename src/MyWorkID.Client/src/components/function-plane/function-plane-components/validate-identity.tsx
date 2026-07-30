@@ -1,138 +1,150 @@
 import { useEffect, useState } from "react";
+import { Panel } from "../../panel";
 import { verifyIdentity } from "../../../services/api-service";
 import { HubConnectionState } from "@microsoft/signalr";
 import { getVerifiedIdConnection } from "../../../services/signal-r-service";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { ValidateIdentityPanelProps, VerifyState } from "../../../types";
 import { useToast } from "@/hooks/use-toast";
-import ValidateIdentitySvg from "../../../assets/svg/validate-identity.svg";
 import { Spinner } from "@/components/ui/spinner";
 
-type VerifiedIdDisplay = {
-  visible: boolean;
-  qrCodeBase64?: string;
-  loading: boolean;
-};
+// Import Icons
+import { FaceCheckCameraIcon } from "@/components/ui/icons/face-check-camera-icon";
+import { InformationCircleIcon } from "@/components/ui/icons/information-circle-icon";
+import VerifiedIdentityIllustrationSvg from "../../../assets/svg/verified-identity-illustration.svg";
 
-export const ValidateIdentity = (/*props: ActionResultProps<any>*/) => {
-  const [verifiedIdDisplay, setVerifiedIdDisplay] = useState<VerifiedIdDisplay>(
-    {
-      visible: false,
-      qrCodeBase64: undefined,
-      loading: false,
-    }
-  );
-
-  const { toastError, toastException, toastSuccess } = useToast();
-
-  const hideVerifiedIdDisplay = () => {
-    setVerifiedIdDisplay({
-      visible: false,
-      qrCodeBase64: undefined,
-      loading: false,
-    });
-  };
+export const ValidateIdentityPanel = ({
+  open,
+  onClose,
+}: ValidateIdentityPanelProps) => {
+  const [verifyState, setVerifyState] = useState<VerifyState>({
+    status: "idle",
+  });
+  const { toastError, toastException, toastInfo, toastSuccess } = useToast();
 
   useEffect(() => {
     getVerifiedIdConnection().then((connection) => {
       if (connection.state === HubConnectionState.Disconnected) {
         connection.on("HideQrCode", () => {
-          hideVerifiedIdDisplay();
+          setVerifyState({ status: "idle" });
+          toastInfo(
+            "QR code scanned",
+            "Please continue on your mobile device.",
+          );
+          onClose();
         });
 
         connection.on("VerificationSuccess", () => {
-          hideVerifiedIdDisplay();
-          toastSuccess("Identity Verified", "Your identity has been successfully verified.");
+          setVerifyState({ status: "idle" });
+          toastSuccess(
+            "Identity Verified",
+            "Your identity has been successfully verified.",
+          );
+          onClose();
         });
 
         connection.on("VerificationFailed", (errorMessage: string) => {
-          hideVerifiedIdDisplay();
-          toastError(errorMessage || "Identity verification failed. Please try again.");
+          setVerifyState({ status: "idle" });
+          toastError(
+            errorMessage || "Identity verification failed. Please try again.",
+          );
         });
+
         connection.start();
       }
     });
-  }, [toastError, toastSuccess]);
-  
-  const validateIdentity = () => {
-    setVerifiedIdDisplay({
-      visible: true,
-      qrCodeBase64: undefined,
-      loading: true,
-    });
+  }, [toastError, toastInfo, toastSuccess, onClose]);
 
+  useEffect(() => {
+    if (!open) {
+      setVerifyState({ status: "idle" });
+    }
+  }, [open]);
+
+  const startVerification = () => {
+    setVerifyState({ status: "loading" });
     verifyIdentity()
       .then((result) => {
-        if (result.data?.qrCode != null) {
-          setVerifiedIdDisplay({
-            visible: true,
-            qrCodeBase64: result.data?.qrCode,
-            loading: false,
-          });
+        const qrCode = result.data?.qrCode;
+        if (qrCode) {
+          setVerifyState({ status: "ready", qrCodeBase64: qrCode });
         } else {
-          setVerifiedIdDisplay({
-            visible: false,
-            qrCodeBase64: undefined,
-            loading: false,
-          });
+          setVerifyState({ status: "idle" });
           toastError();
         }
       })
       .catch((error) => {
-        setVerifiedIdDisplay({
-          visible: false,
-          qrCodeBase64: undefined,
-          loading: false,
-        });
+        setVerifyState({ status: "idle" });
         toastException(error);
       });
   };
 
+  const renderBody = () => {
+    if (verifyState.status === "loading") {
+      return (
+        <div className="panel-loading">
+          <Spinner />
+        </div>
+      );
+    }
+
+    if (verifyState.status === "ready") {
+      return (
+        <>
+          <div className="verify-illustration">
+            <img
+              src={verifyState.qrCodeBase64}
+              alt="Verified ID QR Code"
+              className="verify-illustration__qr"
+            />
+          </div>
+          <div className="form-hint">
+            <InformationCircleIcon />
+            <span>
+              Scan this QR code with the Microsoft Authenticator app to present
+              your Verified ID credential.
+            </span>
+          </div>
+        </>
+      );
+    }
+
+    return (
+      <>
+        <div className="verify-illustration">
+          <img
+            src={VerifiedIdentityIllustrationSvg}
+            alt=""
+            aria-hidden="true"
+            className="verify-illustration__icon"
+          />
+        </div>
+        <div className="form-hint">
+          <InformationCircleIcon />
+          <span>
+            You'll be asked to take a real-time selfie. The system matches it
+            against your Microsoft Entra ID photo. Results are stored securely.
+          </span>
+        </div>
+        <button
+          type="button"
+          className="panel-primary-button"
+          onClick={startVerification}
+        >
+          <FaceCheckCameraIcon />
+          Start Face Check
+        </button>
+      </>
+    );
+  };
+
   return (
-    <div>
-      {!verifiedIdDisplay.visible ? (
-        <Card
-          className="action-card"
-          onClick={() => {
-            validateIdentity();
-          }}
-        >
-          <CardHeader>
-            <CardTitle>
-              <img src={ValidateIdentitySvg} alt="ValidateIdentity" />
-            </CardTitle>
-          </CardHeader>
-          <CardFooter className="action-card__footer">
-            Validate Identity
-          </CardFooter>
-        </Card>
-      ) : verifiedIdDisplay.loading ? (
-        <Card className="action-card__container__loading">
-          <CardContent>
-            <div className="action-card__loading">
-              <Spinner />
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card
-          className="action-card__qr-code"
-          onClick={() => {
-            validateIdentity();
-          }}
-        >
-          <CardContent>
-            <div>
-              <img alt="QrCode" className="action-card__qr-code__img" src={verifiedIdDisplay.qrCodeBase64}></img>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+    <Panel
+      open={open}
+      title="Validate Identity"
+      subtitle="Prove your identity using a face scan via Verified ID."
+      onClose={onClose}
+    >
+      {renderBody()}
+    </Panel>
   );
 };

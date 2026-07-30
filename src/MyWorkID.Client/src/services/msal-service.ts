@@ -83,6 +83,8 @@ export const sendAxiosRequest = async <T, D = unknown>(
       return await axios.post<T>(url, body, { headers: header });
     case REQUEST_TYPE.PUT:
       return await axios.put<T>(url, body, { headers: header });
+    case REQUEST_TYPE.DELETE:
+      return await axios.delete<T>(url, { headers: header });
     default:
       throw new Error("Invalid request type");
   }
@@ -199,6 +201,8 @@ export const getPendingAction = (
         return EApiFunctionTypes.DISMISS_USER_RISK;
       case EApiFunctionTypes.CREATE_TAP:
         return EApiFunctionTypes.CREATE_TAP;
+      case EApiFunctionTypes.REVOKE_TAP:
+        return EApiFunctionTypes.REVOKE_TAP;
       case EApiFunctionTypes.PASSWORD_RESET:
         return EApiFunctionTypes.PASSWORD_RESET;
       default:

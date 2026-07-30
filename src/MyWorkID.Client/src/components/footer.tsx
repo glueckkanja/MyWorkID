@@ -1,22 +1,28 @@
 import BrandingSvg from "../assets/svg/branding.svg";
-import BrandingSvgDark from "../assets/svg/branding-dark.svg";
+import BrandingDarkSvg from "../assets/svg/branding-dark.svg";
 
 export const Footer = () => {
   return (
-    <div className="footer__container no-select">
-      <span className="footer__text">powered by</span>
-      <div className="footer_svg-icon">
+    <footer className="app-footer">
+      <span className="app-footer__text">powered by</span>
+      <a
+        href="https://www.glueckkanja.com"
+        target="_blank"
+        rel="noreferrer"
+        aria-label="glueckkanja"
+        className="app-footer__logo-link"
+      >
         <img
-          className="footer_svg-icon-light"
+          className="app-footer__logo app-footer__logo--light"
           src={BrandingSvg}
-          alt="BrandingLogo"
+          alt="glueckkanja"
         />
         <img
-          className="footer_svg-icon-dark"
-          src={BrandingSvgDark}
-          alt="BrandingLogo"
+          className="app-footer__logo app-footer__logo--dark"
+          src={BrandingDarkSvg}
+          alt="glueckkanja"
         />
-      </div>
-    </div>
+      </a>
+    </footer>
   );
 };

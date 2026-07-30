@@ -1,283 +1,203 @@
-import { TFunctionProps } from "../../../types";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Panel } from "../../panel";
+import { PasswordResetPanelProps } from "../../../types";
 import {
   callResetPassword,
   checkResetPasswordClaim,
 } from "../../../services/api-service";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import PasswordResetSvg from "../../../assets/svg/password-reset.svg";
-import EyeOpenSvg from "../../../assets/svg/eye-open.svg";
-import EyeClosedSvg from "../../../assets/svg/eye-closed.svg";
 import { Spinner } from "@/components/ui/spinner";
 
-type PasswordDisplay = {
-  visible: boolean;
-  value: string;
-  showValue: boolean;
-  errorValue?: string;
-  valueConfirm: string;
-  showValueConfirm: boolean;
-  errorValueConfirm?: string;
-  loading: boolean;
+// Import Icons
+import { EyeIcon } from "@/components/ui/icons/eye-icon";
+import { EyeOffIcon } from "@/components/ui/icons/eye-off-icon";
+import { InformationCircleIcon } from "@/components/ui/icons/information-circle-icon";
+
+const PASSWORD_LENGTH_ERROR_MESSAGE =
+  "Password must be at least 8 characters long.";
+const PASSWORD_COMPLEXITY_ERROR_MESSAGE =
+  "Please use characters from at least 3 of these groups: lowercase, uppercase, digits, special symbols.";
+const PASSWORD_MISMATCH_ERROR_MESSAGE =
+  "Password must be the same in both fields.";
+const PASSWORD_CHANGED_SUCCESS_TITLE = "Password Changed";
+const PASSWORD_CHANGED_SUCCESS_MESSAGE =
+  "Your new password is active. Use it the next time you sign in.";
+
+const isPasswordLengthValid = (password: string) => {
+  return password.length >= 8 && password.length <= 255;
 };
 
-enum PasswordInputType {
-  MAIN,
-  CONFIRM,
-}
+const isPasswordComplexityValid = (password: string) => {
+  const passwordRequirements: RegExp[] = [
+    /[A-Z]/,
+    /[a-z]/,
+    /\d/,
+    /[@#%^&*\-_!+=[\]{}|\\:',./`~"();<> ]/,
+  ];
 
-const PASSWORD_MUST_CONTAIN_ERROR_TEXT =
-  "Please use characters from at least 3 of these groups: lowercase, uppercase, digits, special symbols.";
-const PASSWORD_MUST_BE_SAME_ERROR_TEXT =
-  "Password must be the same in both fields.";
+  let satisfied = 0;
+  for (const requirement of passwordRequirements) {
+    if (requirement.test(password)) {
+      satisfied++;
+    }
+  }
+  return satisfied >= 3;
+};
 
-export const PasswordReset = (props: TFunctionProps) => {
-  const [passwordDisplay, setPasswordDisplay] = useState<PasswordDisplay>({
-    visible: false,
-    value: "",
-    showValue: false,
-    valueConfirm: "",
-    showValueConfirm: false,
-    loading: false,
-  });
+export const PasswordResetPanel = ({
+  open,
+  onClose,
+  comingFromRedirect,
+}: PasswordResetPanelProps) => {
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const { toastError, toastException, toastSuccess } = useToast();
-  const [enableSubmitButton, setEnableSubmitButton] = useState(true);
-  // Note this is the claim challenge check - if successfull comes back the password reset UI should be accasible - if not we have to close the menu again
+
+  // Reset state when the panel is closed
   useEffect(() => {
-    if (props.comingFromRedirect) {
-      togglePasswordResetUI();
+    if (!open) {
+      setPassword("");
+      setConfirmPassword("");
+      setShowPassword(false);
+      setShowConfirmPassword(false);
+      setSubmitting(false);
+    }
+  }, [open]);
+
+  const checkResetPasswordClaimOnOpen = () => {
+    if (!comingFromRedirect) {
+      // check authorization of current user
+      checkResetPasswordClaim().catch(() => undefined);
+    }
+  };
+
+  // Handle the case where the panel is opened via a redirect
+  useEffect(() => {
+    if (open) {
+      checkResetPasswordClaimOnOpen();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.comingFromRedirect]);
+  }, [open]);
 
-  const resetPassword = () => {
-    const passwordToSet = passwordDisplay.value;
-    if (!getIsPasswordValid(passwordToSet)) {
-      toastError(PASSWORD_MUST_CONTAIN_ERROR_TEXT);
-    } else if (passwordToSet !== passwordDisplay.valueConfirm) {
-      toastError(PASSWORD_MUST_BE_SAME_ERROR_TEXT);
-    } else {
-      // Call the API to reset the password
-      callResetPassword(passwordToSet)
-        .then(() => {
-          setPasswordDisplay({
-            visible: false,
-            value: "",
-            showValue: false,
-            valueConfirm: "",
-            showValueConfirm: false,
-            loading: false,
-          });
-          toastSuccess(
-            "Reset Password",
-            "Your password has been sucessfully set."
-          );
-        })
-        .catch((error) => {
-          setPasswordDisplay({
-            visible: true,
-            value: "",
-            showValue: false,
-            valueConfirm: "",
-            showValueConfirm: false,
-            loading: false,
-            errorValue: "ERROR",
-            errorValueConfirm: "ERROR",
-          });
-          toastException(error);
-        });
-    }
-  };
-
-  const togglePasswordResetUI = () => {
-    if (!passwordDisplay.visible) {
-      checkResetPasswordClaim();
+  const handleSubmit = () => {
+    if (!isPasswordLengthValid(password)) {
+      toastError(PASSWORD_LENGTH_ERROR_MESSAGE);
+      return;
     }
 
-    setPasswordDisplay({
-      visible: !passwordDisplay.visible,
-      value: "",
-      showValue: false,
-      valueConfirm: "",
-      showValueConfirm: false,
-      loading: false,
-    });
-  };
-
-  const handleClickShowPassword = (inputType: PasswordInputType) => {
-    setPasswordDisplay((oldValues) => {
-      let propertyToSet = "showValue";
-      let valueToSet = !oldValues.showValue;
-
-      if (inputType == PasswordInputType.CONFIRM) {
-        propertyToSet = "showValueConfirm";
-        valueToSet = !oldValues.showValueConfirm;
-      }
-
-      return { ...oldValues, [propertyToSet]: valueToSet };
-    });
-  };
-
-  const getIsPasswordValid = (password: string) => {
-    if (password.length < 8 || password.length > 255) {
-      return false;
+    if (!isPasswordComplexityValid(password)) {
+      toastError(PASSWORD_COMPLEXITY_ERROR_MESSAGE);
+      return;
     }
 
-    const passwordRequirements: RegExp[] = [
-      /[A-Z]/,
-      /[a-z]/,
-      /\d/,
-      /[@#%^&*\-_!+=[\]{}|\\:',./`~"();<> ]/,
-    ];
-
-    let satisfiedRequirements = 0;
-    for (const requirement of passwordRequirements) {
-      if (requirement.test(password)) {
-        satisfiedRequirements++;
-      }
+    if (password !== confirmPassword) {
+      toastError(PASSWORD_MISMATCH_ERROR_MESSAGE);
+      return;
     }
 
-    return satisfiedRequirements >= 3;
+    setSubmitting(true);
+    callResetPassword(password)
+      .then(() => {
+        toastSuccess(
+          PASSWORD_CHANGED_SUCCESS_TITLE,
+          PASSWORD_CHANGED_SUCCESS_MESSAGE,
+        );
+        onClose();
+      })
+      .catch((error) => {
+        toastException(error);
+      })
+      .finally(() => {
+        setSubmitting(false);
+      });
   };
 
-  const handleInput = (inputType: PasswordInputType, value: string) => {
-    setPasswordDisplay((oldValues) => {
-      let propertyToSet = "value";
-      if (value.length > 0) {
-        setEnableSubmitButton(false);
-      } else {
-        setEnableSubmitButton(true);
-      }
-      if (inputType == PasswordInputType.CONFIRM) {
-        propertyToSet = "valueConfirm";
-      }
-
-      const newValues = {
-        ...oldValues,
-        [propertyToSet]: value,
-      };
-
-      let errorValue = undefined;
-      let errorValueConfirm = undefined;
-
-      if (newValues.value !== newValues.valueConfirm) {
-        errorValueConfirm = PASSWORD_MUST_BE_SAME_ERROR_TEXT;
-      }
-
-      if (!getIsPasswordValid(newValues.value)) {
-        errorValue = PASSWORD_MUST_CONTAIN_ERROR_TEXT;
-      }
-
-      return { ...newValues, errorValueConfirm, errorValue };
-    });
-  };
-  function onSubmit() {
-    resetPassword();
-  }
+  const canSubmit =
+    password.length > 0 && confirmPassword.length > 0 && !submitting;
 
   return (
-    <div>
-      {!passwordDisplay.visible && (
-        <Card
-          className="action-card"
-          onClick={() => {
-            togglePasswordResetUI();
-          }}
-        >
-          <CardHeader>
-            <CardTitle>
-              <img src={PasswordResetSvg} alt="PasswordResetIcon" />
-            </CardTitle>
-          </CardHeader>
-          <CardFooter className="action-card__footer">
-            Reset Password
-          </CardFooter>
-        </Card>
-      )}
-      {passwordDisplay.visible &&
-        (passwordDisplay.loading ? (
-          <Card className="action-card__container__loading">
-            <CardContent>
-              <div className="action-card__loading">
-                <Spinner />
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-2">
-            <div className="action-card__pasword-reser__input-container">
-              <Input
-                type={passwordDisplay.showValue ? "text" : "password"}
-                className="action-card__pasword-reset__input"
-                placeholder="Enter Password"
-                onChange={(e) =>
-                  handleInput(PasswordInputType.MAIN, e.target.value)
-                }
-                value={passwordDisplay.value}
+    <Panel
+      open={open}
+      title="Reset Password"
+      subtitle="Choose a strong password you haven't used before."
+      onClose={onClose}
+    >
+      {submitting ? (
+        <div className="panel-loading">
+          <Spinner />
+        </div>
+      ) : (
+        <>
+          <div className="form-group">
+            <label className="form-label" htmlFor="password-reset-new">
+              New Password
+            </label>
+            <div className="form-input-wrapper">
+              <input
+                id="password-reset-new"
+                type={showPassword ? "text" : "password"}
+                className="form-input"
+                placeholder="Enter new password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                autoComplete="new-password"
               />
               <button
-                tabIndex={0}
-                className="action-card__pasword-reset__input-container__icon"
-                onClick={() => handleClickShowPassword(PasswordInputType.MAIN)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    handleClickShowPassword(PasswordInputType.MAIN);
-                  }
-                }}
+                type="button"
+                className="form-toggle-visibility"
+                onClick={() => setShowPassword((value) => !value)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
               >
-                <img
-                  src={passwordDisplay.showValue ? EyeClosedSvg : EyeOpenSvg}
-                  alt="ShowPasswordIcon"
-                />
+                {showPassword ? <EyeOffIcon /> : <EyeIcon />}
               </button>
             </div>
-            <div className="action-card__pasword-reser__input-container">
-              <Input
-                className="action-card__pasword-reset__input"
-                type={passwordDisplay.showValue ? "text" : "password"}
-                placeholder="Confirm Password"
-                onChange={(e) =>
-                  handleInput(PasswordInputType.CONFIRM, e.target.value)
-                }
-                value={passwordDisplay.valueConfirm}
-              />
-              <button
-                className="action-card__pasword-reset__input-container__icon"
-                tabIndex={0}
-                onClick={() => handleClickShowPassword(PasswordInputType.MAIN)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    handleClickShowPassword(PasswordInputType.MAIN);
-                  }
-                }}
-              >
-                <img
-                  src={passwordDisplay.showValue ? EyeClosedSvg : EyeOpenSvg}
-                  alt="ShowPasswordIcon"
-                />
-              </button>
-            </div>
-            <Button
-              className="action-card__pasword-reset__submit-button"
-              type="submit"
-              disabled={enableSubmitButton}
-              onClick={() => {
-                onSubmit();
-              }}
-            >
-              Submit
-            </Button>
           </div>
-        ))}
-    </div>
+          <div className="form-group">
+            <label className="form-label" htmlFor="password-reset-confirm">
+              Confirm Password
+            </label>
+            <div className="form-input-wrapper">
+              <input
+                id="password-reset-confirm"
+                type={showConfirmPassword ? "text" : "password"}
+                className="form-input"
+                placeholder="Repeat new password"
+                value={confirmPassword}
+                onChange={(event) => setConfirmPassword(event.target.value)}
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                className="form-toggle-visibility"
+                onClick={() => setShowConfirmPassword((value) => !value)}
+                aria-label={
+                  showConfirmPassword ? "Hide password" : "Show password"
+                }
+              >
+                {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
+              </button>
+            </div>
+          </div>
+          <div className="form-hint">
+            <InformationCircleIcon />
+            <span>
+              At least 8 characters (24 for admin accounts) including uppercase
+              and lowercase letters, a number, and a symbol.
+            </span>
+          </div>
+          <button
+            type="button"
+            className="panel-primary-button"
+            disabled={!canSubmit}
+            onClick={handleSubmit}
+          >
+            Change Password
+          </button>
+        </>
+      )}
+    </Panel>
   );
 };
