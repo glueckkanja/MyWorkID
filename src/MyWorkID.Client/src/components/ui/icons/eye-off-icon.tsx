@@ -1,6 +1,4 @@
-import type { ComponentPropsWithoutRef } from "react";
-
-type EyeOffIconProps = ComponentPropsWithoutRef<"svg">;
+import { SvgIconProps } from "../../../types";
 
 export const EyeOffIcon = ({
   width = 18,
@@ -11,7 +9,7 @@ export const EyeOffIcon = ({
   strokeWidth = 1.8,
   strokeLinecap = "round",
   ...svgProperties
-}: EyeOffIconProps) => {
+}: SvgIconProps) => {
   return (
     <svg
       width={width}

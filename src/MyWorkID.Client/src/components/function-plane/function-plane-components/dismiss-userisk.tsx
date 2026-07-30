@@ -1,19 +1,11 @@
 import { useEffect, useState } from "react";
 import { Panel } from "../../panel";
 import { dismissUserRisk } from "../../../services/api-service";
+import { DismissUserRiskPanelProps } from "../../../types";
 import { CircleCheckIcon } from "@/components/ui/icons/circle-check-icon";
 import { useToast } from "@/hooks/use-toast";
 import { Spinner } from "@/components/ui/spinner";
-import { RiskLevel } from "@/hooks/use-user-profile";
-
-type DismissUserRiskPanelProps = {
-  open: boolean;
-  onClose: () => void;
-  comingFromRedirect: boolean;
-  onDismissed?: () => void;
-  riskLevel: RiskLevel;
-  riskLabel: string;
-};
+import { RiskLevel } from "../../../types";
 
 const renderConfirmationBody = (riskLevel: RiskLevel, riskLabel: string) => {
   if (riskLevel === "high" || riskLevel === "medium" || riskLevel === "low") {

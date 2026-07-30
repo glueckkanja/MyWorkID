@@ -1,4 +1,4 @@
-import { RiskLevel, UserProfile } from "@/hooks/use-user-profile";
+import { RiskLevel, UserProfile } from "../../types";
 
 const getInitials = (displayName: string | undefined): string => {
   if (!displayName) {

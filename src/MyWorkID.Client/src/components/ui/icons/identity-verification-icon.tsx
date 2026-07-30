@@ -1,6 +1,4 @@
-import type { ComponentPropsWithoutRef } from "react";
-
-type IdentityVerificationIconProps = ComponentPropsWithoutRef<"svg">;
+import { SvgIconProps } from "../../../types";
 
 export const IdentityVerificationIcon = ({
   width = 20,
@@ -12,7 +10,7 @@ export const IdentityVerificationIcon = ({
   strokeLinecap = "round",
   strokeLinejoin = "round",
   ...svgProperties
-}: IdentityVerificationIconProps) => {
+}: SvgIconProps) => {
   return (
     <svg
       width={width}

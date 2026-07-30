@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Panel } from "../../panel";
+import { CreateTapPanelProps, TapState } from "../../../types";
 import {
   generateTAP,
   revokeTemporaryAccessPass,
@@ -13,18 +14,6 @@ import { CheckmarkIcon } from "@/components/ui/icons/checkmark-icon";
 import { CopyDocumentIcon } from "@/components/ui/icons/copy-document-icon";
 import { RefreshArrowIcon } from "@/components/ui/icons/refresh-arrow-icon";
 import { InformationCircleIcon } from "@/components/ui/icons/information-circle-icon";
-
-type CreateTapPanelProps = {
-  open: boolean;
-  onClose: () => void;
-  comingFromRedirect: boolean;
-};
-
-type TapState =
-  | { status: "empty" }
-  | { status: "loading" }
-  | { status: "revoking" }
-  | { status: "ready"; id: string; password: string };
 
 export const CreateTapPanel = ({
   open,

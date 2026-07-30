@@ -1,6 +1,4 @@
-import type { ComponentPropsWithoutRef } from "react";
-
-type RightChevronIconProps = ComponentPropsWithoutRef<"svg">;
+import { SvgIconProps } from "../../../types";
 
 export const RightChevronIcon = ({
   width = 18,
@@ -11,7 +9,7 @@ export const RightChevronIcon = ({
   strokeWidth = 2,
   strokeLinecap = "round",
   ...svgProperties
-}: RightChevronIconProps) => {
+}: SvgIconProps) => {
   return (
     <svg
       width={width}

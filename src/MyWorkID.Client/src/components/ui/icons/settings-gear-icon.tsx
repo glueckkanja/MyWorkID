@@ -1,6 +1,4 @@
-import type { ComponentPropsWithoutRef } from "react";
-
-type SettingsGearIconProps = ComponentPropsWithoutRef<"svg">;
+import { SvgIconProps } from "../../../types";
 
 export const SettingsGearIcon = ({
   width = 18,
@@ -11,7 +9,7 @@ export const SettingsGearIcon = ({
   strokeWidth = 1.8,
   strokeLinecap = "round",
   ...svgProperties
-}: SettingsGearIconProps) => {
+}: SvgIconProps) => {
   return (
     <svg
       width={width}

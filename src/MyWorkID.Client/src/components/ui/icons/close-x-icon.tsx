@@ -1,6 +1,4 @@
-import type { ComponentPropsWithoutRef } from "react";
-
-type CloseXIconProps = ComponentPropsWithoutRef<"svg">;
+import { SvgIconProps } from "../../../types";
 
 export const CloseXIcon = ({
   width = 16,
@@ -11,7 +9,7 @@ export const CloseXIcon = ({
   strokeWidth = 2.5,
   strokeLinecap = "round",
   ...svgProperties
-}: CloseXIconProps) => {
+}: SvgIconProps) => {
   return (
     <svg
       width={width}

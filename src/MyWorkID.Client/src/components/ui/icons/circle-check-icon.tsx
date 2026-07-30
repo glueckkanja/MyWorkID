@@ -1,6 +1,4 @@
-import type { ComponentPropsWithoutRef } from "react";
-
-type CircleCheckIconProps = ComponentPropsWithoutRef<"svg">;
+import { SvgIconProps } from "../../../types";
 
 export const CircleCheckIcon = ({
   width = 18,
@@ -12,7 +10,7 @@ export const CircleCheckIcon = ({
   strokeLinecap = "round",
   strokeLinejoin = "round",
   ...svgProperties
-}: CircleCheckIconProps) => {
+}: SvgIconProps) => {
   return (
     <svg
       width={width}

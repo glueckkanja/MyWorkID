@@ -1,6 +1,4 @@
-import type { ComponentPropsWithoutRef } from "react";
-
-type PasswordLockIconProps = ComponentPropsWithoutRef<"svg">;
+import { SvgIconProps } from "../../../types";
 
 export const PasswordLockIcon = ({
   width = 20,
@@ -12,7 +10,7 @@ export const PasswordLockIcon = ({
   strokeLinecap = "round",
   strokeLinejoin = "round",
   ...svgProperties
-}: PasswordLockIconProps) => {
+}: SvgIconProps) => {
   return (
     <svg
       width={width}

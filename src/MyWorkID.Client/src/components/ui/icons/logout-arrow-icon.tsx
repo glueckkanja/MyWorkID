@@ -1,6 +1,4 @@
-import type { ComponentPropsWithoutRef } from "react";
-
-type LogoutArrowIconProps = ComponentPropsWithoutRef<"svg">;
+import { SvgIconProps } from "../../../types";
 
 export const LogoutArrowIcon = ({
   width = 16,
@@ -11,7 +9,7 @@ export const LogoutArrowIcon = ({
   strokeWidth = 2,
   strokeLinecap = "round",
   ...svgProperties
-}: LogoutArrowIconProps) => {
+}: SvgIconProps) => {
   return (
     <svg
       width={width}

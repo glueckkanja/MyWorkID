@@ -1,6 +1,4 @@
-import type { ComponentPropsWithoutRef } from "react";
-
-type EyeIconProps = ComponentPropsWithoutRef<"svg">;
+import { SvgIconProps } from "../../../types";
 
 export const EyeIcon = ({
   width = 18,
@@ -11,7 +9,7 @@ export const EyeIcon = ({
   strokeWidth = 1.8,
   strokeLinecap = "round",
   ...svgProperties
-}: EyeIconProps) => {
+}: SvgIconProps) => {
   return (
     <svg
       width={width}

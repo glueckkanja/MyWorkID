@@ -1,6 +1,4 @@
-import type { ComponentPropsWithoutRef } from "react";
-
-type CopyDocumentIconProps = ComponentPropsWithoutRef<"svg">;
+import { SvgIconProps } from "../../../types";
 
 export const CopyDocumentIcon = ({
   width = 14,
@@ -11,7 +9,7 @@ export const CopyDocumentIcon = ({
   strokeWidth = 2,
   strokeLinecap = "round",
   ...svgProperties
-}: CopyDocumentIconProps) => {
+}: SvgIconProps) => {
   return (
     <svg
       width={width}

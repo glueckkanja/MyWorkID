@@ -1,14 +1,7 @@
-import { ReactNode, useEffect, useId, useRef } from "react";
+import { useEffect, useId, useRef } from "react";
+import { PanelProps } from "../types";
 import { createPortal } from "react-dom";
 import { CloseXIcon } from "@/components/ui/icons/close-x-icon";
-
-type PanelProps = {
-  open: boolean;
-  title: string;
-  subtitle?: string;
-  onClose: () => void;
-  children: ReactNode;
-};
 
 export const Panel = ({
   open,

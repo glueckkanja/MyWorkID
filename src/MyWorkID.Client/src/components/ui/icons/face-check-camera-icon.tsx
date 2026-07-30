@@ -1,6 +1,4 @@
-import type { ComponentPropsWithoutRef } from "react";
-
-type FaceCheckCameraIconProps = ComponentPropsWithoutRef<"svg">;
+import { SvgIconProps } from "../../../types";
 
 export const FaceCheckCameraIcon = ({
   width = 18,
@@ -11,7 +9,7 @@ export const FaceCheckCameraIcon = ({
   strokeWidth = 2,
   strokeLinecap = "round",
   ...svgProperties
-}: FaceCheckCameraIconProps) => {
+}: SvgIconProps) => {
   return (
     <svg
       width={width}

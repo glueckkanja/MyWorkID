@@ -1,13 +1,5 @@
-import { ReactNode } from "react";
+import { ActionCardProps } from "../../types";
 import { RightChevronIcon } from "../ui/icons/right-chevron-icon";
-
-type ActionCardProps = {
-  icon: ReactNode;
-  title: string;
-  description: string;
-  highlighted?: boolean;
-  onClick: () => void;
-};
 
 export const ActionCard = ({
   icon,

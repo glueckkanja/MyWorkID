@@ -1,6 +1,4 @@
-import type { ComponentPropsWithoutRef } from "react";
-
-type CrescentMoonIconProps = ComponentPropsWithoutRef<"svg">;
+import { SvgIconProps } from "../../../types";
 
 export const CrescentMoonIcon = ({
   width = 16,
@@ -11,7 +9,7 @@ export const CrescentMoonIcon = ({
   strokeWidth = 1.8,
   strokeLinecap = "round",
   ...svgProperties
-}: CrescentMoonIconProps) => {
+}: SvgIconProps) => {
   return (
     <svg
       width={width}

@@ -4,20 +4,9 @@ import {
   getUserImage,
   getUserRiskState,
 } from "../services/api-service";
-import { TGetRiskStateResponse, User } from "../types";
+import { TGetRiskStateResponse, User, RiskLevel, UserProfile } from "../types";
 
 const RISK_STATE_POLL_INTERVAL_MILLISECONDS = 30000;
-
-export type RiskLevel = "high" | "medium" | "low" | "none" | "unknown";
-
-export type UserProfile = {
-  user: User | undefined;
-  userImage: string | undefined;
-  riskLoading: boolean;
-  riskLevel: RiskLevel;
-  riskLabel: string;
-  refreshRiskState: () => void;
-};
 
 const toRiskLevel = (
   riskState: TGetRiskStateResponse | undefined

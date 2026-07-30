@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Panel } from "../../panel";
+import { PasswordResetPanelProps } from "../../../types";
 import {
   callResetPassword,
   checkResetPasswordClaim,
@@ -12,11 +13,15 @@ import { EyeIcon } from "@/components/ui/icons/eye-icon";
 import { EyeOffIcon } from "@/components/ui/icons/eye-off-icon";
 import { InformationCircleIcon } from "@/components/ui/icons/information-circle-icon";
 
-type PasswordResetPanelProps = {
-  open: boolean;
-  onClose: () => void;
-  comingFromRedirect: boolean;
-};
+const PASSWORD_LENGTH_ERROR_MESSAGE =
+  "Password must be at least 8 characters long.";
+const PASSWORD_COMPLEXITY_ERROR_MESSAGE =
+  "Please use characters from at least 3 of these groups: lowercase, uppercase, digits, special symbols.";
+const PASSWORD_MISMATCH_ERROR_MESSAGE =
+  "Password must be the same in both fields.";
+const PASSWORD_CHANGED_SUCCESS_TITLE = "Password Changed";
+const PASSWORD_CHANGED_SUCCESS_MESSAGE =
+  "Your new password is active. Use it the next time you sign in.";
 
 const isPasswordLengthValid = (password: string) => {
   return password.length >= 8 && password.length <= 255;
@@ -79,19 +84,17 @@ export const PasswordResetPanel = ({
 
   const handleSubmit = () => {
     if (!isPasswordLengthValid(password)) {
-      toastError("Password must be at least 8 characters long.");
+      toastError(PASSWORD_LENGTH_ERROR_MESSAGE);
       return;
     }
 
     if (!isPasswordComplexityValid(password)) {
-      toastError(
-        "Please use characters from at least 3 of these groups: lowercase, uppercase, digits, special symbols.",
-      );
+      toastError(PASSWORD_COMPLEXITY_ERROR_MESSAGE);
       return;
     }
 
     if (password !== confirmPassword) {
-      toastError("Password must be the same in both fields.");
+      toastError(PASSWORD_MISMATCH_ERROR_MESSAGE);
       return;
     }
 
@@ -99,8 +102,8 @@ export const PasswordResetPanel = ({
     callResetPassword(password)
       .then(() => {
         toastSuccess(
-          "Password Changed",
-          "Your new password is active. Use it the next time you sign in.",
+          PASSWORD_CHANGED_SUCCESS_TITLE,
+          PASSWORD_CHANGED_SUCCESS_MESSAGE,
         );
         onClose();
       })

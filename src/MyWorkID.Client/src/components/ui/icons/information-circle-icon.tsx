@@ -1,6 +1,4 @@
-import type { ComponentPropsWithoutRef } from "react";
-
-type InformationCircleIconProps = ComponentPropsWithoutRef<"svg">;
+import { SvgIconProps } from "../../../types";
 
 export const InformationCircleIcon = ({
   width = 16,
@@ -11,7 +9,7 @@ export const InformationCircleIcon = ({
   strokeWidth = 2,
   strokeLinecap = "round",
   ...svgProperties
-}: InformationCircleIconProps) => {
+}: SvgIconProps) => {
   return (
     <svg
       width={width}

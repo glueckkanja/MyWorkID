@@ -3,6 +3,7 @@ import { Panel } from "../../panel";
 import { verifyIdentity } from "../../../services/api-service";
 import { HubConnectionState } from "@microsoft/signalr";
 import { getVerifiedIdConnection } from "../../../services/signal-r-service";
+import { ValidateIdentityPanelProps, VerifyState } from "../../../types";
 import { useToast } from "@/hooks/use-toast";
 import { Spinner } from "@/components/ui/spinner";
 
@@ -10,16 +11,6 @@ import { Spinner } from "@/components/ui/spinner";
 import { FaceCheckCameraIcon } from "@/components/ui/icons/face-check-camera-icon";
 import { InformationCircleIcon } from "@/components/ui/icons/information-circle-icon";
 import VerifiedIdentityIllustrationSvg from "../../../assets/svg/verified-identity-illustration.svg";
-
-type ValidateIdentityPanelProps = {
-  open: boolean;
-  onClose: () => void;
-};
-
-type VerifyState =
-  | { status: "idle" }
-  | { status: "loading" }
-  | { status: "ready"; qrCodeBase64: string };
 
 export const ValidateIdentityPanel = ({
   open,
@@ -35,7 +26,10 @@ export const ValidateIdentityPanel = ({
       if (connection.state === HubConnectionState.Disconnected) {
         connection.on("HideQrCode", () => {
           setVerifyState({ status: "idle" });
-          toastInfo("QR code scanned", "Please continue on your mobile device.");
+          toastInfo(
+            "QR code scanned",
+            "Please continue on your mobile device.",
+          );
           onClose();
         });
 

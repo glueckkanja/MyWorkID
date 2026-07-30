@@ -1,6 +1,4 @@
-import type { ComponentPropsWithoutRef } from "react";
-
-type CheckmarkIconProps = ComponentPropsWithoutRef<"svg">;
+import { SvgIconProps } from "../../../types";
 
 export const CheckmarkIcon = ({
   width = 14,
@@ -11,7 +9,7 @@ export const CheckmarkIcon = ({
   strokeWidth = 2,
   strokeLinecap = "round",
   ...svgProperties
-}: CheckmarkIconProps) => {
+}: SvgIconProps) => {
   return (
     <svg
       width={width}

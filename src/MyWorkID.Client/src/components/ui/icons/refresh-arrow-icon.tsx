@@ -1,6 +1,4 @@
-import type { ComponentPropsWithoutRef } from "react";
-
-type RefreshArrowIconProps = ComponentPropsWithoutRef<"svg">;
+import { SvgIconProps } from "../../../types";
 
 export const RefreshArrowIcon = ({
   width = 16,
@@ -12,7 +10,7 @@ export const RefreshArrowIcon = ({
   strokeLinecap = "round",
   strokeLinejoin = "round",
   ...svgProperties
-}: RefreshArrowIconProps) => {
+}: SvgIconProps) => {
   return (
     <svg
       width={width}

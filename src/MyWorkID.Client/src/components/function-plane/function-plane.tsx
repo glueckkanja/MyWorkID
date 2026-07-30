@@ -3,7 +3,7 @@ import {
   getPendingAction,
   handleRedirectPromise,
 } from "../../services/msal-service";
-import { EApiFunctionTypes } from "../../types";
+import { EApiFunctionTypes, PanelKey } from "../../types";
 import { UserDisplay } from "./user-display";
 import { useSignedInUser } from "../../contexts/signed-in-user-provider";
 import { Role } from "../../services/roles-service";
@@ -19,14 +19,6 @@ import { CircleCheckIcon } from "@/components/ui/icons/circle-check-icon";
 import { IdentityVerificationIcon } from "@/components/ui/icons/identity-verification-icon";
 import { PasswordLockIcon } from "@/components/ui/icons/password-lock-icon";
 import { TemporaryAccessPassIcon } from "@/components/ui/icons/temporary-access-pass-icon";
-
-type PanelKey =
-  | "password"
-  | "tap"
-  | "revokeTap"
-  | "dismiss"
-  | "validate"
-  | null;
 
 const PANEL_BY_ACTION: Record<
   EApiFunctionTypes,
