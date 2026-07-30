@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
 import { Panel } from "../../panel";
 import { dismissUserRisk } from "../../../services/api-service";
-import { DismissUserRiskPanelProps } from "../../../types";
+import { DismissUserRiskPanelProps, RiskLevel } from "../../../types";
 import { CircleCheckIcon } from "@/components/ui/icons/circle-check-icon";
 import { useToast } from "@/hooks/use-toast";
 import { Spinner } from "@/components/ui/spinner";
-import { RiskLevel } from "../../../types";
 
 const renderConfirmationBody = (riskLevel: RiskLevel, riskLabel: string) => {
-  if (riskLevel === "high" || riskLevel === "medium" || riskLevel === "low") {
+  if (
+    riskLevel === RiskLevel.High ||
+    riskLevel === RiskLevel.Medium ||
+    riskLevel === RiskLevel.Low
+  ) {
     return {
       variant: "danger" as const,
       content: (
@@ -20,7 +23,7 @@ const renderConfirmationBody = (riskLevel: RiskLevel, riskLabel: string) => {
       ),
     };
   }
-  if (riskLevel === "none") {
+  if (riskLevel === RiskLevel.None) {
     return {
       variant: "neutral" as const,
       content: (

@@ -15,13 +15,13 @@ const getBadgeClass = (riskLevel: RiskLevel, riskLoading: boolean): string => {
   if (riskLoading) {
     return "risk-badge risk-badge--loading";
   }
-  if (riskLevel === "high") {
+  if (riskLevel === RiskLevel.High) {
     return "risk-badge risk-badge--high";
   }
-  if (riskLevel === "medium") {
+  if (riskLevel === RiskLevel.Medium) {
     return "risk-badge risk-badge--medium";
   }
-  if (riskLevel === "unknown") {
+  if (riskLevel === RiskLevel.Unknown) {
     return "risk-badge risk-badge--unknown";
   }
   return "risk-badge risk-badge--dismissed";

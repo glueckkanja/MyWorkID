@@ -3,7 +3,7 @@ import {
   getPendingAction,
   handleRedirectPromise,
 } from "../../services/msal-service";
-import { EApiFunctionTypes, PanelKey } from "../../types";
+import { EApiFunctionTypes, PanelKey, RiskLevel } from "../../types";
 import { UserDisplay } from "./user-display";
 import { useSignedInUser } from "../../contexts/signed-in-user-provider";
 import { Role } from "../../services/roles-service";
@@ -83,7 +83,8 @@ const FunctionPlane = () => {
   const showRecommendedDismiss =
     canDismissRisk &&
     !profile.riskLoading &&
-    (profile.riskLevel === "high" || profile.riskLevel === "medium");
+    (profile.riskLevel === RiskLevel.High ||
+      profile.riskLevel === RiskLevel.Medium);
 
   const closePanel = () => setActivePanel(null);
 

@@ -7,6 +7,14 @@ export enum REQUEST_TYPE {
   DELETE,
 }
 
+export enum RiskLevel {
+  High = "high",
+  Medium = "medium",
+  Low = "low",
+  None = "none",
+  Unknown = "unknown",
+}
+
 export type CreateTapPanelProps = {
   open: boolean;
   onClose: () => void;
@@ -69,8 +77,6 @@ export type PanelProps = {
   onClose: () => void;
   children: ReactNode;
 };
-
-export type RiskLevel = "high" | "medium" | "low" | "none" | "unknown";
 
 export type UserProfile = {
   user: User | undefined;

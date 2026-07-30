@@ -4,7 +4,12 @@ import {
   getUserImage,
   getUserRiskState,
 } from "../services/api-service";
-import { TGetRiskStateResponse, User, RiskLevel, UserProfile } from "../types";
+import {
+  TGetRiskStateResponse,
+  User,
+  RiskLevel,
+  UserProfile,
+} from "../types";
 
 const RISK_STATE_POLL_INTERVAL_MILLISECONDS = 30000;
 
@@ -13,33 +18,33 @@ const toRiskLevel = (
 ): { level: RiskLevel; label: string } => {
   const rawLevel = riskState?.riskLevel?.toLowerCase();
   switch (rawLevel) {
-    case "high":
-      return { level: "high", label: "Risk Level: High" };
-    case "medium":
-      return { level: "medium", label: "Risk Level: Medium" };
-    case "low":
-      return { level: "low", label: "Risk Level: Low" };
+    case RiskLevel.High:
+      return { level: RiskLevel.High, label: "Risk Level: High" };
+    case RiskLevel.Medium:
+      return { level: RiskLevel.Medium, label: "Risk Level: Medium" };
+    case RiskLevel.Low:
+      return { level: RiskLevel.Low, label: "Risk Level: Low" };
     default:
       break;
   }
   const rawState = riskState?.riskState?.toLowerCase();
   if (
-    rawLevel === "none" ||
-    rawState === "none" ||
+    rawLevel === RiskLevel.None ||
+    rawState === RiskLevel.None ||
     rawState === "dismissed" ||
     rawState === "remediated" ||
     rawState === "confirmedsafe"
   ) {
-    return { level: "none", label: "No Active Risk" };
+    return { level: RiskLevel.None, label: "No Active Risk" };
   }
-  return { level: "unknown", label: "Risk State Unknown" };
+  return { level: RiskLevel.Unknown, label: "Risk State Unknown" };
 };
 
 export const useUserProfile = (): UserProfile => {
   const [user, setUser] = useState<User>();
   const [userImage, setUserImage] = useState<string>();
   const [riskLoading, setRiskLoading] = useState(true);
-  const [riskLevel, setRiskLevel] = useState<RiskLevel>("unknown");
+  const [riskLevel, setRiskLevel] = useState<RiskLevel>(RiskLevel.Unknown);
   const [riskLabel, setRiskLabel] = useState("No Active Risk");
   const pollingIntervalRef = useRef<ReturnType<typeof setInterval>>();
 
@@ -53,7 +58,7 @@ export const useUserProfile = (): UserProfile => {
       })
       .catch((error) => {
         console.error("Could not get risk state", error);
-        setRiskLevel("unknown");
+        setRiskLevel(RiskLevel.Unknown);
         setRiskLabel("Risk State Unknown");
         setRiskLoading(false);
       });
