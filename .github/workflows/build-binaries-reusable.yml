@@ -1,0 +1,43 @@
+name: Build MyWorkID Binaries
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  PROJECT_ROOT_DIRECTORY: "./src/MyWorkID.Server"
+  DOTNET_VERSION: "10.0.x"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ env.PROJECT_ROOT_DIRECTORY }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Restore NuGet Cache
+        uses: actions/cache@v6
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles(env.PROJECT_ROOT_DIRECTORY) }}
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Build with dotnet
+        run: dotnet build --configuration Release
+
+      - name: Publish with dotnet
+        run: dotnet publish --configuration Release --no-build --output ./publish
+
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v7
+        with:
+          name: binaries_${{github.sha}}
+          path: ${{ env.PROJECT_ROOT_DIRECTORY }}/publish
