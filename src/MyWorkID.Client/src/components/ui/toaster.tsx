@@ -14,11 +14,32 @@ function CorrelationIdRow({
   correlationId,
 }: Readonly<{ correlationId: string }>) {
   const [copied, setCopied] = React.useState(false);
+  const copiedTimerRef = React.useRef<number | undefined>(undefined);
+
+  React.useEffect(() => {
+    return () => {
+      if (copiedTimerRef.current !== undefined) {
+        window.clearTimeout(copiedTimerRef.current);
+      }
+    };
+  }, []);
 
   function handleCopy() {
-    navigator.clipboard.writeText(correlationId);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    navigator.clipboard
+      .writeText(correlationId)
+      .then(() => {
+        setCopied(true);
+        if (copiedTimerRef.current !== undefined) {
+          window.clearTimeout(copiedTimerRef.current);
+        }
+        copiedTimerRef.current = window.setTimeout(() => {
+          setCopied(false);
+          copiedTimerRef.current = undefined;
+        }, 2000);
+      })
+      .catch((error) => {
+        console.debug("Failed to copy correlation ID to clipboard", error);
+      });
   }
 
   return (
