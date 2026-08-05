@@ -86,7 +86,10 @@ const FunctionPlane = () => {
     (profile.riskLevel === RiskLevel.High ||
       profile.riskLevel === RiskLevel.Medium);
 
-  const closePanel = () => setActivePanel(null);
+  const closePanel = () => {
+    setActivePanel(null);
+    setRedirectAction(undefined);
+  };
 
   return (
     <main className="app-main">
