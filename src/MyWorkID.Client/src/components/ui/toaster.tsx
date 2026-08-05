@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/toast";
 
 const COPIED_INFO_TOAST_DISMISSAL_TIME_MILLISECONDS = 2000;
+const TOAST_DISPLAY_TIME_MILLISECONDS = 8000;
 
 const CorrelationIdRow = ({
   correlationId,
@@ -67,7 +68,7 @@ export const Toaster = () => {
   const { toasts } = useToast();
 
   return (
-    <ToastProvider duration={8000}>
+    <ToastProvider duration={TOAST_DISPLAY_TIME_MILLISECONDS}>
       {toasts.map(
         ({ id, title, description, action, correlationId, ...props }) => (
           <Toast key={id} {...props}>
