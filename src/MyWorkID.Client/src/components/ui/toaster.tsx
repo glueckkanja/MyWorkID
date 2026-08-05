@@ -12,9 +12,9 @@ import {
 
 const COPIED_INFO_TOAST_DISMISSAL_TIME_MILLISECONDS = 2000;
 
-function CorrelationIdRow({
+const CorrelationIdRow = ({
   correlationId,
-}: Readonly<{ correlationId: string }>) {
+}: Readonly<{ correlationId: string }>) => {
   const [copied, setCopied] = React.useState(false);
   const copiedTimerRef = React.useRef<number | undefined>(undefined);
 
@@ -26,7 +26,7 @@ function CorrelationIdRow({
     };
   }, []);
 
-  function handleCopy() {
+  const handleCopy = () => {
     navigator.clipboard
       .writeText(correlationId)
       .then(() => {
@@ -42,7 +42,7 @@ function CorrelationIdRow({
       .catch((error) => {
         console.debug("Failed to copy correlation ID to clipboard", error);
       });
-  }
+  };
 
   return (
     <ToastDescription className="text-xs opacity-70 mt-1 flex items-center gap-1">
@@ -61,22 +61,15 @@ function CorrelationIdRow({
       </button>
     </ToastDescription>
   );
-}
+};
 
-export function Toaster() {
+export const Toaster = () => {
   const { toasts } = useToast();
 
   return (
     <ToastProvider duration={8000}>
-      {toasts.map(function ({
-        id,
-        title,
-        description,
-        action,
-        correlationId,
-        ...props
-      }) {
-        return (
+      {toasts.map(
+        ({ id, title, description, action, correlationId, ...props }) => (
           <Toast key={id} {...props}>
             <div className="grid gap-1">
               {title && <ToastTitle>{title}</ToastTitle>}
@@ -90,9 +83,9 @@ export function Toaster() {
             {action}
             <ToastClose />
           </Toast>
-        );
-      })}
+        ),
+      )}
       <ToastViewport />
     </ToastProvider>
   );
-}
+};
