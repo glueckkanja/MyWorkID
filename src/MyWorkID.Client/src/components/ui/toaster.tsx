@@ -10,6 +10,8 @@ import {
   ToastViewport,
 } from "@/components/ui/toast";
 
+const COPIED_INFO_TOAST_DISMISSAL_TIME_MILLISECONDS = 2000;
+
 function CorrelationIdRow({
   correlationId,
 }: Readonly<{ correlationId: string }>) {
@@ -35,7 +37,7 @@ function CorrelationIdRow({
         copiedTimerRef.current = window.setTimeout(() => {
           setCopied(false);
           copiedTimerRef.current = undefined;
-        }, 2000);
+        }, COPIED_INFO_TOAST_DISMISSAL_TIME_MILLISECONDS);
       })
       .catch((error) => {
         console.debug("Failed to copy correlation ID to clipboard", error);
