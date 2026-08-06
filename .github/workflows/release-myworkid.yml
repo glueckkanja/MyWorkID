@@ -60,26 +60,18 @@ jobs:
           Compress-Archive -LiteralPath $ItemsToArchive -DestinationPath $HashNamedArchivePath -Force
           Copy-Item -LiteralPath $HashNamedArchivePath -Destination $StableArchivePath -Force
 
-      - name: Resolve release version
-        id: resolve_release_version
-        shell: pwsh
-        run: |
-          $ReleaseTag = git tag --points-at $env:GITHUB_SHA | Select-Object -First 1
-
-          if ([string]::IsNullOrWhiteSpace($ReleaseTag)) {
-            throw 'No release tag was found for the current commit.'
-          }
-
-          "release_tag=$ReleaseTag" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-
       - name: Create GitHub prerelease
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ steps.resolve_release_version.outputs.release_tag }}
+          RELEASE_TAG: ${{ needs.generate_version.outputs.tag }}
         run: |
           $ReleaseAssetsDirectory = Join-Path $env:GITHUB_WORKSPACE $env:RELEASE_ASSETS_DIRECTORY
           $HashNamedArchivePath = Join-Path $ReleaseAssetsDirectory "$($env:BINARY_ARTIFACT_NAME)_$($env:GITHUB_SHA).zip"
           $StableArchivePath = Join-Path $ReleaseAssetsDirectory "$($env:BINARY_ARTIFACT_NAME).zip"
+
+          if ([string]::IsNullOrWhiteSpace($env:RELEASE_TAG)) {
+            throw 'Generated release tag output is empty.'
+          }
 
           gh release create $env:RELEASE_TAG $HashNamedArchivePath $StableArchivePath --title $env:RELEASE_TAG --generate-notes --prerelease
