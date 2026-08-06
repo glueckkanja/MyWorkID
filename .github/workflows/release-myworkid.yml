@@ -25,48 +25,17 @@ jobs:
   build_myworkid_binaries:
     uses: ./.github/workflows/build-binaries-reusable.yml
 
-  prepare_release_assets:
-    name: Prepare release assets
-    runs-on: ubuntu-latest
-    needs: build_myworkid_binaries
-    steps:
-      - name: Download binaries artifact
-        uses: actions/download-artifact@v5
-        with:
-          name: ${{ env.BINARY_ARTIFACT_NAME }}_${{ github.sha }}
-          path: ${{ env.RELEASE_ASSETS_DIRECTORY }}
-
-      - name: Duplicate archive as binaries.zip
-        shell: pwsh
-        run: |
-          $ReleaseAssetsDirectory = Join-Path $env:GITHUB_WORKSPACE $env:RELEASE_ASSETS_DIRECTORY
-          $HashNamedArchivePath = Join-Path $ReleaseAssetsDirectory "$($env:BINARY_ARTIFACT_NAME)_$($env:GITHUB_SHA).zip"
-          $StableArchivePath = Join-Path $ReleaseAssetsDirectory "$($env.BINARY_ARTIFACT_NAME).zip"
-
-          if (-not (Test-Path $HashNamedArchivePath)) {
-            throw "Expected archive '$($env:BINARY_ARTIFACT_NAME)_$($env:GITHUB_SHA).zip' was not found in '$ReleaseAssetsDirectory'."
-          }
-
-          Copy-Item -Path $HashNamedArchivePath -Destination $StableArchivePath -Force
-
-      - name: Upload prepared release assets
-        uses: actions/upload-artifact@v7
-        with:
-          name: release_${{ env.BINARY_ARTIFACT_NAME }}_${{ github.sha }}
-          path: ${{ env.RELEASE_ASSETS_DIRECTORY }}/*.zip
-
   generate_version:
     name: Generate prerelease version number
-    needs: prepare_release_assets
     uses: c4a8/c4a8-code-reusable-actions/.github/workflows/epoch-semver-version.yml@8222fbca3416c3396bfcd6372b58e2b422302a58 # v1.0.2
     with:
       suppress_release: true
 
-  create_release:
-    name: Create prerelease
+  prepare_and_create_prerelease:
+    name: Prepare release assets and create prerelease
     runs-on: ubuntu-latest
     needs:
-      - prepare_release_assets
+      - build_myworkid_binaries
       - generate_version
     steps:
       - name: Checkout repository
@@ -74,11 +43,22 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Download prepared release assets
+      - name: Download binaries artifact
         uses: actions/download-artifact@v5
         with:
-          name: release_${{ env.BINARY_ARTIFACT_NAME }}_${{ github.sha }}
+          name: ${{ env.BINARY_ARTIFACT_NAME }}_${{ github.sha }}
           path: ${{ env.RELEASE_ASSETS_DIRECTORY }}
+
+      - name: Package release archives
+        shell: pwsh
+        run: |
+          $ReleaseAssetsDirectory = Join-Path $env:GITHUB_WORKSPACE $env:RELEASE_ASSETS_DIRECTORY
+          $HashNamedArchivePath = Join-Path $ReleaseAssetsDirectory "$($env:BINARY_ARTIFACT_NAME)_$($env:GITHUB_SHA).zip"
+          $StableArchivePath = Join-Path $ReleaseAssetsDirectory "$($env:BINARY_ARTIFACT_NAME).zip"
+
+          $ItemsToArchive = Get-ChildItem -LiteralPath $ReleaseAssetsDirectory | Select-Object -ExpandProperty FullName
+          Compress-Archive -LiteralPath $ItemsToArchive -DestinationPath $HashNamedArchivePath -Force
+          Copy-Item -LiteralPath $HashNamedArchivePath -Destination $StableArchivePath -Force
 
       - name: Resolve release version
         id: resolve_release_version
@@ -100,6 +80,6 @@ jobs:
         run: |
           $ReleaseAssetsDirectory = Join-Path $env:GITHUB_WORKSPACE $env:RELEASE_ASSETS_DIRECTORY
           $HashNamedArchivePath = Join-Path $ReleaseAssetsDirectory "$($env:BINARY_ARTIFACT_NAME)_$($env:GITHUB_SHA).zip"
-          $StableArchivePath = Join-Path $ReleaseAssetsDirectory "$($env.BINARY_ARTIFACT_NAME).zip"
+          $StableArchivePath = Join-Path $ReleaseAssetsDirectory "$($env:BINARY_ARTIFACT_NAME).zip"
 
           gh release create $env:RELEASE_TAG $HashNamedArchivePath $StableArchivePath --title $env:RELEASE_TAG --generate-notes --prerelease
