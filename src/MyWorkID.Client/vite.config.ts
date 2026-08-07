@@ -52,55 +52,37 @@ const targetWebSocket = target
   .replace("http://", "wss://");
 
 // https://vitejs.dev/config/
-export default defineConfig(({ command }) => {
-  let appVersion: string;
-  if (command === "serve") {
-    appVersion = "development";
-  } else {
-    try {
-      appVersion = child_process
-        .execSync("git describe --tags --abbrev=0", {
-          stdio: ["ignore", "pipe", "ignore"],
-        })
-        .toString()
-        .trim();
-    } catch {
-      appVersion = "unknown";
-    }
-  }
-
-  return {
-    plugins: [react()],
-    define: {
-      __APP_VERSION__: JSON.stringify(appVersion),
+export default defineConfig({
+  plugins: [react()],
+  define: {
+    __APP_VERSION__: JSON.stringify(process.env.APP_VERSION ?? "development"),
+  },
+  resolve: {
+    alias: {
+      // "@": fileURLToPath(new URL("./src", import.meta.url)),
+      "@": path.resolve(__dirname, "./src"),
     },
-    resolve: {
-      alias: {
-        // "@": fileURLToPath(new URL("./src", import.meta.url)),
-        "@": path.resolve(__dirname, "./src"),
+  },
+  server: {
+    proxy: {
+      "/api": {
+        target,
+        secure: false,
+      },
+      "/hubs/verifiedId/negotiate": {
+        target: target,
+        secure: false,
+      },
+      "/hubs": {
+        target: targetWebSocket,
+        ws: true,
+        secure: false,
       },
     },
-    server: {
-      proxy: {
-        "/api": {
-          target,
-          secure: false,
-        },
-        "/hubs/verifiedId/negotiate": {
-          target: target,
-          secure: false,
-        },
-        "/hubs": {
-          target: targetWebSocket,
-          ws: true,
-          secure: false,
-        },
-      },
-      port: 5173,
-      https: {
-        key: fs.readFileSync(keyFilePath),
-        cert: fs.readFileSync(certFilePath),
-      },
+    port: 5173,
+    https: {
+      key: fs.readFileSync(keyFilePath),
+      cert: fs.readFileSync(certFilePath),
     },
-  };
+  },
 });

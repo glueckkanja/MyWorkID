@@ -32,6 +32,15 @@ jobs:
           # used for Vite to resolve the correct version of the build
           fetch-depth: 0
 
+      - name: Compute app version
+        shell: pwsh
+        run: |
+          $tag = git describe --tags --abbrev=0
+          $refName = "${{ github.ref_name }}"
+          $version = if ($refName -eq "main") { $tag } else { "$tag ($refName)" }
+          "APP_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          Write-Host "Building with APP_VERSION=$version"
+
       # Load NuGetCache
       - name: Restore NuGet Cache
         uses: actions/cache@v6
