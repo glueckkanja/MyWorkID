@@ -28,6 +28,9 @@ jobs:
         working-directory: ${{env.PROJECT_ROOT_DIRECTORY}}
     steps:
       - uses: actions/checkout@v7
+        with:
+          # used for Vite to resolve the correct version of the build
+          fetch-depth: 0
 
       # Load NuGetCache
       - name: Restore NuGet Cache
