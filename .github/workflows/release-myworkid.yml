@@ -26,13 +26,13 @@ jobs:
     uses: ./.github/workflows/build-binaries-reusable.yml
 
   generate_version:
-    name: Generate prerelease version number
+    name: Generate version number
     uses: c4a8/c4a8-code-reusable-actions/.github/workflows/epoch-semver-version.yml@8222fbca3416c3396bfcd6372b58e2b422302a58 # v1.0.2
     with:
       suppress_release: true
 
-  prepare_and_create_prerelease:
-    name: Prepare release assets and create prerelease
+  prepare_and_create_release:
+    name: Prepare release assets and create release
     runs-on: ubuntu-latest
     needs:
       - build_myworkid_binaries
@@ -60,11 +60,12 @@ jobs:
           Compress-Archive -LiteralPath $ItemsToArchive -DestinationPath $HashNamedArchivePath -Force
           Copy-Item -LiteralPath $HashNamedArchivePath -Destination $StableArchivePath -Force
 
-      - name: Create GitHub prerelease
+      - name: Create GitHub release
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ needs.generate_version.outputs.tag }}
+          CREATE_PRERELEASE: ${{ github.event_name != 'workflow_dispatch' }}
         run: |
           $ReleaseAssetsDirectory = Join-Path $env:GITHUB_WORKSPACE $env:RELEASE_ASSETS_DIRECTORY
           $HashNamedArchivePath = Join-Path $ReleaseAssetsDirectory "$($env:BINARY_ARTIFACT_NAME)_$($env:GITHUB_SHA).zip"
@@ -74,4 +75,19 @@ jobs:
             throw 'Generated release tag output is empty.'
           }
 
-          gh release create $env:RELEASE_TAG $HashNamedArchivePath $StableArchivePath --title $env:RELEASE_TAG --generate-notes --prerelease
+          $ReleaseCreateArguments = @(
+            'release'
+            'create'
+            $env:RELEASE_TAG
+            $HashNamedArchivePath
+            $StableArchivePath
+            '--title'
+            $env:RELEASE_TAG
+            '--generate-notes'
+          )
+
+          if ($env:CREATE_PRERELEASE -eq 'true') {
+            $ReleaseCreateArguments += '--prerelease'
+          }
+
+          gh @ReleaseCreateArguments
