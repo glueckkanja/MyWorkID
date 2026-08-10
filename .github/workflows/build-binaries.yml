@@ -7,6 +7,11 @@ concurrency:
 
 on:
   workflow_dispatch:
+    inputs:
+      appVersion:
+        description: "Version shown in app footer"
+        required: false
+        type: string
   push:
     paths:
       - "src/**"
@@ -23,23 +28,13 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      APP_VERSION: ${{ github.event.inputs.appVersion || github.ref_name }}
     defaults:
       run:
         working-directory: ${{env.PROJECT_ROOT_DIRECTORY}}
     steps:
       - uses: actions/checkout@v7
-        with:
-          # used for Vite to resolve the correct version of the build
-          fetch-depth: 0
-
-      - name: Compute app version
-        shell: pwsh
-        run: |
-          $tag = git describe --tags --abbrev=0
-          $refName = "${{ github.ref_name }}"
-          $version = if ($refName -eq "main") { $tag } else { "$tag ($refName)" }
-          "APP_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-          Write-Host "Building with APP_VERSION=$version"
 
       # Load NuGetCache
       - name: Restore NuGet Cache
