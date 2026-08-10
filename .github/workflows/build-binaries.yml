@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       appVersion:
-        description: "Version shown in app footer"
+        description: "Version shown in app footer - leave field empty to use current branch name"
         required: false
         type: string
   push:
