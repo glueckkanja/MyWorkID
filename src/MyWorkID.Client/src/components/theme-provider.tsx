@@ -17,8 +17,12 @@ type ThemeProviderState = {
 
 const SYSTEM_DARK_MEDIA_QUERY = "(prefers-color-scheme: dark)"
 
-const getSystemTheme = (): ResolvedTheme =>
-  window.matchMedia(SYSTEM_DARK_MEDIA_QUERY).matches ? "dark" : "light"
+const getSystemTheme = (): ResolvedTheme => {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+    return "light"
+  }
+  return window.matchMedia(SYSTEM_DARK_MEDIA_QUERY).matches ? "dark" : "light"
+}
 
 const initialState: ThemeProviderState = {
   theme: "system",
@@ -42,6 +46,9 @@ export function ThemeProvider({
   )
 
   useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      return
+    }
     const mediaQuery = window.matchMedia(SYSTEM_DARK_MEDIA_QUERY)
     const handleChange = (event: MediaQueryListEvent) => {
       setSystemTheme(event.matches ? "dark" : "light")
