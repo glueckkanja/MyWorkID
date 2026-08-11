@@ -16,17 +16,13 @@ enum ColorTheme {
   Dark = "dark",
 }
 
-const STORAGE_KEY = "vite-ui-theme";
-
 export const Header = () => {
   const { instance } = useMsal();
-  const { setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const { toastError } = useToast();
   const [helpUrl, setHelpUrl] = useState<string | undefined>(undefined);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(
-    () => (localStorage.getItem(STORAGE_KEY) as ColorTheme) === ColorTheme.Dark,
-  );
+  const darkMode = resolvedTheme === ColorTheme.Dark;
 
   useEffect(() => {
     let cancelled = false;
@@ -58,7 +54,6 @@ export const Header = () => {
   }, []);
 
   const handleDarkModeToggle = (enabled: boolean) => {
-    setDarkMode(enabled);
     setTheme(enabled ? ColorTheme.Dark : ColorTheme.Light);
   };
 

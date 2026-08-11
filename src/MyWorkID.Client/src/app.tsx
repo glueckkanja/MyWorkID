@@ -22,7 +22,7 @@ export const App = () => {
   }, []);
 
   return (
-    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+    <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <div className="app-shell">
         <Header />
         <FunctionPlane />
