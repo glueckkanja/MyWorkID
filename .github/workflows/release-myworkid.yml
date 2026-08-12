@@ -65,7 +65,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ needs.generate_version.outputs.tag }}
-          CREATE_PRERELEASE: ${{ github.event_name != 'workflow_dispatch' }}
+          CREATE_PRERELEASE: ${{ github.event_name != 'workflow_dispatch' || github.ref_name != 'main' }}
         run: |
           $ReleaseAssetsDirectory = Join-Path $env:GITHUB_WORKSPACE $env:RELEASE_ASSETS_DIRECTORY
           $HashNamedArchivePath = Join-Path $ReleaseAssetsDirectory "$($env:BINARY_ARTIFACT_NAME)_$($env:GITHUB_SHA).zip"
