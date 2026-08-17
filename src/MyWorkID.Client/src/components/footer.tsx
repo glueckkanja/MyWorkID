@@ -23,6 +23,7 @@ export const Footer = () => {
           alt="glueckkanja"
         />
       </a>
+      <span className="app-footer__version">{__APP_VERSION__}</span>
     </footer>
   );
 };

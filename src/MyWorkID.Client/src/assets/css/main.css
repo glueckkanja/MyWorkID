@@ -985,6 +985,11 @@
   color: var(--text-secondary);
 }
 
+.app-footer__version {
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
 .app-footer__logo-link {
   display: inline-flex;
   align-items: center;

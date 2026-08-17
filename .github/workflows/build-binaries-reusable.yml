@@ -13,6 +13,8 @@ env:
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
+    # env: -> ToDo
+    #   APP_VERSION: ${{ github.event.inputs.appVersion || github.ref_name }}
     defaults:
       run:
         working-directory: ${{ env.PROJECT_ROOT_DIRECTORY }}
