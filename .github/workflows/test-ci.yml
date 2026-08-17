@@ -16,14 +16,16 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Restore NuGet Cache
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('src/MyWorkID.Server') }}
       - name: Setup .NET Core
-        uses: actions/setup-dotnet@v6
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: ${{ env.DOTNET_CORE_VERSION }}
       - name: Build
@@ -39,8 +41,19 @@ jobs:
           mkdir TestResults
           cp tests/MyWorkID.Server.IntegrationTests/TestResults/testResults.trx TestResults/Integration-Tests.trx
           cp tests/MyWorkID.Server.UnitTests/TestResults/testResults.trx TestResults/Unit-Tests.trx
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: success() || failure()
         with:
           name: testResults
           path: TestResults/*.trx
+
+  publish-test-report:
+    name: publish test report
+    needs:
+      - run-tests
+    if: always()
+    permissions:
+      contents: read
+      actions: read
+      checks: write
+    uses: ./.github/workflows/test-report.yml

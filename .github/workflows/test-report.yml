@@ -1,9 +1,6 @@
 name: 'Test Report'
 on:
-  workflow_run:
-    workflows: ['Test CI']
-    types:
-      - completed
+  workflow_call:
 
 permissions:
   contents: read
@@ -14,10 +11,10 @@ jobs:
   report:
     runs-on: ubuntu-latest
     steps:
-    - uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
-      with:
-        artifact: testResults
-        name: test report
-        path: '*.trx'
-        reporter: dotnet-trx
-        use-actions-summary: 'false' # Write summary into check run details instead of actions summary
+      - uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          artifact: testResults
+          name: test report
+          path: '*.trx'
+          reporter: dotnet-trx
+          use-actions-summary: 'false' # Write summary into check run details instead of actions summary

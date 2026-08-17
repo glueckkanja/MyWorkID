@@ -27,7 +27,7 @@ on:
       - "main"
 
 permissions:
-  contents: write
+  contents: read
   actions: read
 
 env:
@@ -36,10 +36,14 @@ env:
 
 jobs:
   build_myworkid_binaries:
+    permissions:
+      contents: read
     uses: ./.github/workflows/build-binaries-reusable.yml
 
   generate_version:
     name: Generate version number
+    permissions:
+      contents: write
     uses: c4a8/c4a8-code-reusable-actions/.github/workflows/epoch-semver-version.yml@eafb1e2c28580ce3f27d89848f3fd6eaacb9253a # v2.0.0
     with:
       # Allow releases and tags only on main branch - Real releases can be created by using workflow_dispatch on main branch
@@ -51,6 +55,9 @@ jobs:
   prepare_and_create_release:
     name: Prepare release assets and create release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
     # Release creation is suppressed if the branch is not main or if the workflow_dispatch input suppress_release is true
     if: ${{ !(github.ref_name != 'main' || (github.event_name == 'workflow_dispatch' && fromJSON(github.event.inputs.suppress_release || 'false'))) }}
     needs:
@@ -61,6 +68,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Download binaries artifact
         uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
