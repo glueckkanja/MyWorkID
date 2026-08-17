@@ -7,6 +7,19 @@ concurrency:
 
 on:
   workflow_dispatch:
+    inputs:
+      suppress_release:
+        description: Suppress creating a release in version generation
+        default: false
+        type: boolean
+      is_draft_release:
+        description: Mark release as draft
+        default: false
+        type: boolean
+      is_prerelease:
+        description: Mark release as prerelease
+        default: false
+        type: boolean
   push:
     paths:
       - "src/**"
@@ -27,13 +40,19 @@ jobs:
 
   generate_version:
     name: Generate version number
-    uses: c4a8/c4a8-code-reusable-actions/.github/workflows/epoch-semver-version.yml@8222fbca3416c3396bfcd6372b58e2b422302a58 # v1.0.2
+    uses: c4a8/c4a8-code-reusable-actions/.github/workflows/epoch-semver-version.yml@eafb1e2c28580ce3f27d89848f3fd6eaacb9253a # v2.0.0
     with:
-      suppress_release: true
+      # Allow releases and tags only on main branch - Real releases can be created by using workflow_dispatch on main branch
+      suppress_tag: ${{ github.ref_name != 'main' || (github.event_name == 'workflow_dispatch' && fromJSON(github.event.inputs.suppress_release || 'false')) }}
+      suppress_release: ${{ github.ref_name != 'main' || (github.event_name == 'workflow_dispatch' && fromJSON(github.event.inputs.suppress_release || 'false')) }}
+      is_draft_release: ${{ github.event_name != 'workflow_dispatch' || fromJSON(github.event.inputs.is_draft_release || 'false') }}
+      is_prerelease: ${{ github.event_name != 'workflow_dispatch' || fromJSON(github.event.inputs.is_prerelease || 'false') }}
 
   prepare_and_create_release:
     name: Prepare release assets and create release
     runs-on: ubuntu-latest
+    # Release creation is suppressed if the branch is not main or if the workflow_dispatch input suppress_release is true
+    if: ${{ !(github.ref_name != 'main' || (github.event_name == 'workflow_dispatch' && fromJSON(github.event.inputs.suppress_release || 'false'))) }}
     needs:
       - build_myworkid_binaries
       - generate_version
@@ -60,12 +79,11 @@ jobs:
           Compress-Archive -LiteralPath $ItemsToArchive -DestinationPath $HashNamedArchivePath -Force
           Copy-Item -LiteralPath $HashNamedArchivePath -Destination $StableArchivePath -Force
 
-      - name: Create GitHub release
+      - name: Upload release assets to existing release
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ needs.generate_version.outputs.tag }}
-          CREATE_PRERELEASE: ${{ github.event_name != 'workflow_dispatch' || github.ref_name != 'main' }}
         run: |
           $ReleaseAssetsDirectory = Join-Path $env:GITHUB_WORKSPACE $env:RELEASE_ASSETS_DIRECTORY
           $HashNamedArchivePath = Join-Path $ReleaseAssetsDirectory "$($env:BINARY_ARTIFACT_NAME)_$($env:GITHUB_SHA).zip"
@@ -75,19 +93,13 @@ jobs:
             throw 'Generated release tag output is empty.'
           }
 
-          $ReleaseCreateArguments = @(
+          $ReleaseUploadArguments = @(
             'release'
-            'create'
+            'upload'
             $env:RELEASE_TAG
             $HashNamedArchivePath
             $StableArchivePath
-            '--title'
-            $env:RELEASE_TAG
-            '--generate-notes'
+            '--clobber'
           )
 
-          if ($env:CREATE_PRERELEASE -eq 'true') {
-            $ReleaseCreateArguments += '--prerelease'
-          }
-
-          gh @ReleaseCreateArguments
+          gh @ReleaseUploadArguments
