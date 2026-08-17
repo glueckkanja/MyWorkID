@@ -7,6 +7,11 @@ concurrency:
 
 on:
   workflow_dispatch:
+    inputs:
+      appVersion:
+        description: "Version shown in app footer - leave field empty to use current branch name"
+        required: false
+        type: string
   push:
     paths:
       - "src/**"
@@ -23,6 +28,8 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      APP_VERSION: ${{ github.event.inputs.appVersion || github.ref_name }}
     defaults:
       run:
         working-directory: ${{env.PROJECT_ROOT_DIRECTORY}}
