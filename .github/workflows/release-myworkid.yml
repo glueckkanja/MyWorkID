@@ -1,26 +1,24 @@
 name: Create MyWorkID Release
 run-name: Create MyWorkID Release
 
+# Mapping:
+#   Pull Request targeting main -> No tag or release, builds binaries including version
+#   Push to main                -> Creates tag and prerelease including binaries
+#   Dispatch on main            -> Creates tag and release including binaries
+#   Dispatch on other branches  -> No tag or release, builds binaries without version
+
 concurrency:
   group: "Create MyWorkID Release"
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 on:
   workflow_dispatch:
-    inputs:
-      suppress_release:
-        description: Suppress creating a release in version generation
-        default: false
-        type: boolean
-      is_draft_release:
-        description: Mark release as draft
-        default: false
-        type: boolean
-      is_prerelease:
-        description: Mark release as prerelease
-        default: false
-        type: boolean
   push:
+    paths:
+      - "src/**"
+    branches:
+      - "main"
+  pull_request:
     paths:
       - "src/**"
     branches:
@@ -35,22 +33,29 @@ env:
   RELEASE_ASSETS_DIRECTORY: release-assets
 
 jobs:
-  build_myworkid_binaries:
-    permissions:
-      contents: read
-    uses: ./.github/workflows/build-binaries-reusable.yml
-
   generate_version:
-    name: Generate version number
+    name: Generate version and draft release
+    if: ${{ github.event_name != 'workflow_dispatch' || github.ref_name == 'main' }}
     permissions:
       contents: write
     uses: c4a8/c4a8-code-reusable-actions/.github/workflows/epoch-semver-version.yml@eafb1e2c28580ce3f27d89848f3fd6eaacb9253a # v2.0.0
     with:
-      # Allow releases and tags only on main branch - Real releases can be created by using workflow_dispatch on main branch
-      suppress_tag: ${{ github.ref_name != 'main' || (github.event_name == 'workflow_dispatch' && fromJSON(github.event.inputs.suppress_release || 'false')) }}
-      suppress_release: ${{ github.ref_name != 'main' || (github.event_name == 'workflow_dispatch' && fromJSON(github.event.inputs.suppress_release || 'false')) }}
-      is_draft_release: ${{ github.event_name != 'workflow_dispatch' || fromJSON(github.event.inputs.is_draft_release || 'false') }}
-      is_prerelease: ${{ github.event_name != 'workflow_dispatch' || fromJSON(github.event.inputs.is_prerelease || 'false') }}
+      suppress_tag: ${{ github.event_name == 'pull_request' }}
+      suppress_release: ${{ github.event_name == 'pull_request' }}
+      is_prerelease: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+      is_draft_release: true
+
+  build_myworkid_binaries:
+    # avoid it being executed in parallel to generate_version
+    needs:
+      - generate_version
+    # always() so that this job runs even if generate_version was skipped
+    if: ${{ always() }}
+    permissions:
+      contents: read
+    uses: ./.github/workflows/build-binaries-reusable.yml
+    with:
+      version: ${{ needs.generate_version.outputs.tag || github.ref_name }}
 
   prepare_and_create_release:
     name: Prepare release assets and create release
@@ -58,8 +63,7 @@ jobs:
     permissions:
       contents: write
       actions: read
-    # Release creation is suppressed if the branch is not main or if the workflow_dispatch input suppress_release is true
-    if: ${{ !(github.ref_name != 'main' || (github.event_name == 'workflow_dispatch' && fromJSON(github.event.inputs.suppress_release || 'false'))) }}
+    if: ${{ github.ref_name == 'main' && github.event_name != 'pull_request' }}
     needs:
       - build_myworkid_binaries
       - generate_version
@@ -87,27 +91,51 @@ jobs:
           Compress-Archive -LiteralPath $ItemsToArchive -DestinationPath $HashNamedArchivePath -Force
           Copy-Item -LiteralPath $HashNamedArchivePath -Destination $StableArchivePath -Force
 
-      - name: Upload release assets to existing release
+      - name: Upload assets to existing draft release
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ needs.generate_version.outputs.tag }}
+          RELEASE_ID: ${{ needs.generate_version.outputs.release_id }}
         run: |
           $ReleaseAssetsDirectory = Join-Path $env:GITHUB_WORKSPACE $env:RELEASE_ASSETS_DIRECTORY
           $HashNamedArchivePath = Join-Path $ReleaseAssetsDirectory "$($env:BINARY_ARTIFACT_NAME)_$($env:GITHUB_SHA).zip"
           $StableArchivePath = Join-Path $ReleaseAssetsDirectory "$($env:BINARY_ARTIFACT_NAME).zip"
 
-          if ([string]::IsNullOrWhiteSpace($env:RELEASE_TAG)) {
-            throw 'Generated release tag output is empty.'
+          if ([string]::IsNullOrWhiteSpace($env:RELEASE_ID)) {
+            throw 'Generated release ID output is empty.'
           }
 
-          $ReleaseUploadArguments = @(
-            'release'
-            'upload'
-            $env:RELEASE_TAG
-            $HashNamedArchivePath
-            $StableArchivePath
-            '--clobber'
-          )
+          foreach ($ArchivePath in @($HashNamedArchivePath, $StableArchivePath)) {
+            $ArchiveName = Split-Path -Path $ArchivePath -Leaf
+            $EncodedArchiveName = [uri]::EscapeDataString($ArchiveName)
+            $UploadApiPath = "https://uploads.github.com/repos/$env:GITHUB_REPOSITORY/releases/$env:RELEASE_ID/assets?name=$EncodedArchiveName"
+            $UploadResponse = gh api --method POST $UploadApiPath --header 'Content-Type: application/zip' --input $ArchivePath 2>&1
 
-          gh @ReleaseUploadArguments
+            if ($LASTEXITCODE -ne 0) {
+              $UploadResponseText = $UploadResponse | Out-String
+
+              if ($UploadResponseText -match 'already_exists') {
+                throw "Release asset '$ArchiveName' already exists on release '$env:RELEASE_ID'."
+              }
+
+              throw "Failed to upload release asset '$ArchiveName' to release '$env:RELEASE_ID'. GitHub response: $UploadResponseText"
+            }
+          }
+
+      - name: Publish release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_ID: ${{ needs.generate_version.outputs.release_id }}
+          IS_PRERELEASE: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+        run: |
+          $ReleaseUpdate = @{
+            draft = $false
+            prerelease = $env:IS_PRERELEASE -eq 'true'
+          } | ConvertTo-Json
+
+          $ReleaseResponse = $ReleaseUpdate | gh api --method PATCH "repos/$env:GITHUB_REPOSITORY/releases/$env:RELEASE_ID" --input - 2>&1
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "Failed to publish release '$env:RELEASE_ID'. GitHub response: $($ReleaseResponse | Out-String)"
+          }
