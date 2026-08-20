@@ -1,22 +1,13 @@
 name: Build MyWorkID Binaries
-run-name: Build MyWorkID Binaries
-
-concurrency:
-  group: "Build MyWorkID Binaries"
-  cancel-in-progress: true
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
-      appVersion:
-        description: "Version shown in app footer - leave field empty to use current branch name"
+      version:
+        description: "Provide a version for MyWorkID UI footer."
         required: false
         type: string
-  push:
-    paths:
-      - "src/**"
-    branches:
-      - "main"
+        default: "unknown"
 
 permissions:
   contents: read
@@ -24,39 +15,38 @@ permissions:
 env:
   PROJECT_ROOT_DIRECTORY: "./src/MyWorkID.Server"
   DOTNET_VERSION: "10.0.x"
+  APP_VERSION: ${{ inputs.version }}
 
 jobs:
-  build:
+  build_and_deploy:
     runs-on: ubuntu-latest
-    env:
-      APP_VERSION: ${{ github.event.inputs.appVersion || github.ref_name }}
     defaults:
       run:
-        working-directory: ${{env.PROJECT_ROOT_DIRECTORY}}
+        working-directory: ${{ env.PROJECT_ROOT_DIRECTORY }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      # Load NuGetCache
       - name: Restore NuGet Cache
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles(env.PROJECT_ROOT_DIRECTORY) }}
 
-      # Setup .NET Core SDK
       - name: Setup .NET Core
-        uses: actions/setup-dotnet@v6
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Build with dotnet
         run: dotnet build --configuration Release
 
-      - name: dotnet publish
+      - name: Publish with dotnet
         run: dotnet publish --configuration Release --no-build --output ./publish
 
       - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: binaries_${{github.sha}}
-          path: ${{env.PROJECT_ROOT_DIRECTORY}}/publish
+          path: ${{ env.PROJECT_ROOT_DIRECTORY }}/publish
