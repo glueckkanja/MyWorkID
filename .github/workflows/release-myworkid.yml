@@ -2,10 +2,10 @@ name: Create MyWorkID Release
 run-name: Create MyWorkID Release
 
 # Mapping:
-#   Pull Request targeting main -> No tag or release, builds binaries including version
-#   Push to main                -> Creates tag and prerelease including binaries
-#   Dispatch on main            -> Creates tag and release including binaries
-#   Dispatch on other branches  -> No tag or release, builds binaries without version
+#   Push to main                -> Creates tag and prerelease including binaries - Set to release manually.
+#   Dispatch on main            -> Skip execution completely.
+#   Pull Request targeting main -> Creates tag with internal suffix including binary build.
+#   Dispatch on other branches  -> Creates tag with internal suffix including binary build.
 
 concurrency:
   group: "Create MyWorkID Release"
@@ -35,27 +35,25 @@ env:
 jobs:
   generate_version:
     name: Generate version and draft release
-    if: ${{ github.event_name != 'workflow_dispatch' || github.ref_name == 'main' }}
+    # Manual dispatches on main branch will be skipped to avoid creating a release for the same commit twice
+    if: ${{ github.event_name != 'workflow_dispatch' || github.ref_name != 'main' }}
     permissions:
       contents: write
     uses: c4a8/c4a8-code-reusable-actions/.github/workflows/epoch-semver-version.yml@eafb1e2c28580ce3f27d89848f3fd6eaacb9253a # epoch-semver-versioning-v2.0.0
     with:
-      suppress_tag: ${{ github.event_name == 'pull_request' }}
-      suppress_release: ${{ github.event_name == 'pull_request' }}
-      is_prerelease: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+      is_prerelease: true
       is_draft_release: true
+      suppress_release: ${{ !(github.event_name == 'push' && github.ref_name == 'main') }}
+      prerelease_name: ${{ github.ref_name != 'main' && 'internal' || '' }}
 
   build_myworkid_binaries:
-    # avoid it being executed in parallel to generate_version
     needs:
       - generate_version
-    # always() so that this job runs even if generate_version was skipped
-    if: ${{ always() }}
     permissions:
       contents: read
     uses: ./.github/workflows/build-binaries-reusable.yml
     with:
-      version: ${{ needs.generate_version.outputs.tag || github.ref_name }}
+      version: ${{ needs.generate_version.outputs.tag }}
 
   prepare_and_create_release:
     name: Prepare release assets and create release
@@ -63,7 +61,7 @@ jobs:
     permissions:
       contents: write
       actions: read
-    if: ${{ github.ref_name == 'main' && github.event_name != 'pull_request' }}
+    if: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
     needs:
       - build_myworkid_binaries
       - generate_version
@@ -127,15 +125,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_ID: ${{ needs.generate_version.outputs.release_id }}
-          IS_PRERELEASE: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
         run: |
           $ReleaseUpdate = @{
             draft = $false
-            prerelease = $env:IS_PRERELEASE -eq 'true'
+            prerelease = $true
           } | ConvertTo-Json
 
           $ReleaseResponse = $ReleaseUpdate | gh api --method PATCH "repos/$env:GITHUB_REPOSITORY/releases/$env:RELEASE_ID" --input - 2>&1
 
           if ($LASTEXITCODE -ne 0) {
-            throw "Failed to publish release '$env:RELEASE_ID'. GitHub response: $($ReleaseResponse | Out-String)"
+            throw "Failed to publish release with id '$env:RELEASE_ID'. GitHub response: $($ReleaseResponse | Out-String)"
           }
