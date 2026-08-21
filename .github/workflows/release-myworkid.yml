@@ -39,6 +39,7 @@ jobs:
     if: ${{ github.event_name != 'workflow_dispatch' || github.ref_name != 'main' }}
     permissions:
       contents: write
+      actions: read
     uses: c4a8/c4a8-code-reusable-actions/.github/workflows/epoch-semver-version.yml@eafb1e2c28580ce3f27d89848f3fd6eaacb9253a # epoch-semver-versioning-v2.0.0
     with:
       is_prerelease: true
