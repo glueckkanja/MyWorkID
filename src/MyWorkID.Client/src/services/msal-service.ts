@@ -213,15 +213,22 @@ export const getGraphBearerToken = async (): Promise<string> => {
   }
 };
 
+// Memoize MSAL redirect response to let every caller observe the same one
+let redirectPromiseCache: Promise<AuthenticationResult | null> | undefined =
+  undefined;
+
 export const handleRedirectPromise =
-  async (): Promise<AuthenticationResult | null> => {
-    const msalInfo = await getMsalInfo();
-    const authenticationResult =
-      await msalInfo.msalInstance.handleRedirectPromise();
-    if (authenticationResult?.account) {
-      msalInfo.msalInstance.setActiveAccount(authenticationResult.account);
-    }
-    return authenticationResult;
+  (): Promise<AuthenticationResult | null> => {
+    redirectPromiseCache ??= (async () => {
+      const msalInfo = await getMsalInfo();
+      const authenticationResult =
+        await msalInfo.msalInstance.handleRedirectPromise();
+      if (authenticationResult?.account) {
+        msalInfo.msalInstance.setActiveAccount(authenticationResult.account);
+      }
+      return authenticationResult;
+    })();
+    return redirectPromiseCache;
   };
 
 export const getPendingAction = (

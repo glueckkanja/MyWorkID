@@ -27,8 +27,14 @@ export const AppAutentication = (props: AppAutenticationProps) => {
   useEffect(() => {
     const initialize = async () => {
       const info = await getMsalInfo();
-      // Process any pending redirect first so the active account gets set
-      await handleRedirectPromise();
+      // Process any pending redirect first so the active account gets set.
+      try {
+        await handleRedirectPromise();
+      } catch (error) {
+        if (import.meta.env.DEV) {
+          console.debug("handleRedirectPromise failed during app init", error);
+        }
+      }
       try {
         await getActiveMsalAccount();
       } catch (error) {
