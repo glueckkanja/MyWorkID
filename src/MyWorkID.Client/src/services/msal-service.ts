@@ -1,5 +1,6 @@
 import {
   PublicClientApplication,
+  AccountInfo,
   AuthenticationResult,
   LogLevel,
 } from "@azure/msal-browser";
@@ -66,6 +67,33 @@ export const getMsalInfo = async (): Promise<TMsalInfo> => {
   });
 };
 
+// Resolves the account MSAL should use for every token acquisition. Prefers the
+// explicitly-set active account. On multiple signed in accounts, prompts the
+// user to select one.
+export const getActiveMsalAccount = async (): Promise<AccountInfo> => {
+  const msalInfo = await getMsalInfo();
+  const activeAccount = msalInfo.msalInstance.getActiveAccount();
+  if (activeAccount) {
+    return activeAccount;
+  }
+
+  const accounts = msalInfo.msalInstance.getAllAccounts();
+  if (accounts.length === 0) {
+    throw new Error("User not signed in");
+  }
+  if (accounts.length === 1) {
+    msalInfo.msalInstance.setActiveAccount(accounts[0]);
+    return accounts[0];
+  }
+
+  await msalInfo.msalInstance.loginRedirect({
+    prompt: "select_account",
+    scopes: [`api://${msalInfo.backendClientId}/Access`],
+  });
+  // Should never throw since loginRedirect navigates away from the page.
+  throw new Error("Multiple accounts cached - prompting account selection");
+};
+
 export const sendAxiosRequest = async <T, D = unknown>(
   url: string,
   requestType: REQUEST_TYPE,
@@ -118,10 +146,13 @@ export const authenticateRequest = async <T, D = undefined>(
       );
 
       const msalInfo = await getMsalInfo();
+      const activeAccount = await getActiveMsalAccount();
       await msalInfo.msalInstance.acquireTokenRedirect({
         claims: window.atob(wwwAuthenticateHeader.claims), // decode the base64 string
         scopes: [`api://${msalInfo.backendClientId}/Access`],
         state: redirectState,
+        account: activeAccount,
+        loginHint: activeAccount.username,
       });
     } else {
       throw error;
@@ -132,15 +163,11 @@ export const authenticateRequest = async <T, D = undefined>(
 
 const getBearerToken = async (): Promise<string> => {
   const msalInfo = await getMsalInfo();
-  const accounts = msalInfo.msalInstance.getAllAccounts();
-
-  if (accounts.length === 0) {
-    throw new Error("User not signed in");
-  }
+  const activeAccount = await getActiveMsalAccount();
 
   const request = {
     scopes: [`api://${msalInfo.backendClientId}/Access`],
-    account: accounts[0],
+    account: activeAccount,
   };
 
   const authResult = await msalInfo.msalInstance
@@ -149,6 +176,8 @@ const getBearerToken = async (): Promise<string> => {
       console.warn("acquire token silently failed", error);
       await msalInfo.msalInstance.acquireTokenRedirect({
         scopes: [`api://${msalInfo.backendClientId}/Access`],
+        account: activeAccount,
+        loginHint: activeAccount.username,
       });
     });
   if (authResult) {
@@ -160,15 +189,11 @@ const getBearerToken = async (): Promise<string> => {
 
 export const getGraphBearerToken = async (): Promise<string> => {
   const msalInfo = await getMsalInfo();
-  const accounts = msalInfo.msalInstance.getAllAccounts();
-
-  if (accounts.length === 0) {
-    throw new Error("User not signed in");
-  }
+  const activeAccount = await getActiveMsalAccount();
 
   const request = {
     scopes: [`https://graph.microsoft.com/User.Read`],
-    account: accounts[0],
+    account: activeAccount,
   };
 
   const authResult = await msalInfo.msalInstance
@@ -177,6 +202,8 @@ export const getGraphBearerToken = async (): Promise<string> => {
       console.warn("acquire token silently failed", error);
       await msalInfo.msalInstance.acquireTokenRedirect({
         scopes: [`https://graph.microsoft.com/User.Read`],
+        account: activeAccount,
+        loginHint: activeAccount.username,
       });
     });
   if (authResult) {
@@ -189,7 +216,12 @@ export const getGraphBearerToken = async (): Promise<string> => {
 export const handleRedirectPromise =
   async (): Promise<AuthenticationResult | null> => {
     const msalInfo = await getMsalInfo();
-    return await msalInfo.msalInstance.handleRedirectPromise();
+    const authenticationResult =
+      await msalInfo.msalInstance.handleRedirectPromise();
+    if (authenticationResult?.account) {
+      msalInfo.msalInstance.setActiveAccount(authenticationResult.account);
+    }
+    return authenticationResult;
   };
 
 export const getPendingAction = (
