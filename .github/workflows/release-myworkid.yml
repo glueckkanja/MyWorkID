@@ -26,7 +26,6 @@ on:
 
 permissions:
   contents: read
-  actions: read
 
 env:
   BINARY_ARTIFACT_NAME: binaries
@@ -39,7 +38,7 @@ jobs:
     if: ${{ github.event_name != 'workflow_dispatch' || github.ref_name != 'main' }}
     permissions:
       contents: write
-    uses: c4a8/c4a8-code-reusable-actions/.github/workflows/epoch-semver-version.yml@eafb1e2c28580ce3f27d89848f3fd6eaacb9253a # epoch-semver-versioning-v2.0.0
+    uses: c4a8/c4a8-code-reusable-actions/.github/workflows/epoch-semver-version.yml@f321371669a3ac3d19bf081e01ce57c9fae364d8 # epoch-semver-versioning-v2.1.1
     with:
       is_prerelease: true
       is_draft_release: true
