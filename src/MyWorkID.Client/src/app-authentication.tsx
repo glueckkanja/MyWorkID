@@ -7,7 +7,12 @@ import {
 import { InteractionType } from "@azure/msal-browser";
 import { ReactNode, useEffect, useState } from "react";
 import { SignedInUserProvider } from "./contexts/signed-in-user-provider";
-import { TMsalInfo, getMsalInfo } from "./services/msal-service";
+import {
+  TMsalInfo,
+  getActiveMsalAccount,
+  getMsalInfo,
+  handleRedirectPromise,
+} from "./services/msal-service";
 
 export type AppAutenticationProps = {
   children: ReactNode;
@@ -16,15 +21,35 @@ export type AppAutenticationProps = {
 export const AppAutentication = (props: AppAutenticationProps) => {
   const [msalInfo, setMsalInfo] = useState<TMsalInfo>();
 
+  // Ensures an active account is set when accounts are already cached.
+  // If multiple accounts are cached without an active one, this triggers
+  // a loginRedirect and the page navigates away before setMsalInfo runs.
   useEffect(() => {
-    getMsalInfo().then((_msalInfo) => {
-      setMsalInfo(_msalInfo);
-    });
+    const initialize = async () => {
+      const info = await getMsalInfo();
+      // Process any pending redirect first so the active account gets set.
+      try {
+        await handleRedirectPromise();
+      } catch (error) {
+        if (import.meta.env.DEV) {
+          console.debug("handleRedirectPromise failed during app init", error);
+        }
+      }
+      try {
+        await getActiveMsalAccount();
+      } catch (error) {
+        if (import.meta.env.DEV) {
+          console.debug("No active account resolved during app init", error);
+        }
+      }
+      setMsalInfo(info);
+    };
+    initialize();
   }, []);
 
   if (!msalInfo) {
     return <div>Loading</div>;
-  } else if(msalInfo.msalInstance) {
+  } else if (msalInfo.msalInstance) {
     return (
       <MsalProvider instance={msalInfo.msalInstance}>
         <MsalAuthenticationTemplate
