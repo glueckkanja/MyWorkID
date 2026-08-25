@@ -14,37 +14,28 @@ import {
   handleRedirectPromise,
 } from "./services/msal-service";
 
-export type AppAutenticationProps = {
+export type AppAuthenticationProps = {
   children: ReactNode;
 };
 
-export const AppAutentication = (props: AppAutenticationProps) => {
+export const AppAuthentication = (props: AppAuthenticationProps) => {
   const [msalInfo, setMsalInfo] = useState<TMsalInfo>();
+
+  const initializeMsalInfo = async (): Promise<TMsalInfo> => {
+    const info = await getMsalInfo();
+    await handleRedirectPromise();
+    await getActiveMsalAccount();
+
+    return info;
+  };
 
   // Ensures an active account is set when accounts are already cached.
   // If multiple accounts are cached without an active one, this triggers
   // a loginRedirect and the page navigates away before setMsalInfo runs.
   useEffect(() => {
-    const initialize = async () => {
-      const info = await getMsalInfo();
-      // Process any pending redirect first so the active account gets set.
-      try {
-        await handleRedirectPromise();
-      } catch (error) {
-        if (import.meta.env.DEV) {
-          console.debug("handleRedirectPromise failed during app init", error);
-        }
-      }
-      try {
-        await getActiveMsalAccount();
-      } catch (error) {
-        if (import.meta.env.DEV) {
-          console.debug("No active account resolved during app init", error);
-        }
-      }
-      setMsalInfo(info);
-    };
-    initialize();
+    initializeMsalInfo().then((resolvedMsalInfo) => {
+      setMsalInfo(resolvedMsalInfo);
+    });
   }, []);
 
   if (!msalInfo) {
