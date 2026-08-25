@@ -22,11 +22,16 @@ export const AppAuthentication = (props: AppAuthenticationProps) => {
   const [msalInfo, setMsalInfo] = useState<TMsalInfo>();
 
   const initializeMsalInfo = async (): Promise<TMsalInfo> => {
-    const info = await getMsalInfo();
+    const msalInformation = await getMsalInfo();
     await handleRedirectPromise();
-    await getActiveMsalAccount();
 
-    return info;
+    const activeAccount = msalInformation.msalInstance.getActiveAccount();
+    const cachedAccounts = msalInformation.msalInstance.getAllAccounts();
+    if (activeAccount || cachedAccounts.length > 0) {
+      await getActiveMsalAccount();
+    }
+
+    return msalInformation;
   };
 
   // Ensures an active account is set when accounts are already cached.
