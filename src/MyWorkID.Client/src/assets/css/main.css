@@ -973,12 +973,20 @@
 
 .app-footer {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 2px;
   padding: 20px;
   font-size: 12px;
   color: var(--text-tertiary);
+}
+
+.app-footer__row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 .app-footer__text {
@@ -988,6 +996,7 @@
 .app-footer__version {
   color: var(--text-tertiary);
   font-variant-numeric: tabular-nums;
+  font-size: 10px;
 }
 
 .app-footer__logo-link {
