@@ -9,7 +9,7 @@ export const Footer = () => {
         <a
           href="https://www.glueckkanja.com"
           target="_blank"
-          rel="noreferrer"
+          rel="noopener noreferrer"
           aria-label="glueckkanja"
           className="app-footer__logo-link"
         >
