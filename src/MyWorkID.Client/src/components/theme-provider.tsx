@@ -1,19 +1,10 @@
-import { createContext, useEffect, useMemo, useState } from "react";
-
-type Theme = "dark" | "light" | "system";
-type ResolvedTheme = "dark" | "light";
-
-type ThemeProviderProps = {
-  children: React.ReactNode;
-  defaultTheme?: Theme;
-  storageKey?: string;
-};
-
-type ThemeProviderState = {
-  theme: Theme;
-  resolvedTheme: ResolvedTheme;
-  setTheme: (theme: Theme) => void;
-};
+import { useEffect, useMemo, useState } from "react";
+import { ThemeProviderContext } from "./theme-provider-context";
+import type {
+  Theme,
+  ResolvedTheme,
+  ThemeProviderProps,
+} from "../types";
 
 const SYSTEM_DARK_MEDIA_QUERY = "(prefers-color-scheme: dark)";
 
@@ -29,15 +20,6 @@ const getSystemTheme = (): ResolvedTheme => {
   }
   return window.matchMedia(SYSTEM_DARK_MEDIA_QUERY).matches ? "dark" : "light";
 };
-
-const initialState: ThemeProviderState = {
-  theme: "system",
-  resolvedTheme: "light",
-  setTheme: () => null,
-};
-
-export const ThemeProviderContext =
-  createContext<ThemeProviderState>(initialState);
 
 export function ThemeProvider({
   children,

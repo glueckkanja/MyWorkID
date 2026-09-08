@@ -46,7 +46,9 @@ export const useUserProfile = (): UserProfile => {
   const [riskLoading, setRiskLoading] = useState(true);
   const [riskLevel, setRiskLevel] = useState<RiskLevel>(RiskLevel.Unknown);
   const [riskLabel, setRiskLabel] = useState("No Active Risk");
-  const pollingIntervalRef = useRef<ReturnType<typeof setInterval>>();
+  const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | undefined>(
+    undefined,
+  );
 
   const refreshRiskState = useCallback(() => {
     getUserRiskState()
