@@ -41,6 +41,42 @@ builder.Services.ConfigureModules(builder.Configuration, builder.Environment, ap
 
 WebApplication app = builder.Build();
 
+app.Use(async (context, next) =>
+{
+    context.Response.OnStarting(() =>
+    {
+        string requestPath = context.Request.Path.Value ?? string.Empty;
+
+        bool isHtml =
+            context.Response.ContentType?.StartsWith(
+                "text/html",
+                StringComparison.OrdinalIgnoreCase
+            ) == true;
+
+        if (isHtml)
+        {
+            context.Response.Headers["Cache-Control"] = "no-store, max-age=0";
+            context.Response.Headers["Pragma"] = "no-cache";
+            context.Response.Headers["Expires"] = "0";
+        }
+        else if (
+            context.Response.StatusCode >= StatusCodes.Status200OK
+            && context.Response.StatusCode < StatusCodes.Status300MultipleChoices
+            && (
+            requestPath.Equals("/assets", StringComparison.OrdinalIgnoreCase)
+            || requestPath.StartsWith("/assets/", StringComparison.OrdinalIgnoreCase)
+            )
+        )
+        {
+            context.Response.Headers["Cache-Control"] = "public, max-age=31536000, immutable";
+        }
+
+        return Task.CompletedTask;
+    });
+
+    await next();
+});
+
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
