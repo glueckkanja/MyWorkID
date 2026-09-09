@@ -186,7 +186,7 @@ export type ToastAction =
     }
   | {
       type: ToastActionType["UPDATE_TOAST"];
-      toast: Partial<ToasterToast>;
+      toast: Pick<ToasterToast, "id"> & Partial<Omit<ToasterToast, "id">>;
     }
   | {
       type: ToastActionType["DISMISS_TOAST"];
