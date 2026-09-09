@@ -149,3 +149,13 @@ jobs:
           if ($LASTEXITCODE -ne 0) {
             throw "Failed to publish release with id '$env:RELEASE_ID'. GitHub response: $($ReleaseResponse | Out-String)"
           }
+
+          # Update release link after setting draft release to productive in workflow summary
+          $PublishedRelease = $ReleaseResponse | Out-String | ConvertFrom-Json
+          $PublishedReleaseUrl = $PublishedRelease.html_url
+
+          if ([string]::IsNullOrWhiteSpace($PublishedReleaseUrl)) {
+            throw "Failed to update html_url in release summary for release id '$env:RELEASE_ID'."
+          }
+
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value "## Published release`n[$($PublishedRelease.tag_name)]($PublishedReleaseUrl)"
