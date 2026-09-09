@@ -41,44 +41,26 @@ builder.Services.ConfigureModules(builder.Configuration, builder.Environment, ap
 
 WebApplication app = builder.Build();
 
-app.Use(async (context, next) =>
+// OnPrepareResponse only runs for files that are actually served, so error responses are never cached.
+StaticFileOptions staticFileOptions = new StaticFileOptions
 {
-    context.Response.OnStarting(() =>
+    OnPrepareResponse = ctx =>
     {
-        string requestPath = context.Request.Path.Value ?? string.Empty;
-
-        bool isHtml =
-            context.Response.ContentType?.StartsWith(
-                "text/html",
-                StringComparison.OrdinalIgnoreCase
-            ) == true;
-
-        if (isHtml)
+        if (ctx.Context.Request.Path.StartsWithSegments("/assets"))
         {
-            context.Response.Headers["Cache-Control"] = "no-store, max-age=0";
-            context.Response.Headers["Pragma"] = "no-cache";
-            context.Response.Headers["Expires"] = "0";
+            // Fingerprinted build assets: filename changes on content change.
+            ctx.Context.Response.Headers["Cache-Control"] =
+                "public, max-age=31536000, immutable";
         }
-        else if (
-            context.Response.StatusCode >= StatusCodes.Status200OK
-            && context.Response.StatusCode < StatusCodes.Status300MultipleChoices
-            && (
-            requestPath.Equals("/assets", StringComparison.OrdinalIgnoreCase)
-            || requestPath.StartsWith("/assets/", StringComparison.OrdinalIgnoreCase)
-            )
-        )
+        else if (ctx.File.Name.EndsWith(".html", StringComparison.OrdinalIgnoreCase))
         {
-            context.Response.Headers["Cache-Control"] = "public, max-age=31536000, immutable";
+            ctx.Context.Response.Headers["Cache-Control"] = "no-store, max-age=0";
         }
-
-        return Task.CompletedTask;
-    });
-
-    await next();
-});
+    },
+};
 
 app.UseDefaultFiles();
-app.UseStaticFiles();
+app.UseStaticFiles(staticFileOptions);
 
 app.UseExceptionHandler(exceptionHandlerApp =>
 {
@@ -137,6 +119,6 @@ app.UseAuthorization();
 app.RegisterEndpoints(appAssembly);
 
 app.MapHub<VerifiedIdHub>("/hubs/verifiedId");
-app.MapFallbackToFile("/index.html");
+app.MapFallbackToFile("/index.html", staticFileOptions);
 
 await app.RunAsync();
