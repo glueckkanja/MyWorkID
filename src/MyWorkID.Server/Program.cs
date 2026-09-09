@@ -60,8 +60,12 @@ app.Use(async (context, next) =>
             context.Response.Headers["Expires"] = "0";
         }
         else if (
+            context.Response.StatusCode >= StatusCodes.Status200OK
+            && context.Response.StatusCode < StatusCodes.Status300MultipleChoices
+            && (
             requestPath.Equals("/assets", StringComparison.OrdinalIgnoreCase)
             || requestPath.StartsWith("/assets/", StringComparison.OrdinalIgnoreCase)
+            )
         )
         {
             context.Response.Headers["Cache-Control"] = "public, max-age=31536000, immutable";
