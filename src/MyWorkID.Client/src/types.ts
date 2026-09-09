@@ -1,4 +1,20 @@
 import { ReactNode, ComponentPropsWithoutRef } from "react";
+import type { ToastActionElement, ToastProps } from "@/components/ui/toast";
+
+export type Theme = "dark" | "light" | "system";
+export type ResolvedTheme = "dark" | "light";
+
+export type ThemeProviderState = {
+  theme: Theme;
+  resolvedTheme: ResolvedTheme;
+  setTheme: (theme: Theme) => void;
+};
+
+export type ThemeProviderProps = {
+  children: ReactNode;
+  defaultTheme?: Theme;
+  storageKey?: string;
+};
 
 export enum REQUEST_TYPE {
   GET,
@@ -146,4 +162,41 @@ export type TVerifyIdentityReponse = {
 export type TGetRiskStateResponse = {
   riskState: string;
   riskLevel?: string;
+};
+
+export type ToasterToast = ToastProps & {
+  id: string;
+  title?: ReactNode;
+  description?: ReactNode;
+  action?: ToastActionElement;
+  correlationId?: string;
+};
+
+export type ToastActionType = {
+  ADD_TOAST: "ADD_TOAST";
+  UPDATE_TOAST: "UPDATE_TOAST";
+  DISMISS_TOAST: "DISMISS_TOAST";
+  REMOVE_TOAST: "REMOVE_TOAST";
+};
+
+export type ToastAction =
+  | {
+      type: ToastActionType["ADD_TOAST"];
+      toast: ToasterToast;
+    }
+  | {
+      type: ToastActionType["UPDATE_TOAST"];
+      toast: Pick<ToasterToast, "id"> & Partial<Omit<ToasterToast, "id">>;
+    }
+  | {
+      type: ToastActionType["DISMISS_TOAST"];
+      toastId?: ToasterToast["id"];
+    }
+  | {
+      type: ToastActionType["REMOVE_TOAST"];
+      toastId?: ToasterToast["id"];
+    };
+
+export type ToastState = {
+  toasts: ToasterToast[];
 };
