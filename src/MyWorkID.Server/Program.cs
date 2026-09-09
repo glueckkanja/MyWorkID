@@ -44,17 +44,23 @@ WebApplication app = builder.Build();
 // OnPrepareResponse only runs for files that are actually served, so error responses are never cached.
 StaticFileOptions staticFileOptions = new StaticFileOptions
 {
-    OnPrepareResponse = ctx =>
+    OnPrepareResponse = staticFileResponseContext =>
     {
-        if (ctx.Context.Request.Path.StartsWithSegments("/assets"))
+        if (staticFileResponseContext.Context.Request.Path.StartsWithSegments("/assets"))
         {
             // Fingerprinted build assets: filename changes on content change.
-            ctx.Context.Response.Headers["Cache-Control"] =
+            staticFileResponseContext.Context.Response.Headers["Cache-Control"] =
                 "public, max-age=31536000, immutable";
         }
-        else if (ctx.File.Name.EndsWith(".html", StringComparison.OrdinalIgnoreCase))
+        else if (
+            staticFileResponseContext.File.Name.EndsWith(
+                ".html",
+                StringComparison.OrdinalIgnoreCase
+            )
+        )
         {
-            ctx.Context.Response.Headers["Cache-Control"] = "no-store, max-age=0";
+            staticFileResponseContext.Context.Response.Headers["Cache-Control"] =
+                "no-store, max-age=0";
         }
     },
 };
