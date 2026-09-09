@@ -3,7 +3,10 @@ import { Header } from "./components/header";
 import { Footer } from "./components/footer";
 import { ThemeProvider } from "./components/theme-provider";
 import { useEffect } from "react";
-import { getFrontendOptions, updateDocumentHead } from "./services/frontend-options-service";
+import {
+  getFrontendOptions,
+  updateDocumentHead,
+} from "./services/frontend-options-service";
 
 export const App = () => {
   useEffect(() => {
@@ -19,10 +22,12 @@ export const App = () => {
   }, []);
 
   return (
-    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-      <Header />
-      <FunctionPlane />
-      <Footer />
+    <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+      <div className="app-shell">
+        <Header />
+        <FunctionPlane />
+        <Footer />
+      </div>
     </ThemeProvider>
   );
 };

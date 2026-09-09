@@ -175,6 +175,14 @@ function toastSuccess(title: string, description: string) {
   });
 }
 
+function toastInfo(title: string, description: string) {
+  toast({
+    variant: "info",
+    title,
+    description,
+  });
+}
+
 function toastException(error: unknown) {
   let description = "Something went wrong";
   let correlationId: string | undefined;
@@ -223,6 +231,7 @@ function useToast() {
     toastException,
     toastError,
     toastSuccess,
+    toastInfo,
     dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
   };
 }

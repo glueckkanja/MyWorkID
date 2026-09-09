@@ -1,0 +1,52 @@
+name: Build MyWorkID Binaries
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: "Provide a version for MyWorkID UI footer."
+        required: false
+        type: string
+        default: "unknown"
+
+permissions:
+  contents: read
+
+env:
+  PROJECT_ROOT_DIRECTORY: "./src/MyWorkID.Server"
+  DOTNET_VERSION: "10.0.x"
+  APP_VERSION: ${{ inputs.version }}
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ env.PROJECT_ROOT_DIRECTORY }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Restore NuGet Cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles(env.PROJECT_ROOT_DIRECTORY) }}
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Build with dotnet
+        run: dotnet build --configuration Release
+
+      - name: Publish with dotnet
+        run: dotnet publish --configuration Release --no-build --output ./publish
+
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: binaries_${{github.sha}}
+          path: ${{ env.PROJECT_ROOT_DIRECTORY }}/publish

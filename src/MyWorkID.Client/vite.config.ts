@@ -54,6 +54,9 @@ const targetWebSocket = target
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  define: {
+    __APP_VERSION__: JSON.stringify(process.env.APP_VERSION ?? "development"),
+  },
   resolve: {
     alias: {
       // "@": fileURLToPath(new URL("./src", import.meta.url)),

@@ -1,0 +1,137 @@
+name: Create MyWorkID Release
+run-name: Create MyWorkID Release
+
+# Mapping:
+#   Push to main                -> Creates tag and prerelease including binaries - Set to release manually.
+#   Dispatch on main            -> Skip execution completely.
+#   Pull Request targeting main -> Creates tag with internal suffix including binary build.
+#   Dispatch on other branches  -> Creates tag with internal suffix including binary build.
+
+concurrency:
+  group: "Create MyWorkID Release"
+  cancel-in-progress: false
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "src/**"
+    branches:
+      - "main"
+  pull_request:
+    paths:
+      - "src/**"
+    branches:
+      - "main"
+
+permissions:
+  contents: read
+
+env:
+  BINARY_ARTIFACT_NAME: binaries
+  RELEASE_ASSETS_DIRECTORY: release-assets
+
+jobs:
+  generate_version:
+    name: Generate version and draft release
+    # Manual dispatches on main branch will be skipped to avoid creating a release for the same commit twice
+    if: ${{ github.event_name != 'workflow_dispatch' || github.ref_name != 'main' }}
+    permissions:
+      contents: write
+    uses: c4a8/c4a8-code-reusable-actions/.github/workflows/epoch-semver-version.yml@f321371669a3ac3d19bf081e01ce57c9fae364d8 # epoch-semver-versioning-v2.1.1
+    with:
+      is_prerelease: true
+      is_draft_release: true
+      suppress_release: ${{ !(github.event_name == 'push' && github.ref_name == 'main') }}
+      prerelease_name: ${{ github.ref_name != 'main' && 'internal' || '' }}
+
+  build_myworkid_binaries:
+    needs:
+      - generate_version
+    permissions:
+      contents: read
+    uses: ./.github/workflows/build-binaries-reusable.yml
+    with:
+      version: ${{ needs.generate_version.outputs.tag }}
+
+  prepare_and_create_release:
+    name: Prepare release assets and create release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    if: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+    needs:
+      - build_myworkid_binaries
+      - generate_version
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Download binaries artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: ${{ env.BINARY_ARTIFACT_NAME }}_${{ github.sha }}
+          path: ${{ env.RELEASE_ASSETS_DIRECTORY }}
+
+      - name: Package release archives
+        shell: pwsh
+        run: |
+          $ReleaseAssetsDirectory = Join-Path $env:GITHUB_WORKSPACE $env:RELEASE_ASSETS_DIRECTORY
+          $HashNamedArchivePath = Join-Path $ReleaseAssetsDirectory "$($env:BINARY_ARTIFACT_NAME)_$($env:GITHUB_SHA).zip"
+          $StableArchivePath = Join-Path $ReleaseAssetsDirectory "$($env:BINARY_ARTIFACT_NAME).zip"
+
+          $ItemsToArchive = Get-ChildItem -LiteralPath $ReleaseAssetsDirectory | Select-Object -ExpandProperty FullName
+          Compress-Archive -LiteralPath $ItemsToArchive -DestinationPath $HashNamedArchivePath -Force
+          Copy-Item -LiteralPath $HashNamedArchivePath -Destination $StableArchivePath -Force
+
+      - name: Upload assets to existing draft release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_ID: ${{ needs.generate_version.outputs.release_id }}
+        run: |
+          $ReleaseAssetsDirectory = Join-Path $env:GITHUB_WORKSPACE $env:RELEASE_ASSETS_DIRECTORY
+          $HashNamedArchivePath = Join-Path $ReleaseAssetsDirectory "$($env:BINARY_ARTIFACT_NAME)_$($env:GITHUB_SHA).zip"
+          $StableArchivePath = Join-Path $ReleaseAssetsDirectory "$($env:BINARY_ARTIFACT_NAME).zip"
+
+          if ([string]::IsNullOrWhiteSpace($env:RELEASE_ID)) {
+            throw 'Generated release ID output is empty.'
+          }
+
+          foreach ($ArchivePath in @($HashNamedArchivePath, $StableArchivePath)) {
+            $ArchiveName = Split-Path -Path $ArchivePath -Leaf
+            $EncodedArchiveName = [uri]::EscapeDataString($ArchiveName)
+            $UploadApiPath = "https://uploads.github.com/repos/$env:GITHUB_REPOSITORY/releases/$env:RELEASE_ID/assets?name=$EncodedArchiveName"
+            $UploadResponse = gh api --method POST $UploadApiPath --header 'Content-Type: application/zip' --input $ArchivePath 2>&1
+
+            if ($LASTEXITCODE -ne 0) {
+              $UploadResponseText = $UploadResponse | Out-String
+
+              if ($UploadResponseText -match 'already_exists') {
+                throw "Release asset '$ArchiveName' already exists on release '$env:RELEASE_ID'."
+              }
+
+              throw "Failed to upload release asset '$ArchiveName' to release '$env:RELEASE_ID'. GitHub response: $UploadResponseText"
+            }
+          }
+
+      - name: Publish release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_ID: ${{ needs.generate_version.outputs.release_id }}
+        run: |
+          $ReleaseUpdate = @{
+            draft = $false
+            prerelease = $true
+          } | ConvertTo-Json
+
+          $ReleaseResponse = $ReleaseUpdate | gh api --method PATCH "repos/$env:GITHUB_REPOSITORY/releases/$env:RELEASE_ID" --input - 2>&1
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "Failed to publish release with id '$env:RELEASE_ID'. GitHub response: $($ReleaseResponse | Out-String)"
+          }
