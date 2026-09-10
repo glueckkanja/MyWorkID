@@ -1,7 +1,11 @@
-﻿using MyWorkID.Server.Common;
+using MyWorkID.Server.Common;
 using MyWorkID.Server.Features.ResetPassword.Entities;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Graph.Models;
+using Microsoft.Kiota.Abstractions;
+using Microsoft.Kiota.Abstractions.Serialization;
+using NSubstitute;
 using System.Net;
 using System.Net.Http.Json;
 
@@ -112,6 +116,88 @@ namespace MyWorkID.Server.IntegrationTests.Features.UserRiskState
                 provider => provider.WithDismissUserRiskRole().WithRandomSubAndOid().WithAuthContext(_validAuthContextId));
             var response = await client.PutAsync(_baseUrl, null, TestContext.Current.CancellationToken);
             response.StatusCode.Should().Be(HttpStatusCode.OK);
+        }
+
+        [Fact]
+        public async Task DismissUserRisk_WhenUserRiskLevelExceedsConfiguredMax_Returns403()
+        {
+            var testApp = new TestApplicationFactory();
+            testApp.AddAuthContextConfig(AppFunctions.DismissUserRisk.ToString(), _validAuthContextId);
+            testApp.AddMaxDismissibleRiskLevelConfig(RiskLevel.Low.ToString());
+
+            IRequestAdapter requestAdapter = GetGraphRequestAdapterForRiskyUser(
+                new RiskyUser { RiskState = RiskState.AtRisk, RiskLevel = RiskLevel.High });
+
+            var client = TestHelper.CreateClientWithRole(testApp,
+                provider => provider.WithDismissUserRiskRole().WithRandomSubAndOid().WithAuthContext(_validAuthContextId),
+                requestAdapter);
+            var response = await client.PutAsync(_baseUrl, null, TestContext.Current.CancellationToken);
+            response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+            var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>(TestContext.Current.CancellationToken);
+            problemDetails.Should().NotBeNull();
+            problemDetails!.Detail.Should().Be(Strings.ERROR_RISK_LEVEL_EXCEEDS_MAX_DISMISSIBLE);
+        }
+
+        [Fact]
+        public async Task DismissUserRisk_WhenUserRiskLevelWithinConfiguredMax_Returns200()
+        {
+            var testApp = new TestApplicationFactory();
+            testApp.AddAuthContextConfig(AppFunctions.DismissUserRisk.ToString(), _validAuthContextId);
+            testApp.AddMaxDismissibleRiskLevelConfig(RiskLevel.High.ToString());
+
+            IRequestAdapter requestAdapter = GetGraphRequestAdapterForRiskyUser(
+                new RiskyUser { RiskState = RiskState.AtRisk, RiskLevel = RiskLevel.Medium });
+
+            var client = TestHelper.CreateClientWithRole(testApp,
+                provider => provider.WithDismissUserRiskRole().WithRandomSubAndOid().WithAuthContext(_validAuthContextId),
+                requestAdapter);
+            var response = await client.PutAsync(_baseUrl, null, TestContext.Current.CancellationToken);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+        }
+
+        [Fact]
+        public async Task DismissUserRisk_WhenUserRiskLevelEqualsConfiguredMax_Returns200()
+        {
+            var testApp = new TestApplicationFactory();
+            testApp.AddAuthContextConfig(AppFunctions.DismissUserRisk.ToString(), _validAuthContextId);
+            testApp.AddMaxDismissibleRiskLevelConfig(RiskLevel.Medium.ToString());
+
+            IRequestAdapter requestAdapter = GetGraphRequestAdapterForRiskyUser(
+                new RiskyUser { RiskState = RiskState.AtRisk, RiskLevel = RiskLevel.Medium });
+
+            var client = TestHelper.CreateClientWithRole(testApp,
+                provider => provider.WithDismissUserRiskRole().WithRandomSubAndOid().WithAuthContext(_validAuthContextId),
+                requestAdapter);
+            var response = await client.PutAsync(_baseUrl, null, TestContext.Current.CancellationToken);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+        }
+
+        [Fact]
+        public async Task DismissUserRisk_WithInvalidMaxDismissibleRiskLevelConfig_FailsStartup()
+        {
+            var testApp = new TestApplicationFactory();
+            testApp.AddAuthContextConfig(AppFunctions.DismissUserRisk.ToString(), _validAuthContextId);
+            testApp.AddMaxDismissibleRiskLevelConfig("None");
+
+            Func<Task> act = async () =>
+            {
+                var client = TestHelper.CreateClientWithRole(testApp,
+                    provider => provider.WithDismissUserRiskRole().WithRandomSubAndOid().WithAuthContext(_validAuthContextId));
+                await client.PutAsync(_baseUrl, null, TestContext.Current.CancellationToken);
+            };
+            await act.Should().ThrowAsync<Microsoft.Extensions.Options.OptionsValidationException>();
+        }
+
+        private static IRequestAdapter GetGraphRequestAdapterForRiskyUser(RiskyUser riskyUser)
+        {
+            var requestAdapter = Substitute.For<IRequestAdapter>();
+            requestAdapter.SendAsync(
+                Arg.Any<RequestInformation>(),
+                Arg.Any<ParsableFactory<RiskyUser>>(),
+                Arg.Any<Dictionary<string, ParsableFactory<IParsable>>>(),
+                Arg.Any<CancellationToken>())
+                .ReturnsForAnyArgs(riskyUser);
+            return requestAdapter;
         }
     }
 }

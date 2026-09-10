@@ -4,5 +4,6 @@
     {
         public string? RiskState { get; set; }
         public string? RiskLevel { get; set; }
+        public string? MaxDismissibleRiskLevel { get; set; }
     }
 }

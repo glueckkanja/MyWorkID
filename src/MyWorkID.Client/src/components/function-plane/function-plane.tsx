@@ -8,6 +8,7 @@ import { UserDisplay } from "./user-display";
 import { useSignedInUser } from "../../contexts/signed-in-user-provider";
 import { Role } from "../../services/roles-service";
 import { useUserProfile } from "@/hooks/use-user-profile";
+import { canDismissRiskLevel, formatRiskLevel } from "@/lib/risk-level";
 import { ActionCard } from "./action-card";
 import { PasswordResetPanel } from "./function-plane-components/password-reset";
 import { CreateTapPanel } from "./function-plane-components/create-tap";
@@ -80,9 +81,18 @@ const FunctionPlane = () => {
   const canDismissRisk = hasRole(Role.ALLOW_DISMISS_USER_RISK);
   const canValidateIdentity = hasRole(Role.ALLOW_VALIDATE_IDENTITY);
 
+  const dismissAllowedForCurrentLevel = canDismissRiskLevel(
+    profile.riskLevel,
+    profile.maxDismissibleRiskLevel,
+  );
+  const dismissDisabledReason = !dismissAllowedForCurrentLevel
+    ? `Your ${formatRiskLevel(profile.riskLevel)} risk level cannot be dismissed via self-service (max allowed: ${formatRiskLevel(profile.maxDismissibleRiskLevel)}). Please contact your administrator.`
+    : undefined;
+
   const showRecommendedDismiss =
     canDismissRisk &&
     !profile.riskLoading &&
+    dismissAllowedForCurrentLevel &&
     (profile.riskLevel === RiskLevel.High ||
       profile.riskLevel === RiskLevel.Medium);
 
@@ -134,6 +144,8 @@ const FunctionPlane = () => {
             title="Dismiss User Risk"
             description="Clear your account risk status"
             onClick={() => setActivePanel("dismiss")}
+            disabled={!dismissAllowedForCurrentLevel}
+            disabledReason={dismissDisabledReason}
           />
         )}
         {canValidateIdentity && (

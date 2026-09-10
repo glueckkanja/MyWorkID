@@ -74,6 +74,8 @@ export type ActionCardProps = {
   description: string;
   highlighted?: boolean;
   onClick: () => void;
+  disabled?: boolean;
+  disabledReason?: string;
 };
 
 export type PanelKey =
@@ -100,6 +102,7 @@ export type UserProfile = {
   riskLoading: boolean;
   riskLevel: RiskLevel;
   riskLabel: string;
+  maxDismissibleRiskLevel: RiskLevel;
   refreshRiskState: () => void;
 };
 
@@ -162,6 +165,7 @@ export type TVerifyIdentityReponse = {
 export type TGetRiskStateResponse = {
   riskState: string;
   riskLevel?: string;
+  maxDismissibleRiskLevel: string;
 };
 
 export type ToasterToast = ToastProps & {

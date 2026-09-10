@@ -1,4 +1,4 @@
-﻿using Microsoft.Graph.Models;
+using Microsoft.Graph.Models;
 
 namespace MyWorkID.Server.Features.UserRiskState.Entities
 {
@@ -18,14 +18,21 @@ namespace MyWorkID.Server.Features.UserRiskState.Entities
         public RiskLevel? RiskLevel { get; set; }
 
         /// <summary>
+        /// The maximum risk level a user is allowed to dismiss themselves.
+        /// </summary>
+        public RiskLevel MaxDismissibleRiskLevel { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="GetRiskStateResponse"/> class.
         /// </summary>
         /// <param name="riskState">The risk state of the user.</param>
         /// <param name="riskLevel">The risk level of the user.</param>
-        public GetRiskStateResponse(RiskState riskState, RiskLevel? riskLevel)
+        /// <param name="maxDismissibleRiskLevel">The maximum risk level a user is allowed to dismiss.</param>
+        public GetRiskStateResponse(RiskState riskState, RiskLevel? riskLevel, RiskLevel maxDismissibleRiskLevel)
         {
             RiskState = riskState;
             RiskLevel = riskLevel;
+            MaxDismissibleRiskLevel = maxDismissibleRiskLevel;
         }
     }
 }
