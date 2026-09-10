@@ -33,11 +33,11 @@ jobs:
           dotnet build --configuration Release --no-restore
       - name: Test
         run: |
-          dotnet test --logger "trx;logfilename=testResults.trx"
+          dotnet test --configuration Release --no-build --report-xunit-trx --report-xunit-trx-filename testResults.trx
       - name: Gather Test Results
         if: success() || failure()
         run: |
-          mkdir TestResults
+          mkdir -p TestResults
           cp tests/MyWorkID.Server.IntegrationTests/TestResults/testResults.trx TestResults/Integration-Tests.trx
           cp tests/MyWorkID.Server.UnitTests/TestResults/testResults.trx TestResults/Unit-Tests.trx
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
