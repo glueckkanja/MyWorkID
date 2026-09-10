@@ -51,4 +51,4 @@ jobs:
       contents: read
       actions: read
       checks: write
-    uses: ./.github/workflows/test-report.yml
+    uses: $/.github/workflows/test-report.yml
