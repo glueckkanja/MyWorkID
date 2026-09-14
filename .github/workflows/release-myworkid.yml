@@ -50,7 +50,7 @@ jobs:
       - generate_version
     permissions:
       contents: read
-    uses: ./.github/workflows/build-binaries-reusable.yml
+    uses: $/.github/workflows/build-binaries-reusable.yml
     with:
       version: ${{ needs.generate_version.outputs.tag }}
 
