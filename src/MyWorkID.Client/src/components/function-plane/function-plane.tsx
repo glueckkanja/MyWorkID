@@ -85,7 +85,7 @@ const FunctionPlane = () => {
     profile.riskLoading ||
     canDismissRiskLevel(profile.riskLevel, profile.maxDismissibleRiskLevel);
   const dismissDisabledReason = !dismissAllowedForCurrentLevel
-    ? `Your ${formatRiskLevel(profile.riskLevel)} risk level cannot be dismissed via self-service (max allowed: ${formatRiskLevel(profile.maxDismissibleRiskLevel)}). Please contact your administrator.`
+    ? `Your ${formatRiskLevel(profile.riskLevel)} risk level cannot be dismissed via self-service. Please contact your administrator.`
     : undefined;
 
   const showRecommendedDismiss =
