@@ -8,8 +8,10 @@ import {
   TGetRiskStateResponse,
   User,
   RiskLevel,
+  RiskLabel,
   UserProfile,
 } from "../types";
+import axios from "axios";
 
 const RISK_STATE_POLL_INTERVAL_MILLISECONDS = 30000;
 
@@ -18,19 +20,19 @@ const toRiskLevel = (
 ): { level: RiskLevel; label: string } => {
   const rawLevel = riskState?.riskLevel?.toLowerCase();
   switch (rawLevel) {
-    case RiskLevel.High:
+    case RiskLabel.High:
       return { level: RiskLevel.High, label: "Risk Level: High" };
-    case RiskLevel.Medium:
+    case RiskLabel.Medium:
       return { level: RiskLevel.Medium, label: "Risk Level: Medium" };
-    case RiskLevel.Low:
+    case RiskLabel.Low:
       return { level: RiskLevel.Low, label: "Risk Level: Low" };
     default:
       break;
   }
   const rawState = riskState?.riskState?.toLowerCase();
   if (
-    rawLevel === RiskLevel.None ||
-    rawState === RiskLevel.None ||
+    rawLevel === RiskLabel.None ||
+    rawState === RiskLabel.None ||
     rawState === "dismissed" ||
     rawState === "remediated" ||
     rawState === "confirmedsafe"
@@ -40,12 +42,29 @@ const toRiskLevel = (
   return { level: RiskLevel.Unknown, label: "Risk State Unknown" };
 };
 
+const toMaxDismissibleRiskLevel = (
+  raw: string | undefined
+): RiskLevel => {
+  switch (raw?.toLowerCase()) {
+    case RiskLabel.High:
+      return RiskLevel.High;
+    case RiskLabel.Medium:
+      return RiskLevel.Medium;
+    case RiskLabel.Low:
+    default:
+      return RiskLevel.Low;
+  }
+};
+
 export const useUserProfile = (): UserProfile => {
   const [user, setUser] = useState<User>();
   const [userImage, setUserImage] = useState<string>();
   const [riskLoading, setRiskLoading] = useState(true);
   const [riskLevel, setRiskLevel] = useState<RiskLevel>(RiskLevel.Unknown);
   const [riskLabel, setRiskLabel] = useState("No Active Risk");
+  const [maxDismissibleRiskLevel, setMaxDismissibleRiskLevel] =
+    // Initial level is "Low" when nothing was defined in the appsettings json
+    useState<RiskLevel>(RiskLevel.Low);
   const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | undefined>(
     undefined,
   );
@@ -56,12 +75,20 @@ export const useUserProfile = (): UserProfile => {
         const { level, label } = toRiskLevel(result);
         setRiskLevel(level);
         setRiskLabel(label);
+        setMaxDismissibleRiskLevel(
+          toMaxDismissibleRiskLevel(result?.maxDismissibleRiskLevel),
+        );
         setRiskLoading(false);
       })
       .catch((error) => {
-        console.error("Could not get risk state", error);
-        setRiskLevel(RiskLevel.Unknown);
-        setRiskLabel("Risk State Unknown");
+        if (axios.isAxiosError(error) && error.response?.status === 404) {
+          setRiskLevel(RiskLevel.None);
+          setRiskLabel("No Active Risk");
+        } else {
+          console.error("Could not get risk state", error);
+          setRiskLevel(RiskLevel.Unknown);
+          setRiskLabel("Risk State Unknown");
+        }
         setRiskLoading(false);
       });
   }, []);
@@ -114,6 +141,7 @@ export const useUserProfile = (): UserProfile => {
     riskLoading,
     riskLevel,
     riskLabel,
+    maxDismissibleRiskLevel,
     refreshRiskState,
   };
 };

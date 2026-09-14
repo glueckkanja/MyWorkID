@@ -564,6 +564,20 @@
   color: white;
 }
 
+.action-card--disabled,
+.action-card--disabled:hover {
+  cursor: not-allowed;
+  opacity: 0.6;
+  border-color: var(--surface-border);
+  box-shadow: none;
+  transform: none;
+}
+
+.action-card--disabled:hover .action-card__arrow {
+  transform: none;
+  color: var(--text-tertiary);
+}
+
 .action-card__icon {
   width: 42px;
   height: 42px;
