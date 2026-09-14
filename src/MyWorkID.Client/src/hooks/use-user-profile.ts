@@ -11,6 +11,7 @@ import {
   RiskLabel,
   UserProfile,
 } from "../types";
+import axios from "axios";
 
 const RISK_STATE_POLL_INTERVAL_MILLISECONDS = 30000;
 
@@ -80,9 +81,14 @@ export const useUserProfile = (): UserProfile => {
         setRiskLoading(false);
       })
       .catch((error) => {
-        console.error("Could not get risk state", error);
-        setRiskLevel(RiskLevel.Unknown);
-        setRiskLabel("Risk State Unknown");
+        if (axios.isAxiosError(error) && error.response?.status === 404) {
+          setRiskLevel(RiskLevel.None);
+          setRiskLabel("No Active Risk");
+        } else {
+          console.error("Could not get risk state", error);
+          setRiskLevel(RiskLevel.Unknown);
+          setRiskLabel("Risk State Unknown");
+        }
         setRiskLoading(false);
       });
   }, []);
