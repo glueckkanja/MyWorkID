@@ -8,6 +8,7 @@ import {
   TGetRiskStateResponse,
   User,
   RiskLevel,
+  RiskLabel,
   UserProfile,
 } from "../types";
 
@@ -18,19 +19,19 @@ const toRiskLevel = (
 ): { level: RiskLevel; label: string } => {
   const rawLevel = riskState?.riskLevel?.toLowerCase();
   switch (rawLevel) {
-    case RiskLevel.High:
+    case RiskLabel.High:
       return { level: RiskLevel.High, label: "Risk Level: High" };
-    case RiskLevel.Medium:
+    case RiskLabel.Medium:
       return { level: RiskLevel.Medium, label: "Risk Level: Medium" };
-    case RiskLevel.Low:
+    case RiskLabel.Low:
       return { level: RiskLevel.Low, label: "Risk Level: Low" };
     default:
       break;
   }
   const rawState = riskState?.riskState?.toLowerCase();
   if (
-    rawLevel === RiskLevel.None ||
-    rawState === RiskLevel.None ||
+    rawLevel === RiskLabel.None ||
+    rawState === RiskLabel.None ||
     rawState === "dismissed" ||
     rawState === "remediated" ||
     rawState === "confirmedsafe"
@@ -44,11 +45,11 @@ const toMaxDismissibleRiskLevel = (
   raw: string | undefined
 ): RiskLevel => {
   switch (raw?.toLowerCase()) {
-    case RiskLevel.High:
+    case RiskLabel.High:
       return RiskLevel.High;
-    case RiskLevel.Medium:
+    case RiskLabel.Medium:
       return RiskLevel.Medium;
-    case RiskLevel.Low:
+    case RiskLabel.Low:
     default:
       return RiskLevel.Low;
   }
@@ -61,6 +62,7 @@ export const useUserProfile = (): UserProfile => {
   const [riskLevel, setRiskLevel] = useState<RiskLevel>(RiskLevel.Unknown);
   const [riskLabel, setRiskLabel] = useState("No Active Risk");
   const [maxDismissibleRiskLevel, setMaxDismissibleRiskLevel] =
+    // Initial level is "Low" when nothing was defined in the appsettings json
     useState<RiskLevel>(RiskLevel.Low);
   const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | undefined>(
     undefined,

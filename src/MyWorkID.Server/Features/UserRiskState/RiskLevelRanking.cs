@@ -11,18 +11,19 @@ namespace MyWorkID.Server.Features.UserRiskState
         private static int Rank(RiskLevel level) =>
             level switch
             {
+                RiskLevel.None => 0,
                 RiskLevel.Low => 1,
                 RiskLevel.Medium => 2,
                 RiskLevel.High => 3,
-                _ => 0,
+                _ => int.MaxValue, // Hidden, UnknownFutureValue — unresolvable, always denied
             };
 
         /// <summary>
         /// Returns <c>true</c> if a user with <paramref name="currentRiskLevel"/> is allowed to
         /// dismiss their own risk given the configured <paramref name="maxDismissibleRiskLevel"/>.
-        /// Users with no assigned risk level (<c>null</c>, <see cref="RiskLevel.None"/>,
-        /// <see cref="RiskLevel.Hidden"/>, or <see cref="RiskLevel.UnknownFutureValue"/>) are
-        /// always allowed to confirm their account is safe.
+        /// <c>null</c> and <see cref="RiskLevel.None"/> are always allowed (confirm-safe path).
+        /// <see cref="RiskLevel.Hidden"/> and <see cref="RiskLevel.UnknownFutureValue"/> are always
+        /// denied because the actual risk level cannot be determined.
         /// </summary>
         public static bool CanDismiss(RiskLevel? currentRiskLevel, RiskLevel maxDismissibleRiskLevel)
         {
@@ -30,12 +31,7 @@ namespace MyWorkID.Server.Features.UserRiskState
             {
                 return true;
             }
-            int currentRank = Rank(currentRiskLevel.Value);
-            if (currentRank == 0)
-            {
-                return true;
-            }
-            return currentRank <= Rank(maxDismissibleRiskLevel);
+            return Rank(currentRiskLevel.Value) <= Rank(maxDismissibleRiskLevel);
         }
     }
 }

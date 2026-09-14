@@ -37,6 +37,7 @@ namespace MyWorkID.Server.Features.UserRiskState.Commands
         /// <param name="user">The claims principal representing the user.</param>
         /// <param name="graphClient">The Graph service client.</param>
         /// <param name="userRiskStateOptions">The user risk state configuration options.</param>
+        /// <param name="logger">The logger.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A result indicating the success of the dismissal operation.</returns>
         [Authorize(Roles = Strings.DISMISS_USER_RISK_ROLE)]
@@ -44,6 +45,7 @@ namespace MyWorkID.Server.Features.UserRiskState.Commands
             ClaimsPrincipal user,
             GraphServiceClient graphClient,
             IOptions<UserRiskStateOptions> userRiskStateOptions,
+            ILogger<DismissUserRisk> logger,
             CancellationToken cancellationToken
         )
         {
@@ -57,9 +59,17 @@ namespace MyWorkID.Server.Features.UserRiskState.Commands
                     .IdentityProtection.RiskyUsers[userId]
                     .GetAsync(cancellationToken: cancellationToken);
             }
-            catch (ODataError odataError) when (odataError.ResponseStatusCode == StatusCodes.Status404NotFound)
+            catch (ODataError odataError)
+                when (odataError.ResponseStatusCode == StatusCodes.Status404NotFound)
             {
-                // No risky-user record means there is nothing above the max level; allow dismiss to run for confirm-safe semantics.
+                if (logger.IsEnabled(LogLevel.Information))
+                {
+                    logger.LogInformation(
+                        odataError,
+                        "No risky user record found for user {UserId}. User can proceed with risk dismissal for confirm-safe semantics.",
+                        userId
+                    );
+                }
             }
 
             RiskLevel? currentRiskLevel = riskyUser?.RiskLevel;

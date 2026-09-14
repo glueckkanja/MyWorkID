@@ -81,10 +81,9 @@ const FunctionPlane = () => {
   const canDismissRisk = hasRole(Role.ALLOW_DISMISS_USER_RISK);
   const canValidateIdentity = hasRole(Role.ALLOW_VALIDATE_IDENTITY);
 
-  const dismissAllowedForCurrentLevel = canDismissRiskLevel(
-    profile.riskLevel,
-    profile.maxDismissibleRiskLevel,
-  );
+  const dismissAllowedForCurrentLevel =
+    profile.riskLoading ||
+    canDismissRiskLevel(profile.riskLevel, profile.maxDismissibleRiskLevel);
   const dismissDisabledReason = !dismissAllowedForCurrentLevel
     ? `Your ${formatRiskLevel(profile.riskLevel)} risk level cannot be dismissed via self-service (max allowed: ${formatRiskLevel(profile.maxDismissibleRiskLevel)}). Please contact your administrator.`
     : undefined;

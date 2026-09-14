@@ -10,10 +10,14 @@ namespace MyWorkID.Server.UnitTests.Features.UserRiskState
         [InlineData(null, RiskLevel.Low, true)]
         [InlineData(null, RiskLevel.Medium, true)]
         [InlineData(null, RiskLevel.High, true)]
-        // Non-ranked values behave like "no risk"
+        // None: no active risk, always allowed
         [InlineData(RiskLevel.None, RiskLevel.Low, true)]
-        [InlineData(RiskLevel.Hidden, RiskLevel.Low, true)]
-        [InlineData(RiskLevel.UnknownFutureValue, RiskLevel.Low, true)]
+        [InlineData(RiskLevel.None, RiskLevel.High, true)]
+        // Hidden/UnknownFutureValue: unresolvable level, always denied
+        [InlineData(RiskLevel.Hidden, RiskLevel.Low, false)]
+        [InlineData(RiskLevel.Hidden, RiskLevel.High, false)]
+        [InlineData(RiskLevel.UnknownFutureValue, RiskLevel.Low, false)]
+        [InlineData(RiskLevel.UnknownFutureValue, RiskLevel.High, false)]
         // Max = Low: only Low is dismissible
         [InlineData(RiskLevel.Low, RiskLevel.Low, true)]
         [InlineData(RiskLevel.Medium, RiskLevel.Low, false)]
