@@ -23,12 +23,20 @@ export enum REQUEST_TYPE {
   DELETE,
 }
 
-export enum RiskLevel {
-  High = "high",
-  Medium = "medium",
-  Low = "low",
-  None = "none",
+export enum RiskLabel {
   Unknown = "unknown",
+  None = "none",
+  Low = "low",
+  Medium = "medium",
+  High = "high",
+}
+
+export enum RiskLevel {
+  None = 0,
+  Low = 1,
+  Medium = 2,
+  High = 3,
+  Unknown = 999,
 }
 
 export type CreateTapPanelProps = {
@@ -74,6 +82,8 @@ export type ActionCardProps = {
   description: string;
   highlighted?: boolean;
   onClick: () => void;
+  disabled?: boolean;
+  disabledReason?: string;
 };
 
 export type PanelKey =
@@ -100,6 +110,7 @@ export type UserProfile = {
   riskLoading: boolean;
   riskLevel: RiskLevel;
   riskLabel: string;
+  maxDismissibleRiskLevel: RiskLevel;
   refreshRiskState: () => void;
 };
 
@@ -162,6 +173,7 @@ export type TVerifyIdentityReponse = {
 export type TGetRiskStateResponse = {
   riskState: string;
   riskLevel?: string;
+  maxDismissibleRiskLevel: string;
 };
 
 export type ToasterToast = ToastProps & {
