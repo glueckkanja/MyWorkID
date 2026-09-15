@@ -8,8 +8,10 @@ import {
   TGetRiskStateResponse,
   User,
   RiskLevel,
+  RiskLabel,
   UserProfile,
 } from "../types";
+import axios from "axios";
 
 const RISK_STATE_POLL_INTERVAL_MILLISECONDS = 30000;
 
@@ -18,19 +20,19 @@ const toRiskLevel = (
 ): { level: RiskLevel; label: string } => {
   const rawLevel = riskState?.riskLevel?.toLowerCase();
   switch (rawLevel) {
-    case RiskLevel.High:
-      return { level: RiskLevel.High, label: "Risk Level: High" };
-    case RiskLevel.Medium:
-      return { level: RiskLevel.Medium, label: "Risk Level: Medium" };
-    case RiskLevel.Low:
-      return { level: RiskLevel.Low, label: "Risk Level: Low" };
+    case RiskLabel.High:
+      return { level: RiskLevel.High, label: `Risk Level: ${RiskLabel.High}` };
+    case RiskLabel.Medium:
+      return { level: RiskLevel.Medium, label: `Risk Level: ${RiskLabel.Medium}` };
+    case RiskLabel.Low:
+      return { level: RiskLevel.Low, label: `Risk Level: ${RiskLabel.Low}` };
     default:
       break;
   }
   const rawState = riskState?.riskState?.toLowerCase();
   if (
-    rawLevel === RiskLevel.None ||
-    rawState === RiskLevel.None ||
+    rawLevel === RiskLabel.None ||
+    rawState === RiskLabel.None ||
     rawState === "dismissed" ||
     rawState === "remediated" ||
     rawState === "confirmedsafe"
@@ -59,9 +61,14 @@ export const useUserProfile = (): UserProfile => {
         setRiskLoading(false);
       })
       .catch((error) => {
-        console.error("Could not get risk state", error);
-        setRiskLevel(RiskLevel.Unknown);
-        setRiskLabel("Risk State Unknown");
+        if (axios.isAxiosError(error) && error.response?.status === 404) {
+          setRiskLevel(RiskLevel.None);
+          setRiskLabel("No Active Risk");
+        } else {
+          console.error("Could not get risk state", error);
+          setRiskLevel(RiskLevel.Unknown);
+          setRiskLabel("Risk State Unknown");
+        }
         setRiskLoading(false);
       });
   }, []);
