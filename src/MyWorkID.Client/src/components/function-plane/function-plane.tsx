@@ -6,6 +6,7 @@ import {
 import { EApiFunctionTypes, PanelKey, RiskLevel } from "../../types";
 import { UserDisplay } from "./user-display";
 import { useSignedInUser } from "../../contexts/signed-in-user-provider";
+import { useSettings } from "../../hooks/use-settings";
 import { Role } from "../../services/roles-service";
 import { useUserProfile } from "@/hooks/use-user-profile";
 import { canDismissRiskLevel, getRiskLabelFromLevel } from "@/lib/risk-level";
@@ -42,6 +43,7 @@ const FunctionPlane = () => {
   const [redirectAction, setRedirectAction] = useState<EApiFunctionTypes>();
   const signedInUserInfo = useSignedInUser();
   const profile = useUserProfile();
+  const settings = useSettings();
 
   useEffect(() => {
     handleRedirectPromise()
@@ -83,7 +85,7 @@ const FunctionPlane = () => {
 
   const dismissAllowedForCurrentLevel =
     profile.riskLoading ||
-    canDismissRiskLevel(profile.riskLevel, profile.maxDismissibleRiskLevel);
+    canDismissRiskLevel(profile.riskLevel, settings.maxDismissibleRiskLevel);
   const dismissDisabledReason = !dismissAllowedForCurrentLevel
     ? `Your ${getRiskLabelFromLevel(profile.riskLevel)} risk level cannot be dismissed via self-service. Please contact your administrator.`
     : undefined;

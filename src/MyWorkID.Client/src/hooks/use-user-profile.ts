@@ -42,29 +42,12 @@ const toRiskLevel = (
   return { level: RiskLevel.Unknown, label: "Risk State Unknown" };
 };
 
-const toMaxDismissibleRiskLevel = (
-  raw: string | undefined
-): RiskLevel => {
-  switch (raw?.toLowerCase()) {
-    case RiskLabel.High:
-      return RiskLevel.High;
-    case RiskLabel.Medium:
-      return RiskLevel.Medium;
-    case RiskLabel.Low:
-    default:
-      return RiskLevel.Low;
-  }
-};
-
 export const useUserProfile = (): UserProfile => {
   const [user, setUser] = useState<User>();
   const [userImage, setUserImage] = useState<string>();
   const [riskLoading, setRiskLoading] = useState(true);
   const [riskLevel, setRiskLevel] = useState<RiskLevel>(RiskLevel.Unknown);
   const [riskLabel, setRiskLabel] = useState("No Active Risk");
-  const [maxDismissibleRiskLevel, setMaxDismissibleRiskLevel] =
-    // Initial level is "Low" when nothing was defined in the appsettings json
-    useState<RiskLevel>(RiskLevel.Low);
   const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | undefined>(
     undefined,
   );
@@ -75,9 +58,6 @@ export const useUserProfile = (): UserProfile => {
         const { level, label } = toRiskLevel(result);
         setRiskLevel(level);
         setRiskLabel(label);
-        setMaxDismissibleRiskLevel(
-          toMaxDismissibleRiskLevel(result?.maxDismissibleRiskLevel),
-        );
         setRiskLoading(false);
       })
       .catch((error) => {
@@ -141,7 +121,6 @@ export const useUserProfile = (): UserProfile => {
     riskLoading,
     riskLevel,
     riskLabel,
-    maxDismissibleRiskLevel,
     refreshRiskState,
   };
 };

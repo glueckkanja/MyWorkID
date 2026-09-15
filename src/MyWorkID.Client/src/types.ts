@@ -104,13 +104,20 @@ export type PanelProps = {
   children: ReactNode;
 };
 
+export type Settings = {
+  maxDismissibleRiskLevel: RiskLevel;
+};
+
+export type SettingsProviderProps = {
+  children: ReactNode;
+};
+
 export type UserProfile = {
   user: User | undefined;
   userImage: string | undefined;
   riskLoading: boolean;
   riskLevel: RiskLevel;
   riskLabel: string;
-  maxDismissibleRiskLevel: RiskLevel;
   refreshRiskState: () => void;
 };
 
