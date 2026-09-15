@@ -21,11 +21,11 @@ const toRiskLevel = (
   const rawLevel = riskState?.riskLevel?.toLowerCase();
   switch (rawLevel) {
     case RiskLabel.High:
-      return { level: RiskLevel.High, label: "Risk Level: High" };
+      return { level: RiskLevel.High, label: `Risk Level: ${RiskLabel.High}` };
     case RiskLabel.Medium:
-      return { level: RiskLevel.Medium, label: "Risk Level: Medium" };
+      return { level: RiskLevel.Medium, label: `Risk Level: ${RiskLabel.Medium}` };
     case RiskLabel.Low:
-      return { level: RiskLevel.Low, label: "Risk Level: Low" };
+      return { level: RiskLevel.Low, label: `Risk Level: ${RiskLabel.Low}` };
     default:
       break;
   }

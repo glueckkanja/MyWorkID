@@ -8,7 +8,7 @@ import { UserDisplay } from "./user-display";
 import { useSignedInUser } from "../../contexts/signed-in-user-provider";
 import { Role } from "../../services/roles-service";
 import { useUserProfile } from "@/hooks/use-user-profile";
-import { canDismissRiskLevel, formatRiskLevel } from "@/lib/risk-level";
+import { canDismissRiskLevel, getRiskLabelFromLevel } from "@/lib/risk-level";
 import { ActionCard } from "./action-card";
 import { PasswordResetPanel } from "./function-plane-components/password-reset";
 import { CreateTapPanel } from "./function-plane-components/create-tap";
@@ -85,7 +85,7 @@ const FunctionPlane = () => {
     profile.riskLoading ||
     canDismissRiskLevel(profile.riskLevel, profile.maxDismissibleRiskLevel);
   const dismissDisabledReason = !dismissAllowedForCurrentLevel
-    ? `Your ${formatRiskLevel(profile.riskLevel)} risk level cannot be dismissed via self-service. Please contact your administrator.`
+    ? `Your ${getRiskLabelFromLevel(profile.riskLevel)} risk level cannot be dismissed via self-service. Please contact your administrator.`
     : undefined;
 
   const showRecommendedDismiss =

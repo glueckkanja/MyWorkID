@@ -1,4 +1,4 @@
-import { RiskLevel } from "../types";
+import { RiskLabel, RiskLevel } from "../types";
 
 /**
  * Returns true if a user with `currentRiskLevel` is allowed to dismiss their own risk
@@ -11,19 +11,19 @@ export const canDismissRiskLevel = (
 ): boolean => currentRiskLevel <= maxDismissibleRiskLevel;
 
 /**
- * Returns a human-readable label for a risk level (e.g. "Low", "Medium", "High").
+ * Returns a human-readable label for a risk level (e.g. "low", "medium", "high").
  */
-export const formatRiskLevel = (riskLevel: RiskLevel): string => {
+export const getRiskLabelFromLevel = (riskLevel: RiskLevel): RiskLabel => {
   switch (riskLevel) {
     case RiskLevel.High:
-      return "High";
+      return RiskLabel.High;
     case RiskLevel.Medium:
-      return "Medium";
+      return RiskLabel.Medium;
     case RiskLevel.Low:
-      return "Low";
+      return RiskLabel.Low;
     case RiskLevel.None:
-      return "None";
+      return RiskLabel.None;
     default:
-      return "Unknown";
+      return RiskLabel.Unknown;
   }
 };
