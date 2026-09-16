@@ -1,25 +1,11 @@
-import { useMemo, useEffect, useState } from "react";
+import { useMemo } from "react";
 import { SettingsProviderProps } from "../types";
-import { getMaximumDismissibleRiskLevel, RiskLevel } from "@/lib/risk-level";
-import { getFrontendOptions } from "@/services/frontend-options-service";
 import { SettingsContext } from "./settings-context";
 
-export const SettingsProvider = (props: SettingsProviderProps) => {
-  const [maxDismissibleRiskLevel, setMaxDismissibleRiskLevel] =
-    useState<RiskLevel>(RiskLevel.Low);
-
-  useEffect(() => {
-    getFrontendOptions()
-      .then((result) => {
-        setMaxDismissibleRiskLevel(
-          getMaximumDismissibleRiskLevel(result?.maxDismissibleRiskLevel),
-        );
-      })
-      .catch(() => {
-        // Keep default (Low) on failure — same fallback as the previous hook
-      });
-  }, []);
-
+export const SettingsProvider = ({
+  children,
+  maxDismissibleRiskLevel,
+}: SettingsProviderProps) => {
   const settingsValue = useMemo(
     () => ({ maxDismissibleRiskLevel }),
     [maxDismissibleRiskLevel],
@@ -27,7 +13,7 @@ export const SettingsProvider = (props: SettingsProviderProps) => {
 
   return (
     <SettingsContext.Provider value={settingsValue}>
-      {props.children}
+      {children}
     </SettingsContext.Provider>
   );
 };

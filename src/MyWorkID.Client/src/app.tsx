@@ -3,30 +3,18 @@ import { Header } from "./components/header";
 import { Footer } from "./components/footer";
 import { ThemeProvider } from "./components/theme-provider";
 import { SettingsProvider } from "./contexts/settings-provider";
-import { useEffect } from "react";
-import {
-  getFrontendOptions,
-  updateDocumentHead,
-} from "./services/frontend-options-service";
+import { RiskLevel } from "@/lib/risk-level";
 
-export const App = () => {
-  useEffect(() => {
-    const loadConfig = async () => {
-      try {
-        const options = await getFrontendOptions();
-        updateDocumentHead(options);
-      } catch (error) {
-        console.error("Failed to load frontend configuration:", error);
-      }
-    };
-    void loadConfig();
-  }, []);
+type AppProps = {
+  maxDismissibleRiskLevel: RiskLevel;
+};
 
+export const App = ({ maxDismissibleRiskLevel }: AppProps) => {
   return (
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <div className="app-shell">
         <Header />
-        <SettingsProvider>
+        <SettingsProvider maxDismissibleRiskLevel={maxDismissibleRiskLevel}>
           <FunctionPlane />
         </SettingsProvider>
         <Footer />

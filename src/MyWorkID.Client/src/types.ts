@@ -95,6 +95,7 @@ export type Settings = {
 
 export type SettingsProviderProps = {
   children: ReactNode;
+  maxDismissibleRiskLevel: RiskLevel;
 };
 
 export type UserProfile = {
