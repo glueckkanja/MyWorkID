@@ -1,5 +1,6 @@
 import { ReactNode, ComponentPropsWithoutRef } from "react";
 import type { ToastActionElement, ToastProps } from "@/components/ui/toast";
+import type { RiskLevel } from "@/lib/risk-level";
 
 export type Theme = "dark" | "light" | "system";
 export type ResolvedTheme = "dark" | "light";
@@ -21,22 +22,6 @@ export enum REQUEST_TYPE {
   POST,
   PUT,
   DELETE,
-}
-
-export enum RiskLabel {
-  Unknown = "unknown",
-  None = "none",
-  Low = "low",
-  Medium = "medium",
-  High = "high",
-}
-
-export enum RiskLevel {
-  None = 0,
-  Low = 1,
-  Medium = 2,
-  High = 3,
-  Unknown = 999,
 }
 
 export type CreateTapPanelProps = {
@@ -129,6 +114,7 @@ export type TFrontendOptions = {
   frontendClientId: string;
   tenantId: string;
   backendClientId: string;
+  maxDismissibleRiskLevel: string;
   customCssUrl?: string;
   appTitle?: string;
   faviconUrl?: string;

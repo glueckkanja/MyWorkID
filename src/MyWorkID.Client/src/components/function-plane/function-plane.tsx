@@ -3,13 +3,13 @@ import {
   getPendingAction,
   handleRedirectPromise,
 } from "../../services/msal-service";
-import { EApiFunctionTypes, PanelKey, RiskLevel } from "../../types";
+import { EApiFunctionTypes, PanelKey } from "../../types";
 import { UserDisplay } from "./user-display";
 import { useSignedInUser } from "../../contexts/signed-in-user-provider";
 import { useSettings } from "../../hooks/use-settings";
 import { Role } from "../../services/roles-service";
 import { useUserProfile } from "@/hooks/use-user-profile";
-import { canDismissRiskLevel, getRiskLabelFromLevel } from "@/lib/risk-level";
+import { canDismissRiskLevel, getRiskLabelFromLevel, RiskLevel } from "@/lib/risk-level";
 import { ActionCard } from "./action-card";
 import { PasswordResetPanel } from "./function-plane-components/password-reset";
 import { CreateTapPanel } from "./function-plane-components/create-tap";

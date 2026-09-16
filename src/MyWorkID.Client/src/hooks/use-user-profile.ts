@@ -7,10 +7,9 @@ import {
 import {
   TGetRiskStateResponse,
   User,
-  RiskLevel,
-  RiskLabel,
   UserProfile,
 } from "../types";
+import { getRiskLabelFromLevel, getRiskLevelFromLabel, RiskLabel, RiskLevel } from "@/lib/risk-level";
 import axios from "axios";
 
 const RISK_STATE_POLL_INTERVAL_MILLISECONDS = 30000;
@@ -18,24 +17,22 @@ const RISK_STATE_POLL_INTERVAL_MILLISECONDS = 30000;
 const toRiskLevel = (
   riskState: TGetRiskStateResponse | undefined
 ): { level: RiskLevel; label: string } => {
-  const rawLevel = riskState?.riskLevel?.toLowerCase();
-  switch (rawLevel) {
-    case RiskLabel.High:
-      return { level: RiskLevel.High, label: `Risk Level: ${RiskLabel.High}` };
-    case RiskLabel.Medium:
-      return { level: RiskLevel.Medium, label: `Risk Level: ${RiskLabel.Medium}` };
-    case RiskLabel.Low:
-      return { level: RiskLevel.Low, label: `Risk Level: ${RiskLabel.Low}` };
+  const riskLevel = getRiskLevelFromLabel(riskState?.riskLevel);
+  switch (riskLevel) {
+    case RiskLevel.High:
+    case RiskLevel.Medium:
+    case RiskLevel.Low:
+      return { level: riskLevel, label: `Risk Level: ${getRiskLabelFromLevel(riskLevel)}` };
     default:
       break;
   }
-  const rawState = riskState?.riskState?.toLowerCase();
+  const riskStateLabel = riskState?.riskState?.toLowerCase();
   if (
-    rawLevel === RiskLabel.None ||
-    rawState === RiskLabel.None ||
-    rawState === "dismissed" ||
-    rawState === "remediated" ||
-    rawState === "confirmedsafe"
+    riskLevel === RiskLevel.None ||
+    riskStateLabel === RiskLabel.None.toLowerCase() ||
+    riskStateLabel === "dismissed" ||
+    riskStateLabel === "remediated" ||
+    riskStateLabel === "confirmedsafe"
   ) {
     return { level: RiskLevel.None, label: "No Active Risk" };
   }
