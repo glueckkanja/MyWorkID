@@ -109,11 +109,11 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    app.UseCors(builder =>
-        builder
+    app.UseCors(corsBuilder =>
+        corsBuilder
             .AllowAnyHeader()
             .AllowAnyMethod()
-            .AllowAnyOrigin()
+            .WithOrigins("https://localhost:5173") // port configured in vite.config.ts
             .WithExposedHeaders("Content-Disposition")
     );
 }
