@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Panel } from "../../panel";
 import { dismissUserRisk } from "../../../services/api-service";
-import { DismissUserRiskPanelProps, RiskLevel } from "../../../types";
+import { DismissUserRiskPanelProps } from "../../../types";
 import { CircleCheckIcon } from "@/components/ui/icons/circle-check-icon";
 import { useToast } from "@/hooks/use-toast";
 import { Spinner } from "@/components/ui/spinner";
+import { RiskLevel } from "@/lib/risk-level";
 
 const renderConfirmationBody = (riskLevel: RiskLevel, riskLabel: string) => {
   if (
@@ -58,7 +59,16 @@ export const DismissUserRiskPanel = ({
   const [submitting, setSubmitting] = useState(false);
   const { toastException, toastSuccess } = useToast();
 
-  const triggerDismiss = () => {
+  // Reset submitting when panel closes — store information from previous renders
+  const [previousOpen, setPreviousOpen] = useState(open);
+  if (previousOpen !== open) {
+    setPreviousOpen(open);
+    if (!open && submitting) {
+      setSubmitting(false);
+    }
+  }
+
+  const triggerDismiss = useCallback(() => {
     setSubmitting(true);
     dismissUserRisk()
       .then(() => {
@@ -75,22 +85,17 @@ export const DismissUserRiskPanel = ({
       .finally(() => {
         setSubmitting(false);
       });
-  };
+  }, [toastSuccess, toastException, onDismissed, onClose]);
 
   // auto-dismiss risk when returning from authentication redirect
+  // setTimeout prevents the dismissal from running if the panel closes and avoids extra renders
   useEffect(() => {
-    if (open && comingFromRedirect) {
-      triggerDismiss();
+    if (!open || !comingFromRedirect) {
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, comingFromRedirect]);
-
-  // reset submitting state when panel is closed
-  useEffect(() => {
-    if (!open) {
-      setSubmitting(false);
-    }
-  }, [open]);
+    const timeoutId = setTimeout(triggerDismiss, 0);
+    return () => clearTimeout(timeoutId);
+  }, [open, comingFromRedirect, triggerDismiss]);
 
   return (
     <Panel

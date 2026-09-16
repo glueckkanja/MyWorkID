@@ -1,20 +1,32 @@
 import { useEffect, useState } from "react";
+
+// Import services
 import {
   getPendingAction,
   handleRedirectPromise,
 } from "../../services/msal-service";
-import { EApiFunctionTypes, PanelKey, RiskLevel } from "../../types";
-import { UserDisplay } from "./user-display";
 import { useSignedInUser } from "../../contexts/signed-in-user-provider";
 import { Role } from "../../services/roles-service";
+import { EApiFunctionTypes, PanelKey } from "../../types";
+import type { AppProps } from "../../types";
+
+// Import app state and utilities
 import { useUserProfile } from "@/hooks/use-user-profile";
+import {
+  canDismissRiskLevel,
+  getRiskLabelFromLevel,
+  RiskLevel,
+} from "@/lib/risk-level";
+
+// Import feature components
 import { ActionCard } from "./action-card";
-import { PasswordResetPanel } from "./function-plane-components/password-reset";
 import { CreateTapPanel } from "./function-plane-components/create-tap";
 import { DismissUserRiskPanel } from "./function-plane-components/dismiss-userisk";
+import { PasswordResetPanel } from "./function-plane-components/password-reset";
 import { ValidateIdentityPanel } from "./function-plane-components/validate-identity";
+import { UserDisplay } from "./user-display";
 
-// Import Icons
+// Import icons
 import { CircleCheckIcon } from "@/components/ui/icons/circle-check-icon";
 import { IdentityVerificationIcon } from "@/components/ui/icons/identity-verification-icon";
 import { PasswordLockIcon } from "@/components/ui/icons/password-lock-icon";
@@ -36,7 +48,7 @@ const DismissIcon = () => (
   <CircleCheckIcon width={20} height={20} strokeWidth={1.8} />
 );
 
-const FunctionPlane = () => {
+const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
   const [activePanel, setActivePanel] = useState<PanelKey>(null);
   const [redirectAction, setRedirectAction] = useState<EApiFunctionTypes>();
   const signedInUserInfo = useSignedInUser();
@@ -80,9 +92,17 @@ const FunctionPlane = () => {
   const canDismissRisk = hasRole(Role.ALLOW_DISMISS_USER_RISK);
   const canValidateIdentity = hasRole(Role.ALLOW_VALIDATE_IDENTITY);
 
+  const dismissAllowedForCurrentLevel =
+    profile.riskLoading ||
+    canDismissRiskLevel(profile.riskLevel, maxDismissibleRiskLevel);
+  const dismissDisabledReason = !dismissAllowedForCurrentLevel
+    ? `Your ${getRiskLabelFromLevel(profile.riskLevel)} risk level cannot be dismissed via self-service. Please contact your administrator.`
+    : undefined;
+
   const showRecommendedDismiss =
     canDismissRisk &&
     !profile.riskLoading &&
+    dismissAllowedForCurrentLevel &&
     (profile.riskLevel === RiskLevel.High ||
       profile.riskLevel === RiskLevel.Medium);
 
@@ -134,6 +154,8 @@ const FunctionPlane = () => {
             title="Dismiss User Risk"
             description="Clear your account risk status"
             onClick={() => setActivePanel("dismiss")}
+            disabled={!dismissAllowedForCurrentLevel}
+            disabledReason={dismissDisabledReason}
           />
         )}
         {canValidateIdentity && (
