@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
+using Microsoft.Extensions.Options;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
 using Microsoft.Graph.Models.ODataErrors;
@@ -6,6 +7,7 @@ using Microsoft.Identity.Web;
 using MyWorkID.Server.Common;
 using MyWorkID.Server.Features.UserRiskState.Entities;
 using MyWorkID.Server.Filters;
+using MyWorkID.Server.Options;
 
 namespace MyWorkID.Server.Features.UserRiskState.Queries
 {
@@ -33,15 +35,18 @@ namespace MyWorkID.Server.Features.UserRiskState.Queries
         /// </summary>
         /// <param name="user">The claims principal representing the user.</param>
         /// <param name="graphClient">The Graph service client.</param>
+        /// <param name="userRiskStateOptions">The user risk state configuration options.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A result containing the user's risk state and risk level.</returns>
         public static async Task<IResult> HandleAsync(
             ClaimsPrincipal user,
             GraphServiceClient graphClient,
+            IOptions<UserRiskStateOptions> userRiskStateOptions,
             CancellationToken cancellationToken
         )
         {
             string? userId = user.GetObjectId();
+            RiskLevel maxDismissibleRiskLevel = userRiskStateOptions.Value.MaxDismissibleRiskLevel;
             RiskyUser? riskyUser;
             try
             {
@@ -74,7 +79,7 @@ namespace MyWorkID.Server.Features.UserRiskState.Queries
                 riskLevel = riskyUser.RiskLevel;
             }
 
-            return TypedResults.Ok(new GetRiskStateResponse(riskState, riskLevel));
+            return TypedResults.Ok(new GetRiskStateResponse(riskState, riskLevel, maxDismissibleRiskLevel));
         }
     }
 }
