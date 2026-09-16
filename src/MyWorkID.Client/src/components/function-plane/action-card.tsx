@@ -7,21 +7,33 @@ export const ActionCard = ({
   description,
   highlighted,
   onClick,
+  disabled,
+  disabledReason,
 }: ActionCardProps) => {
+  const classes = ["action-card"];
+  if (highlighted) {
+    classes.push("action-card--highlighted");
+  }
+  if (disabled) {
+    classes.push("action-card--disabled");
+  }
   return (
     <button
       type="button"
-      className={
-        highlighted ? "action-card action-card--highlighted" : "action-card"
-      }
+      className={classes.join(" ")}
       onClick={onClick}
+      disabled={disabled}
+      aria-disabled={disabled || undefined}
+      title={disabled ? disabledReason : undefined}
     >
       <span className="action-card__icon" aria-hidden="true">
         {icon}
       </span>
       <span className="action-card__content">
         <span className="action-card__title">{title}</span>
-        <span className="action-card__desc">{description}</span>
+        <span className="action-card__desc">
+          {disabled && disabledReason ? disabledReason : description}
+        </span>
       </span>
       <span className="action-card__arrow" aria-hidden="true">
         <RightChevronIcon />
