@@ -93,15 +93,6 @@ export type AppProps = {
   maxDismissibleRiskLevel: RiskLevel;
 };
 
-export type Settings = {
-  maxDismissibleRiskLevel: RiskLevel;
-};
-
-export type SettingsProviderProps = {
-  children: ReactNode;
-  maxDismissibleRiskLevel: RiskLevel;
-};
-
 export type UserProfile = {
   user: User | undefined;
   userImage: string | undefined;

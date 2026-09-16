@@ -2,7 +2,6 @@ import FunctionPlane from "./components/function-plane/function-plane";
 import { Header } from "./components/header";
 import { Footer } from "./components/footer";
 import { ThemeProvider } from "./components/theme-provider";
-import { SettingsProvider } from "./contexts/settings-provider";
 import type { AppProps } from "./types";
 
 export const App = ({ maxDismissibleRiskLevel }: AppProps) => {
@@ -10,9 +9,7 @@ export const App = ({ maxDismissibleRiskLevel }: AppProps) => {
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <div className="app-shell">
         <Header />
-        <SettingsProvider maxDismissibleRiskLevel={maxDismissibleRiskLevel}>
-          <FunctionPlane />
-        </SettingsProvider>
+        <FunctionPlane maxDismissibleRiskLevel={maxDismissibleRiskLevel} />
         <Footer />
       </div>
     </ThemeProvider>
