@@ -31,23 +31,6 @@ export const getRiskLevelFromLabel = (
   }
 };
 
-export const getMaximumDismissibleRiskLevel = (
-  riskLevelLabel: string | undefined,
-): RiskLevel => getRiskLevelFromLabel(riskLevelLabel) ?? RiskLevel.Low;
-
-/**
- * Returns true if a user with `currentRiskLevel` is allowed to dismiss their own risk
- * given the configured `maxDismissibleRiskLevel`. Users with None are always allowed
- * to confirm-safe. Unknown risk is not dismissible because the current risk level could
- * not be resolved.
- */
-export const canDismissRiskLevel = (
-  currentRiskLevel: RiskLevel,
-  maxDismissibleRiskLevel: RiskLevel,
-): boolean =>
-  currentRiskLevel !== RiskLevel.Unknown &&
-  currentRiskLevel <= maxDismissibleRiskLevel;
-
 /**
  * Returns a human-readable label for a risk level (e.g. "Low", "Medium", "High").
  */
@@ -65,3 +48,20 @@ export const getRiskLabelFromLevel = (riskLevel: RiskLevel): RiskLabel => {
       return RiskLabel.Unknown;
   }
 };
+
+export const getMaximumDismissibleRiskLevel = (
+  riskLevelLabel: string | undefined,
+): RiskLevel => getRiskLevelFromLabel(riskLevelLabel) ?? RiskLevel.Low;
+
+/**
+ * Returns true if a user with `currentRiskLevel` is allowed to dismiss their own risk
+ * given the configured `maxDismissibleRiskLevel`. Users with None are always allowed
+ * to confirm-safe. Unknown risk is not dismissible because the current risk level could
+ * not be resolved.
+ */
+export const canDismissRiskLevel = (
+  currentRiskLevel: RiskLevel,
+  maxDismissibleRiskLevel: RiskLevel,
+): boolean =>
+  currentRiskLevel !== RiskLevel.Unknown &&
+  currentRiskLevel <= maxDismissibleRiskLevel;
