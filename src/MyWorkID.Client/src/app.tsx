@@ -3,11 +3,7 @@ import { Header } from "./components/header";
 import { Footer } from "./components/footer";
 import { ThemeProvider } from "./components/theme-provider";
 import { SettingsProvider } from "./contexts/settings-provider";
-import { RiskLevel } from "@/lib/risk-level";
-
-type AppProps = {
-  maxDismissibleRiskLevel: RiskLevel;
-};
+import type { AppProps } from "./types";
 
 export const App = ({ maxDismissibleRiskLevel }: AppProps) => {
   return (

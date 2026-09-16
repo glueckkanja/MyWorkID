@@ -89,6 +89,10 @@ export type PanelProps = {
   children: ReactNode;
 };
 
+export type AppProps = {
+  maxDismissibleRiskLevel: RiskLevel;
+};
+
 export type Settings = {
   maxDismissibleRiskLevel: RiskLevel;
 };
