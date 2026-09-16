@@ -2,6 +2,7 @@ import FunctionPlane from "./components/function-plane/function-plane";
 import { Header } from "./components/header";
 import { Footer } from "./components/footer";
 import { ThemeProvider } from "./components/theme-provider";
+import { SettingsProvider } from "./contexts/settings-provider";
 import { useEffect } from "react";
 import {
   getFrontendOptions,
@@ -25,7 +26,9 @@ export const App = () => {
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <div className="app-shell">
         <Header />
-        <FunctionPlane />
+        <SettingsProvider>
+          <FunctionPlane />
+        </SettingsProvider>
         <Footer />
       </div>
     </ThemeProvider>
