@@ -1,4 +1,5 @@
-import { RiskLevel, UserProfile } from "../../types";
+import { UserProfile } from "../../types";
+import { RiskLevel } from "@/lib/risk-level";
 
 const getInitials = (displayName: string | undefined): string => {
   if (!displayName) {
@@ -8,7 +9,7 @@ const getInitials = (displayName: string | undefined): string => {
   if (parts.length === 1) {
     return parts[0].substring(0, 2).toUpperCase();
   }
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  return (parts[0][0] + parts.at(-1)![0]).toUpperCase();
 };
 
 const getBadgeClass = (riskLevel: RiskLevel, riskLoading: boolean): string => {
