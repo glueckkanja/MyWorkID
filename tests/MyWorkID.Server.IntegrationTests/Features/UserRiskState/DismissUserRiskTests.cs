@@ -173,6 +173,26 @@ namespace MyWorkID.Server.IntegrationTests.Features.UserRiskState
         }
 
         [Fact]
+        public async Task DismissUserRisk_WhenGraphReturnsRiskyUserWithAbsentRiskLevel_Returns403()
+        {
+            var testApp = new TestApplicationFactory();
+            testApp.AddAuthContextConfig(AppFunctions.DismissUserRisk.ToString(), _validAuthContextId);
+            testApp.AddMaxDismissibleRiskLevelConfig(RiskLevel.High.ToString());
+
+            IRequestAdapter requestAdapter = GetGraphRequestAdapterForRiskyUser(
+                new RiskyUser { RiskState = RiskState.AtRisk, RiskLevel = null });
+
+            var client = TestHelper.CreateClientWithRole(testApp,
+                provider => provider.WithDismissUserRiskRole().WithRandomSubAndOid().WithAuthContext(_validAuthContextId),
+                requestAdapter);
+            var response = await client.PutAsync(_baseUrl, null, TestContext.Current.CancellationToken);
+            response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+            var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>(TestContext.Current.CancellationToken);
+            problemDetails.Should().NotBeNull();
+            problemDetails!.Detail.Should().Be(Strings.ERROR_RISK_LEVEL_EXCEEDS_MAX_DISMISSIBLE);
+        }
+
+        [Fact]
         public async Task DismissUserRisk_WithInvalidMaxDismissibleRiskLevelConfig_FailsStartup()
         {
             var testApp = new TestApplicationFactory();

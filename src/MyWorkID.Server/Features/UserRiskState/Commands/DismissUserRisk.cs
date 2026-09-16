@@ -72,7 +72,12 @@ namespace MyWorkID.Server.Features.UserRiskState.Commands
                 }
             }
 
-            RiskLevel? currentRiskLevel = riskyUser?.RiskLevel;
+            // UnknownFutureValue is a sentinel for an active record with an absent RiskLevel.
+            // RiskLevelRanking.Rank maps it to int.MaxValue, so CanDismiss always denies it.
+            RiskLevel? currentRiskLevel =
+                riskyUser is { RiskState: RiskState.AtRisk or RiskState.ConfirmedCompromised, RiskLevel: null }
+                    ? RiskLevel.UnknownFutureValue
+                    : riskyUser?.RiskLevel;
             if (!RiskLevelRanking.CanDismiss(currentRiskLevel, maxDismissibleRiskLevel))
             {
                 return TypedResults.Problem(
