@@ -3,9 +3,14 @@ name: 'Test CI'
 on:
   pull_request:
 
+# Cancel superseded runs for the same PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
-  
+
 env:
   DOTNET_CORE_VERSION: 10.0.x
 
@@ -49,6 +54,6 @@ jobs:
     if: always()
     permissions:
       contents: read
-      actions: read
-      checks: write
+      actions: read # Downloads the testResults artifact
+      checks: write # Publishes the test report as a check run
     uses: $/.github/workflows/test-report.yml

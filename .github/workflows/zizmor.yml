@@ -3,10 +3,16 @@ name: Zizmor GitHub Actions security scan
 on:
   pull_request:
 
+# Cancel superseded runs for the same PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions: {}
 
 jobs:
   zizmor:
+    name: Scan workflows
     runs-on: ubuntu-latest
     permissions:
       contents: read
