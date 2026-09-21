@@ -1,29 +1,224 @@
-# zizmor.yml
-name: Zizmor GitHub Actions security scan
+# Copied from https://github.com/c4a8/c4a8-code-zizmor-scanner/blob/c66927c52a757839ea3f0db0c926e493b6c174a4/.github/workflows/zizmor-action.yml (v0.2.0).
+# That workflow has no workflow_call trigger, so it cannot be referenced with `uses:`. Keep this copy in sync manually.
+
+name: zizmor
+
 on:
   pull_request:
-
-# Cancel superseded runs for the same PR
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+    # synchronize reruns the scan whenever commits are pushed to an open PR
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
 
 permissions: {}
 
+# cancel a still-running scan of the same PR (or branch, for manual runs)
+# when a newer one starts
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   zizmor:
-    name: Scan workflows
+    name: Scan GitHub Actions
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: read # checkout the repository to scan its workflows
+      pull-requests: write # create/update the findings comment on PRs
+
     steps:
-      - name: checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Run zizmor
+
+      # fails the job on findings; results appear as PR annotations
+      - id: zizmor
         uses: zizmorcore/zizmor-action@cc914d7f3750a2d13d75c7f184a1060aa0e9d482 # v0.6.4
         with:
-          # Code scanning (GHAS) is not enabled on this repo, so report findings
-          # as annotations will fail the check instead of uploading SARIF.
           advanced-security: false
+          annotations: true
+          # zizmor still runs and collects inputs itself (workflows, action
+          # definitions, dependabot and pre-commit configs). Only its exit code
+          # 3 ("no inputs collected") is downgraded to a warning, so repos with
+          # nothing to audit pass instead of failing. Findings still fail.
+          fail-on-no-inputs: false
+
+      # Builds a markdown report from zizmor's annotation output and appends it
+      # to the workflow run summary. The action tees zizmor's output to
+      # ${RUNNER_TEMP}/zizmor (internal detail of the pinned version — re-check
+      # when bumping the pin above).
+      - name: Build findings report
+        id: report
+        if: ${{ !cancelled() }}
+        env:
+          ZIZMOR_OUTCOME: ${{ steps.zizmor.outcome }}
+          # commit the findings refer to: the PR head for pull_request runs,
+          # the pushed/dispatched commit otherwise
+          LINK_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          python3 - <<'PYEOF'
+          import glob
+          import os
+          import re
+          from urllib.parse import quote
+
+          raw_path = os.path.join(os.environ["RUNNER_TEMP"], "zizmor")
+          outcome = os.environ["ZIZMOR_OUTCOME"]
+          repo_url = "{}/{}".format(
+              os.environ["GITHUB_SERVER_URL"], os.environ["GITHUB_REPOSITORY"]
+          )
+          run_url = "{}/actions/runs/{}".format(repo_url, os.environ["GITHUB_RUN_ID"])
+          # permalink base for the exact commit that was scanned, so the line
+          # numbers in the findings keep pointing at the right code
+          blob_url = "{}/blob/{}".format(repo_url, os.environ["LINK_SHA"])
+          commit_url = "{}/commit/{}".format(repo_url, os.environ["LINK_SHA"])
+          DOCS_URL = "https://docs.zizmor.sh/audits/"
+
+          MARKER = "<!-- zizmor-findings-report -->"
+          MAX_ROWS = 50
+          ANSI = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
+          # ::error file=x.yml,line=3,title=some-audit::message
+          CMD = re.compile(r"^::(error|warning|notice)\s+(.*?)::(.*)$")
+
+          def unescape(s, prop=False):
+              if prop:
+                  s = s.replace("%3A", ":").replace("%2C", ",")
+              return s.replace("%0D", "\r").replace("%0A", "\n").replace("%25", "%")
+
+          def cell(s):
+              s = s.replace("|", "\\|").replace("\r", "").replace("\n", "<br>")
+              return s if len(s) <= 300 else s[:297] + "..."
+
+          # Mirrors zizmor's default input collection, for report wording only:
+          # zizmor prints "no inputs collected" to stderr, which the action does
+          # not tee into raw_path, so an empty raw_path alone cannot tell
+          # "nothing found" from "nothing to scan". The job outcome is driven
+          # solely by zizmor's exit code, never by this check.
+          def count_auditable_inputs():
+              patterns = [
+                  os.path.join(".github", "workflows", "*.yml"),
+                  os.path.join(".github", "workflows", "*.yaml"),
+                  os.path.join("**", "action.yml"),
+                  os.path.join("**", "action.yaml"),
+                  os.path.join(".github", "dependabot.yml"),
+                  os.path.join(".github", "dependabot.yaml"),
+                  ".pre-commit-config.yaml",
+              ]
+              found = [p for pat in patterns for p in glob.glob(pat, recursive=True)]
+              return len([p for p in found if not p.startswith(".git" + os.sep)])
+
+          findings = []
+          if os.path.exists(raw_path):
+              with open(raw_path, encoding="utf-8", errors="replace") as f:
+                  for line in f:
+                      m = CMD.match(ANSI.sub("", line.strip()))
+                      if not m:
+                          continue
+                      level, props_raw, message = m.groups()
+                      props = {}
+                      for kv in props_raw.split(","):
+                          if "=" in kv:
+                              k, v = kv.split("=", 1)
+                              props[k.strip()] = unescape(v, prop=True)
+                      # message starts with "<filename>:<line>: ", already covered
+                      # by the Location column
+                      message = re.sub(r"^[^:]+:\d+:\s*", "", unescape(message))
+                      findings.append((level, props, message))
+
+          lines = [MARKER, "## 🌈 zizmor scan results", ""]
+          # "nothing to scan" only goes to the run summary, not to a PR comment
+          skip_comment = False
+          if findings:
+              lines.append(
+                  "❌ zizmor found **{}** finding(s) in this repository's "
+                  "GitHub Actions.".format(len(findings))
+              )
+              lines += ["", "| Severity | Check | Location | Details |", "|---|---|---|---|"]
+              icons = {"error": "🔴 error", "warning": "🟡 warning", "notice": "🔵 notice"}
+              for level, props, message in findings[:MAX_ROWS]:
+                  check = props.get("title", "?")
+                  check_cell = "`{}`".format(check)
+                  # audit names are the anchors on the docs page
+                  if re.fullmatch(r"[a-z0-9-]+", check):
+                      check_cell = "[`{}`]({}#{})".format(check, DOCS_URL, check)
+
+                  path = props.get("file", "")
+                  line_no = props.get("line", "")
+                  end_line = props.get("endLine", "")
+                  loc = (path or "?") + (":" + line_no if line_no else "")
+                  loc_cell = "`{}`".format(loc)
+                  if path:
+                      target = "{}/{}".format(blob_url, quote(path))
+                      if re.fullmatch(r"\d+", line_no):
+                          target += "#L" + line_no
+                          if re.fullmatch(r"\d+", end_line) and end_line != line_no:
+                              target += "-L" + end_line
+                      loc_cell = "[`{}`]({})".format(loc, target)
+
+                  lines.append("| {} | {} | {} | {} |".format(
+                      icons[level], check_cell, loc_cell, cell(message)))
+              if len(findings) > MAX_ROWS:
+                  lines.append("")
+                  lines.append("...and {} more finding(s), see the run log.".format(
+                      len(findings) - MAX_ROWS))
+              lines += [
+                  "",
+                  "🔎 Full details: [workflow run log]({}) — on pull requests the "
+                  "findings also appear as inline annotations in the "
+                  "**Files changed** tab. Each check links to its [audit "
+                  "documentation]({}), each location to the offending line at "
+                  "commit [`{}`]({}).".format(
+                      run_url, DOCS_URL, os.environ["LINK_SHA"][:7], commit_url),
+              ]
+          elif outcome == "success" and count_auditable_inputs() == 0:
+              skip_comment = True
+              lines.append(
+                  "ℹ️ Nothing to scan: this repository has no GitHub Actions "
+                  "workflows, action definitions or Dependabot configs."
+              )
+          elif outcome == "success":
+              lines.append("✅ zizmor found no issues in this repository's GitHub Actions.")
+          else:
+              lines.append(
+                  "⚠️ The zizmor scan did not complete successfully (no findings "
+                  "were reported). Check the [workflow run log]({}) for the "
+                  "error.".format(run_url)
+              )
+          lines.append("")
+
+          report = "\n".join(lines)
+          with open(os.path.join(os.environ["RUNNER_TEMP"], "zizmor-report.md"), "w",
+                    encoding="utf-8") as f:
+              f.write(report)
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as f:
+              f.write(report)
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
+              f.write("skip_comment={}\n".format("true" if skip_comment else "false"))
+          PYEOF
+
+      # Creates the report comment on the PR, or updates the existing one on
+      # subsequent runs (matched via the hidden marker). Skipped for PRs from
+      # forks, whose read-only token cannot comment, and when there was nothing
+      # to scan.
+      - name: Comment report on PR
+        if: ${{ !cancelled() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && steps.report.outputs.skip_comment != 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          marker='<!-- zizmor-findings-report -->'
+          report="${RUNNER_TEMP}/zizmor-report.md"
+
+          comment_id="$(gh api "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" --paginate \
+            --jq ".[] | select(.body | startswith(\"${marker}\")) | .id" | head -n 1)"
+
+          payload="$(jq -n --rawfile body "${report}" '{body: $body}')"
+          if [[ -n "${comment_id}" ]]; then
+            gh api --method PATCH "repos/${GITHUB_REPOSITORY}/issues/comments/${comment_id}" \
+              --input - <<< "${payload}" > /dev/null
+            echo "Updated existing report comment ${comment_id}"
+          else
+            gh api --method POST "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" \
+              --input - <<< "${payload}" > /dev/null
+            echo "Created report comment"
+          fi
