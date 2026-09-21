@@ -26,8 +26,6 @@ jobs:
     name: Sonar
     runs-on: ubuntu-latest
     if: github.event.repository.fork == false
-    # Dedicated environment so the Sonar secrets are only exposed to this job
-    environment: sonar
     permissions:
       contents: read
       pull-requests: write # Lets the scanner read PR metadata and decorate the PR with analysis results
