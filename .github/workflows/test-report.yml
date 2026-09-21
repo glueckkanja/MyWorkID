@@ -4,12 +4,15 @@ on:
 
 permissions:
   contents: read
-  actions: read
-  checks: write
 
 jobs:
   report:
+    name: Test report
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read # Downloads the testResults artifact from the calling workflow run
+      checks: write # Creates the check run that holds the test report
     steps:
       - uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
         with:

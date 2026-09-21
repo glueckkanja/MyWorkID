@@ -8,9 +8,13 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+# Cancel superseded PR analyses; runs for main and manual dispatches queue up instead
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: read
-  pull-requests: write
 
 env:
   CONFIGURATION: Release
@@ -22,6 +26,9 @@ jobs:
     name: Sonar
     runs-on: ubuntu-latest
     if: github.event.repository.fork == false
+    permissions:
+      contents: read
+      pull-requests: write # Lets the scanner read PR metadata and decorate the PR with analysis results
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -51,13 +58,16 @@ jobs:
           dotnet tool update dotnet-sonarscanner --tool-path ./.sonar/scanner
           dotnet tool install --global dotnet-coverage
       - name: Restore
-        run: dotnet restore "${{ env.WORKING_DIRECTORY }}"
+        run: dotnet restore "$WORKING_DIRECTORY"
       - name: Build and analyze
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed to get PR information, if any
+          SONAR_PROJECT_ID: ${{ secrets.SONAR_PROJECT_ID }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         shell: pwsh
         run: |
-          .\.sonar\scanner\dotnet-sonarscanner begin /k:"${{ secrets.SONAR_PROJECT_ID}}" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}" /d:sonar.cs.vscoveragexml.reportsPaths=coverage.xml /d:sonar.coverage.exclusions=src/MyWorkID.Client/**
-          dotnet build "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-restore
+          .\.sonar\scanner\dotnet-sonarscanner begin /k:"$env:SONAR_PROJECT_ID" /d:sonar.token="$env:SONAR_TOKEN" /d:sonar.host.url="$env:SONAR_HOST_URL" /d:sonar.cs.vscoveragexml.reportsPaths=coverage.xml /d:sonar.coverage.exclusions=src/MyWorkID.Client/**
+          dotnet build "$env:WORKING_DIRECTORY" --configuration $env:CONFIGURATION --no-restore
           dotnet-coverage collect 'dotnet test' -f xml  -o 'coverage.xml'
-          .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+          .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="$env:SONAR_TOKEN"
