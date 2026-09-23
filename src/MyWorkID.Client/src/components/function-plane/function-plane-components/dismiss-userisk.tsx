@@ -59,14 +59,10 @@ export const DismissUserRiskPanel = ({
   const [submitting, setSubmitting] = useState(false);
   const { toastException, toastSuccess } = useToast();
 
-  // Reset submitting when panel closes — store information from previous renders
-  const [previousOpen, setPreviousOpen] = useState(open);
-  if (previousOpen !== open) {
-    setPreviousOpen(open);
-    if (!open && submitting) {
-      setSubmitting(false);
-    }
-  }
+  const handleClose = useCallback(() => {
+    setSubmitting(false);
+    onClose();
+  }, [onClose]);
 
   const triggerDismiss = useCallback(() => {
     setSubmitting(true);
@@ -77,18 +73,16 @@ export const DismissUserRiskPanel = ({
           "Your risk status has been cleared. All previous sessions have been revoked.",
         );
         onDismissed?.();
-        onClose();
+        handleClose();
       })
       .catch((error) => {
-        toastException(error);
-      })
-      .finally(() => {
         setSubmitting(false);
+        toastException(error);
       });
-  }, [toastSuccess, toastException, onDismissed, onClose]);
+  }, [toastSuccess, toastException, onDismissed, handleClose]);
 
-  // auto-dismiss risk when returning from authentication redirect
-  // setTimeout prevents the dismissal from running if the panel closes and avoids extra renders
+  // auto-dismiss risk when returning from authentication redirect.
+  // setTimeout defers setState out of the effect body (react-hooks/set-state-in-effect).
   useEffect(() => {
     if (!open || !comingFromRedirect) {
       return;
@@ -102,7 +96,7 @@ export const DismissUserRiskPanel = ({
       open={open}
       title="Dismiss User Risk"
       subtitle="Confirm that your account is safe and request risk removal."
-      onClose={onClose}
+      onClose={handleClose}
     >
       {submitting ? (
         <div className="panel-loading">
