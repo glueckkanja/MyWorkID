@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   getUser,
   getUserImage,
@@ -112,12 +112,15 @@ export const useUserProfile = (): UserProfile => {
     };
   }, [refreshRiskState]);
 
-  return {
-    user,
-    userImage,
-    riskLoading,
-    riskLevel,
-    riskLabel,
-    refreshRiskState,
-  };
+  return useMemo(
+    () => ({
+      user,
+      userImage,
+      riskLoading,
+      riskLevel,
+      riskLabel,
+      refreshRiskState,
+    }),
+    [user, userImage, riskLoading, riskLevel, riskLabel, refreshRiskState],
+  );
 };

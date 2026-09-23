@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { Panel } from "../../panel";
 import { dismissUserRisk } from "../../../services/api-service";
 import { DismissUserRiskPanelProps } from "../../../types";
@@ -47,15 +47,18 @@ const renderConfirmationBody = (riskLevel: RiskLevel, riskLabel: string) => {
   };
 };
 
-export const DismissUserRiskPanel = ({
+export const DismissUserRiskPanel = memo(function DismissUserRiskPanel({
   open,
   onClose,
   comingFromRedirect,
   onDismissed,
   riskLevel,
   riskLabel,
-}: DismissUserRiskPanelProps) => {
-  const confirmation = renderConfirmationBody(riskLevel, riskLabel);
+}: DismissUserRiskPanelProps) {
+  const confirmation = useMemo(
+    () => renderConfirmationBody(riskLevel, riskLabel),
+    [riskLevel, riskLabel],
+  );
   const [submitting, setSubmitting] = useState(false);
   const { toastException, toastSuccess } = useToast();
 
@@ -81,8 +84,7 @@ export const DismissUserRiskPanel = ({
       });
   }, [toastSuccess, toastException, onDismissed, handleClose]);
 
-  // auto-dismiss risk when returning from authentication redirect.
-  // setTimeout defers setState out of the effect body (react-hooks/set-state-in-effect).
+  // auto-dismiss risk when returning from authentication redirect
   useEffect(() => {
     if (!open || !comingFromRedirect) {
       return;
@@ -125,4 +127,4 @@ export const DismissUserRiskPanel = ({
       )}
     </Panel>
   );
-};
+});

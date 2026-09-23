@@ -1,7 +1,8 @@
+import { memo } from "react";
 import { ActionCardProps } from "../../types";
 import { RightChevronIcon } from "../ui/icons/right-chevron-icon";
 
-export const ActionCard = ({
+export const ActionCard = memo(function ActionCard({
   icon,
   title,
   description,
@@ -9,7 +10,7 @@ export const ActionCard = ({
   onClick,
   disabled,
   disabledReason,
-}: ActionCardProps) => {
+}: ActionCardProps) {
   const classes = ["action-card"];
   if (highlighted) {
     classes.push("action-card--highlighted");
@@ -40,4 +41,4 @@ export const ActionCard = ({
       </span>
     </button>
   );
-};
+});
