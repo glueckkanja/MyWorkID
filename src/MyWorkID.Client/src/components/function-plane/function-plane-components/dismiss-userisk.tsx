@@ -3,6 +3,9 @@ import { Panel } from "../../panel";
 import { dismissUserRisk } from "../../../services/api-service";
 import { DismissUserRiskPanelProps } from "../../../types";
 import { CircleCheckIcon } from "@/components/ui/icons/circle-check-icon";
+import { AlertWarningIcon } from "@/components/ui/icons/alert-warning-icon";
+import { AlertErrorIcon } from "@/components/ui/icons/alert-error-icon";
+import { InformationCircleIcon } from "@/components/ui/icons/information-circle-icon";
 import { useToast } from "@/hooks/use-toast";
 import { Spinner } from "@/components/ui/spinner";
 import { RiskLevel } from "@/lib/risk-level";
@@ -109,18 +112,19 @@ export const DismissUserRiskPanel = memo(function DismissUserRiskPanel({
       ) : (
         <>
           {!canDismiss && dismissDisabledReason ? (
-            <div className="confirm-box confirm-box--warning">
-              {dismissDisabledReason}
+            <div className="confirm-box">
+              <AlertErrorIcon aria-hidden="true" />
+              <span>{dismissDisabledReason}</span>
+            </div>
+          ) : confirmation.variant === "neutral" ? (
+            <div className="confirm-box confirm-box--neutral">
+              <InformationCircleIcon aria-hidden="true" />
+              <span>{confirmation.content}</span>
             </div>
           ) : (
-            <div
-              className={
-                confirmation.variant === "neutral"
-                  ? "confirm-box confirm-box--neutral"
-                  : "confirm-box"
-              }
-            >
-              {confirmation.content}
+            <div className="confirm-box confirm-box--warning">
+              <AlertWarningIcon aria-hidden="true" />
+              <span>{confirmation.content}</span>
             </div>
           )}
           <button
@@ -129,7 +133,6 @@ export const DismissUserRiskPanel = memo(function DismissUserRiskPanel({
             onClick={triggerDismiss}
             disabled={!canDismiss}
             aria-disabled={!canDismiss || undefined}
-            title={!canDismiss ? dismissDisabledReason : undefined}
           >
             <CircleCheckIcon />
             Dismiss Risk
