@@ -108,20 +108,21 @@ export const DismissUserRiskPanel = memo(function DismissUserRiskPanel({
         </div>
       ) : (
         <>
-          {!canDismiss && dismissDisabledReason && (
+          {!canDismiss && dismissDisabledReason ? (
             <div className="confirm-box confirm-box--warning">
               {dismissDisabledReason}
             </div>
+          ) : (
+            <div
+              className={
+                confirmation.variant === "neutral"
+                  ? "confirm-box confirm-box--neutral"
+                  : "confirm-box"
+              }
+            >
+              {confirmation.content}
+            </div>
           )}
-          <div
-            className={
-              confirmation.variant === "neutral"
-                ? "confirm-box confirm-box--neutral"
-                : "confirm-box"
-            }
-          >
-            {confirmation.content}
-          </div>
           <button
             type="button"
             className="panel-primary-button"
