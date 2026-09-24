@@ -17,6 +17,6 @@ namespace MyWorkID.Server.Options
         /// Defaults to <see cref="RiskLevel.Low"/>.
         /// </summary>
         [AllowedValues(RiskLevel.Low, RiskLevel.Medium, RiskLevel.High, ErrorMessage = "MaxDismissibleRiskLevel must be one of: Low, Medium, High.")]
-        public RiskLevel MaxDismissibleRiskLevel { get; set; } = RiskLevel.Low;
+        public RiskLevel MaxDismissibleRiskLevel { get; set; } = RiskLevel.High;
     }
 }
