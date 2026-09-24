@@ -22,7 +22,7 @@ const renderConfirmationBody = (riskLevel: RiskLevel, riskLabel: string) => {
         <>
           Your account is currently flagged with <strong>{riskLabel}</strong>.
           By dismissing, you confirm this was expected behavior (e.g. travel,
-          new device). All active sessions will be revoked.
+          new device).
         </>
       ),
     };
@@ -33,8 +33,7 @@ const renderConfirmationBody = (riskLevel: RiskLevel, riskLabel: string) => {
       content: (
         <>
           Your account currently has <strong>no active risk</strong>. You can
-          still confirm your account is safe — all active sessions will be
-          revoked.
+          still confirm your account is safe.
         </>
       ),
     };
@@ -44,7 +43,7 @@ const renderConfirmationBody = (riskLevel: RiskLevel, riskLabel: string) => {
     content: (
       <>
         Your current risk state could not be retrieved. Dismissing will still
-        confirm your account is safe. All active sessions will be revoked.
+        confirm your account is safe.
       </>
     ),
   };
@@ -78,7 +77,7 @@ export const DismissUserRiskPanel = memo(function DismissUserRiskPanel({
       .then(() => {
         toastSuccess(
           "Risk Dismissed",
-          "Your risk status has been cleared. All previous sessions have been revoked.",
+          "Your risk status has been cleared.",
         );
         onDismissed?.();
         handleClose();
