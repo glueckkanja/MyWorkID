@@ -38,7 +38,7 @@ jobs:
     if: ${{ github.event_name != 'workflow_dispatch' || github.ref_name != 'main' }}
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: write # Creates the version tag and the draft release
     outputs:
       tag: ${{ steps.generate_version.outputs.tag }}
       release_id: ${{ steps.generate_version.outputs.release_id }}
@@ -66,8 +66,8 @@ jobs:
     name: Prepare release assets and create release
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      actions: read
+      contents: write # Uploads release assets and publishes the draft release
+      actions: read # Downloads the binaries artifact from the build job
     if: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
     needs:
       - build_myworkid_binaries
