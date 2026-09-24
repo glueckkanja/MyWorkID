@@ -59,6 +59,23 @@ namespace MyWorkID.Server.IntegrationTests.Features.UserRiskState
             var getRiskStateResponse = await response.Content.ReadFromJsonAsync<GetRiskStateTestResponse>(TestContext.Current.CancellationToken);
             getRiskStateResponse?.RiskState.Should().Be(RiskState.None.ToString());
             getRiskStateResponse?.RiskLevel.Should().BeNull();
+            getRiskStateResponse?.MaxDismissibleRiskLevel.Should().Be(RiskLevel.Low.ToString());
+        }
+
+        [Fact]
+        public async Task GetUserRisk_WithConfiguredMaxDismissibleRiskLevel_ReturnsThatMaxLevel()
+        {
+            var testApp = new TestApplicationFactory();
+            testApp.AddMaxDismissibleRiskLevelConfig(RiskLevel.High.ToString());
+
+            RiskyUser riskyUser = new();
+            IRequestAdapter requestAdapter = GetGraphRequestAdapterForRiskyUser(riskyUser);
+            var client = TestHelper.CreateClientWithRole(testApp,
+                provider => provider.WithRandomSubAndOid(), requestAdapter);
+            var response = await client.GetAsync(_baseUrl, TestContext.Current.CancellationToken);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            var getRiskStateResponse = await response.Content.ReadFromJsonAsync<GetRiskStateTestResponse>(TestContext.Current.CancellationToken);
+            getRiskStateResponse?.MaxDismissibleRiskLevel.Should().Be(RiskLevel.High.ToString());
         }
 
         [Fact]
