@@ -44,8 +44,6 @@ const PANEL_BY_ACTION: Record<
   [EApiFunctionTypes.UNKNOWN]: null,
 };
 
-// Hoisted so the ActionCard `icon` prop is a stable reference across renders,
-// which lets React.memo(ActionCard) bail out on unrelated FunctionPlane re-renders.
 const DISMISS_ICON = (
   <CircleCheckIcon width={20} height={20} strokeWidth={1.8} />
 );

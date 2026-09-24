@@ -21,7 +21,7 @@ try {
   );
 } catch (error) {
   console.debug(
-    "Failed to load frontend options; falling back to maxDismissibleRiskLevel Low",
+    "Failed to load frontend options - falling back to maxDismissibleRiskLevel Low",
     error,
   );
 }
