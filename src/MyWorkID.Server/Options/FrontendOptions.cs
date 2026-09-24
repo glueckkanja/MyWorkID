@@ -46,5 +46,10 @@ namespace MyWorkID.Server.Options
         /// Optional URL to a help page. When set, a help icon is shown in the header that links to this URL.
         /// </summary>
         public string? HelpUrl { get; set; }
+
+        /// <summary>
+        /// The maximum risk level a user is allowed to dismiss themselves.
+        /// </summary>
+        public string MaxDismissibleRiskLevel { get; set; } = "High";
     }
 }
