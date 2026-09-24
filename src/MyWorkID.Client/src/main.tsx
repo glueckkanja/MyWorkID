@@ -12,7 +12,7 @@ import {
 } from "./services/frontend-options-service";
 import { getMaximumDismissibleRiskLevel, RiskLevel } from "./lib/risk-level";
 
-let maxDismissibleRiskLevel: RiskLevel = RiskLevel.High;
+let maxDismissibleRiskLevel: RiskLevel = RiskLevel.Low;
 try {
   const frontendOptions = await getFrontendOptions();
   updateDocumentHead(frontendOptions);
@@ -21,7 +21,7 @@ try {
   );
 } catch (error) {
   console.debug(
-    "Failed to load frontend options; falling back to maxDismissibleRiskLevel High",
+    "Failed to load frontend options; falling back to maxDismissibleRiskLevel Low",
     error,
   );
 }

@@ -50,6 +50,6 @@ namespace MyWorkID.Server.Options
         /// <summary>
         /// The maximum risk level a user is allowed to dismiss themselves.
         /// </summary>
-        public string MaxDismissibleRiskLevel { get; set; } = "High";
+        public string MaxDismissibleRiskLevel { get; set; } = "Low";
     }
 }
