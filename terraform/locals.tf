@@ -16,6 +16,7 @@ locals {
   verified_id_verify_security_attribute_set        = var.verified_id_verify_security_attribute_set
   verified_id_verify_security_attribute            = var.verified_id_verify_security_attribute
   verified_id_face_match_confidence_threshold      = var.verified_id_face_match_confidence_threshold
+  max_dismissible_risk_level                       = var.max_dismissible_risk_level
   tap_lifetime_in_minutes                          = var.tap_lifetime_in_minutes
   tap_is_usable_once                               = var.tap_is_usable_once
   custom_domains                                   = var.custom_domains

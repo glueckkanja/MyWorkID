@@ -1,20 +1,32 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+
+// Import services
 import {
   getPendingAction,
   handleRedirectPromise,
 } from "../../services/msal-service";
-import { EApiFunctionTypes, PanelKey, RiskLevel } from "../../types";
-import { UserDisplay } from "./user-display";
 import { useSignedInUser } from "../../contexts/signed-in-user-provider";
 import { Role } from "../../services/roles-service";
+import { EApiFunctionTypes, PanelKey } from "../../types";
+import type { AppProps } from "../../types";
+
+// Import app state and utilities
 import { useUserProfile } from "@/hooks/use-user-profile";
+import {
+  canDismissRiskLevel,
+  getRiskLabelFromLevel,
+  RiskLevel,
+} from "@/lib/risk-level";
+
+// Import feature components
 import { ActionCard } from "./action-card";
-import { PasswordResetPanel } from "./function-plane-components/password-reset";
 import { CreateTapPanel } from "./function-plane-components/create-tap";
 import { DismissUserRiskPanel } from "./function-plane-components/dismiss-userisk";
+import { PasswordResetPanel } from "./function-plane-components/password-reset";
 import { ValidateIdentityPanel } from "./function-plane-components/validate-identity";
+import { UserDisplay } from "./user-display";
 
-// Import Icons
+// Import icons
 import { CircleCheckIcon } from "@/components/ui/icons/circle-check-icon";
 import { IdentityVerificationIcon } from "@/components/ui/icons/identity-verification-icon";
 import { PasswordLockIcon } from "@/components/ui/icons/password-lock-icon";
@@ -32,15 +44,22 @@ const PANEL_BY_ACTION: Record<
   [EApiFunctionTypes.UNKNOWN]: null,
 };
 
-const DismissIcon = () => (
+// Hoisted so the ActionCard `icon` prop is a stable reference across renders,
+// which lets React.memo(ActionCard) bail out on unrelated FunctionPlane re-renders.
+const DISMISS_ICON = (
   <CircleCheckIcon width={20} height={20} strokeWidth={1.8} />
 );
+const PASSWORD_ICON = <PasswordLockIcon />;
+const TEMPORARY_ACCESS_PASS_ICON = <TemporaryAccessPassIcon />;
+const IDENTITY_VERIFICATION_ICON = <IdentityVerificationIcon />;
 
-const FunctionPlane = () => {
+const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
   const [activePanel, setActivePanel] = useState<PanelKey>(null);
   const [redirectAction, setRedirectAction] = useState<EApiFunctionTypes>();
   const signedInUserInfo = useSignedInUser();
   const profile = useUserProfile();
+
+  const openDismissPanel = useCallback(() => setActivePanel("dismiss"), []);
 
   useEffect(() => {
     handleRedirectPromise()
@@ -80,16 +99,24 @@ const FunctionPlane = () => {
   const canDismissRisk = hasRole(Role.ALLOW_DISMISS_USER_RISK);
   const canValidateIdentity = hasRole(Role.ALLOW_VALIDATE_IDENTITY);
 
+  const dismissAllowedForCurrentLevel =
+    profile.riskLoading ||
+    canDismissRiskLevel(profile.riskLevel, maxDismissibleRiskLevel);
+  const dismissDisabledReason = !dismissAllowedForCurrentLevel
+    ? `Your ${getRiskLabelFromLevel(profile.riskLevel)} risk level cannot be dismissed via self-service. Please contact your administrator.`
+    : undefined;
+
   const showRecommendedDismiss =
     canDismissRisk &&
     !profile.riskLoading &&
+    dismissAllowedForCurrentLevel &&
     (profile.riskLevel === RiskLevel.High ||
       profile.riskLevel === RiskLevel.Medium);
 
-  const closePanel = () => {
+  const closePanel = useCallback(() => {
     setActivePanel(null);
     setRedirectAction(undefined);
-  };
+  }, []);
 
   return (
     <main className="app-main">
@@ -100,11 +127,11 @@ const FunctionPlane = () => {
           <div className="section-label">Recommended</div>
           <div className="actions-list">
             <ActionCard
-              icon={<DismissIcon />}
+              icon={DISMISS_ICON}
               title="Dismiss Risk"
               description="Resolve your risk status to regain full access"
               highlighted
-              onClick={() => setActivePanel("dismiss")}
+              onClick={openDismissPanel}
             />
           </div>
         </>
@@ -114,7 +141,7 @@ const FunctionPlane = () => {
       <div className="actions-list">
         {canResetPassword && (
           <ActionCard
-            icon={<PasswordLockIcon />}
+            icon={PASSWORD_ICON}
             title="Reset Password"
             description="Set a new password for your account"
             onClick={() => setActivePanel("password")}
@@ -122,7 +149,7 @@ const FunctionPlane = () => {
         )}
         {canCreateTap && (
           <ActionCard
-            icon={<TemporaryAccessPassIcon />}
+            icon={TEMPORARY_ACCESS_PASS_ICON}
             title="Temporary Access Pass"
             description="Get a one-time code to sign in or set up a new device"
             onClick={() => setActivePanel("tap")}
@@ -130,15 +157,15 @@ const FunctionPlane = () => {
         )}
         {canDismissRisk && !showRecommendedDismiss && (
           <ActionCard
-            icon={<DismissIcon />}
+            icon={DISMISS_ICON}
             title="Dismiss User Risk"
             description="Clear your account risk status"
-            onClick={() => setActivePanel("dismiss")}
+            onClick={openDismissPanel}
           />
         )}
         {canValidateIdentity && (
           <ActionCard
-            icon={<IdentityVerificationIcon />}
+            icon={IDENTITY_VERIFICATION_ICON}
             title="Validate Identity"
             description="Verify who you are using Face Check"
             onClick={() => setActivePanel("validate")}
@@ -172,6 +199,8 @@ const FunctionPlane = () => {
           onDismissed={profile.refreshRiskState}
           riskLevel={profile.riskLevel}
           riskLabel={profile.riskLabel}
+          canDismiss={dismissAllowedForCurrentLevel}
+          dismissDisabledReason={dismissDisabledReason}
         />
       )}
       {canValidateIdentity && (
