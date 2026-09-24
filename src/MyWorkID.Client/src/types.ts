@@ -43,6 +43,8 @@ export type DismissUserRiskPanelProps = {
   onDismissed?: () => void;
   riskLevel: RiskLevel;
   riskLabel: string;
+  canDismiss: boolean;
+  dismissDisabledReason?: string;
 };
 
 export type PasswordResetPanelProps = {

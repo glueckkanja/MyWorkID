@@ -54,6 +54,8 @@ export const DismissUserRiskPanel = memo(function DismissUserRiskPanel({
   onDismissed,
   riskLevel,
   riskLabel,
+  canDismiss,
+  dismissDisabledReason,
 }: DismissUserRiskPanelProps) {
   const confirmation = useMemo(
     () => renderConfirmationBody(riskLevel, riskLabel),
@@ -86,12 +88,12 @@ export const DismissUserRiskPanel = memo(function DismissUserRiskPanel({
 
   // auto-dismiss risk when returning from authentication redirect
   useEffect(() => {
-    if (!open || !comingFromRedirect) {
+    if (!open || !comingFromRedirect || !canDismiss) {
       return;
     }
     const timeoutId = setTimeout(triggerDismiss, 0);
     return () => clearTimeout(timeoutId);
-  }, [open, comingFromRedirect, triggerDismiss]);
+  }, [open, comingFromRedirect, canDismiss, triggerDismiss]);
 
   return (
     <Panel
@@ -106,6 +108,11 @@ export const DismissUserRiskPanel = memo(function DismissUserRiskPanel({
         </div>
       ) : (
         <>
+          {!canDismiss && dismissDisabledReason && (
+            <div className="confirm-box confirm-box--warning">
+              {dismissDisabledReason}
+            </div>
+          )}
           <div
             className={
               confirmation.variant === "neutral"
@@ -119,6 +126,9 @@ export const DismissUserRiskPanel = memo(function DismissUserRiskPanel({
             type="button"
             className="panel-primary-button"
             onClick={triggerDismiss}
+            disabled={!canDismiss}
+            aria-disabled={!canDismiss || undefined}
+            title={!canDismiss ? dismissDisabledReason : undefined}
           >
             <CircleCheckIcon />
             Dismiss Risk

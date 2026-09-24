@@ -161,8 +161,6 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
             title="Dismiss User Risk"
             description="Clear your account risk status"
             onClick={openDismissPanel}
-            disabled={!dismissAllowedForCurrentLevel}
-            disabledReason={dismissDisabledReason}
           />
         )}
         {canValidateIdentity && (
@@ -201,6 +199,8 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
           onDismissed={profile.refreshRiskState}
           riskLevel={profile.riskLevel}
           riskLabel={profile.riskLabel}
+          canDismiss={dismissAllowedForCurrentLevel}
+          dismissDisabledReason={dismissDisabledReason}
         />
       )}
       {canValidateIdentity && (
