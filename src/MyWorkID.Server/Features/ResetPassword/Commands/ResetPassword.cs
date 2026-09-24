@@ -49,6 +49,26 @@ namespace MyWorkID.Server.Features.ResetPassword.Commands
         )
         {
             string userId = user.GetObjectId()!;
+
+            var userInfo = await graphClient.Users[userId].GetAsync(
+                requestConfiguration =>
+                    requestConfiguration.QueryParameters.Select = ["userType", "onPremisesSyncEnabled"],
+                cancellationToken: cancellationToken);
+
+            if (userInfo?.UserType == "Guest")
+            {
+                return Results.Problem(
+                    detail: Strings.ERROR_RESET_PASSWORD_GUEST_USER,
+                    statusCode: StatusCodes.Status422UnprocessableEntity);
+            }
+
+            if (userInfo?.OnPremisesSyncEnabled == true)
+            {
+                return Results.Problem(
+                    detail: Strings.ERROR_RESET_PASSWORD_FEDERATED_USER,
+                    statusCode: StatusCodes.Status422UnprocessableEntity);
+            }
+
             await graphClient
                 .Users[userId]
                 .PatchAsync(
