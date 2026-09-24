@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { Panel } from "../../panel";
 import { dismissUserRisk } from "../../../services/api-service";
-import { DismissUserRiskPanelProps, RiskLevel } from "../../../types";
+import { DismissUserRiskPanelProps } from "../../../types";
 import { CircleCheckIcon } from "@/components/ui/icons/circle-check-icon";
 import { useToast } from "@/hooks/use-toast";
 import { Spinner } from "@/components/ui/spinner";
+import { RiskLevel } from "@/lib/risk-level";
 
 const renderConfirmationBody = (riskLevel: RiskLevel, riskLabel: string) => {
   if (
@@ -46,19 +47,29 @@ const renderConfirmationBody = (riskLevel: RiskLevel, riskLabel: string) => {
   };
 };
 
-export const DismissUserRiskPanel = ({
+export const DismissUserRiskPanel = memo(function DismissUserRiskPanel({
   open,
   onClose,
   comingFromRedirect,
   onDismissed,
   riskLevel,
   riskLabel,
-}: DismissUserRiskPanelProps) => {
-  const confirmation = renderConfirmationBody(riskLevel, riskLabel);
+  canDismiss,
+  dismissDisabledReason,
+}: DismissUserRiskPanelProps) {
+  const confirmation = useMemo(
+    () => renderConfirmationBody(riskLevel, riskLabel),
+    [riskLevel, riskLabel],
+  );
   const [submitting, setSubmitting] = useState(false);
   const { toastException, toastSuccess } = useToast();
 
-  const triggerDismiss = () => {
+  const handleClose = useCallback(() => {
+    setSubmitting(false);
+    onClose();
+  }, [onClose]);
+
+  const triggerDismiss = useCallback(() => {
     setSubmitting(true);
     dismissUserRisk()
       .then(() => {
@@ -67,37 +78,29 @@ export const DismissUserRiskPanel = ({
           "Your risk status has been cleared. All previous sessions have been revoked.",
         );
         onDismissed?.();
-        onClose();
+        handleClose();
       })
       .catch((error) => {
-        toastException(error);
-      })
-      .finally(() => {
         setSubmitting(false);
+        toastException(error);
       });
-  };
+  }, [toastSuccess, toastException, onDismissed, handleClose]);
 
   // auto-dismiss risk when returning from authentication redirect
   useEffect(() => {
-    if (open && comingFromRedirect) {
-      triggerDismiss();
+    if (!open || !comingFromRedirect || !canDismiss) {
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, comingFromRedirect]);
-
-  // reset submitting state when panel is closed
-  useEffect(() => {
-    if (!open) {
-      setSubmitting(false);
-    }
-  }, [open]);
+    const timeoutId = setTimeout(triggerDismiss, 0);
+    return () => clearTimeout(timeoutId);
+  }, [open, comingFromRedirect, canDismiss, triggerDismiss]);
 
   return (
     <Panel
       open={open}
       title="Dismiss User Risk"
       subtitle="Confirm that your account is safe and request risk removal."
-      onClose={onClose}
+      onClose={handleClose}
     >
       {submitting ? (
         <div className="panel-loading">
@@ -105,6 +108,11 @@ export const DismissUserRiskPanel = ({
         </div>
       ) : (
         <>
+          {!canDismiss && dismissDisabledReason && (
+            <div className="confirm-box confirm-box--warning">
+              {dismissDisabledReason}
+            </div>
+          )}
           <div
             className={
               confirmation.variant === "neutral"
@@ -118,6 +126,9 @@ export const DismissUserRiskPanel = ({
             type="button"
             className="panel-primary-button"
             onClick={triggerDismiss}
+            disabled={!canDismiss}
+            aria-disabled={!canDismiss || undefined}
+            title={!canDismiss ? dismissDisabledReason : undefined}
           >
             <CircleCheckIcon />
             Dismiss Risk
@@ -126,4 +137,4 @@ export const DismissUserRiskPanel = ({
       )}
     </Panel>
   );
-};
+});

@@ -136,6 +136,18 @@ variable "help_url" {
   nullable    = true
 }
 
+# UserRiskState settings
+variable "max_dismissible_risk_level" {
+  type        = string
+  description = "Optional override for the maximum risk level a user may dismiss themselves. One of: Low, Medium, High. Defaults to Low when not set."
+  default     = null
+  nullable    = true
+  validation {
+    condition = var.max_dismissible_risk_level == null || contains(["Low", "Medium", "High"], var.max_dismissible_risk_level)
+    error_message = "Must be null or one of: Low, Medium, High."
+  }
+}
+
 # Tap settings
 variable "tap_lifetime_in_minutes" {
   type        = number
