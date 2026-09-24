@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Panel } from "../../panel";
 import { dismissUserRisk } from "../../../services/api-service";
 import { DismissUserRiskPanelProps } from "../../../types";
@@ -98,6 +98,30 @@ export const DismissUserRiskPanel = memo(function DismissUserRiskPanel({
     return () => clearTimeout(timeoutId);
   }, [open, comingFromRedirect, canDismiss, triggerDismiss]);
 
+  let confirmationBox: ReactNode;
+  if (!canDismiss && dismissDisabledReason) {
+    confirmationBox = (
+      <div className="confirm-box">
+        <AlertErrorIcon aria-hidden="true" />
+        <span>{dismissDisabledReason}</span>
+      </div>
+    );
+  } else if (confirmation.variant === "neutral") {
+    confirmationBox = (
+      <div className="confirm-box confirm-box--neutral">
+        <InformationCircleIcon aria-hidden="true" />
+        <span>{confirmation.content}</span>
+      </div>
+    );
+  } else {
+    confirmationBox = (
+      <div className="confirm-box confirm-box--warning">
+        <AlertWarningIcon aria-hidden="true" />
+        <span>{confirmation.content}</span>
+      </div>
+    );
+  }
+
   return (
     <Panel
       open={open}
@@ -111,22 +135,7 @@ export const DismissUserRiskPanel = memo(function DismissUserRiskPanel({
         </div>
       ) : (
         <>
-          {!canDismiss && dismissDisabledReason ? (
-            <div className="confirm-box">
-              <AlertErrorIcon aria-hidden="true" />
-              <span>{dismissDisabledReason}</span>
-            </div>
-          ) : confirmation.variant === "neutral" ? (
-            <div className="confirm-box confirm-box--neutral">
-              <InformationCircleIcon aria-hidden="true" />
-              <span>{confirmation.content}</span>
-            </div>
-          ) : (
-            <div className="confirm-box confirm-box--warning">
-              <AlertWarningIcon aria-hidden="true" />
-              <span>{confirmation.content}</span>
-            </div>
-          )}
+          {confirmationBox}
           <button
             type="button"
             className="panel-primary-button"
