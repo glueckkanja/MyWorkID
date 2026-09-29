@@ -564,6 +564,20 @@
   color: white;
 }
 
+.action-card--disabled,
+.action-card--disabled:hover {
+  cursor: not-allowed;
+  opacity: 0.6;
+  border-color: var(--surface-border);
+  box-shadow: none;
+  transform: none;
+}
+
+.action-card--disabled:hover .action-card__arrow {
+  transform: none;
+  color: var(--text-tertiary);
+}
+
 .action-card__icon {
   width: 42px;
   height: 42px;
@@ -919,6 +933,9 @@
 }
 
 .confirm-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
   background: var(--risk-high-bg);
   border: 1px solid var(--risk-high-border);
   border-radius: var(--radius-card);
@@ -933,6 +950,12 @@
   color: var(--risk-high);
 }
 
+.confirm-box svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--risk-high);
+}
+
 .confirm-box--neutral {
   background: var(--surface-hover);
   border-color: var(--surface-border);
@@ -940,6 +963,23 @@
 
 .confirm-box--neutral strong {
   color: var(--text-primary);
+}
+
+.confirm-box--neutral svg {
+  color: var(--text-secondary);
+}
+
+.confirm-box--warning {
+  background: var(--risk-medium-bg);
+  border-color: var(--risk-medium);
+}
+
+.confirm-box--warning strong {
+  color: var(--risk-medium);
+}
+
+.confirm-box--warning svg {
+  color: var(--risk-medium);
 }
 
 .verify-illustration {

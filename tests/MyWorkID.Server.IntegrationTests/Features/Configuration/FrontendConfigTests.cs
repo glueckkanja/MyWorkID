@@ -1,15 +1,17 @@
-﻿using MyWorkID.Server.Options;
+﻿using System.Net;
+using System.Net.Http.Json;
 using FluentAssertions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using System.Net;
-using System.Net.Http.Json;
+using Microsoft.Graph.Models;
+using MyWorkID.Server.Options;
 
 namespace MyWorkID.Server.IntegrationTests.Features.Configuration
 {
-    public class FrontendConfigTests(TestApplicationFactory _testApplicationFactory) : IClassFixture<TestApplicationFactory>
+    public class FrontendConfigTests(TestApplicationFactory _testApplicationFactory)
+        : IClassFixture<TestApplicationFactory>
     {
         private readonly string _baseUrl = "/api/config/frontend";
 
@@ -17,14 +19,22 @@ namespace MyWorkID.Server.IntegrationTests.Features.Configuration
         public async Task GetConfig_WithoutAuth_ReturnsCorrectFrontendConfig()
         {
             var unauthenticatedClient = _testApplicationFactory.CreateDefaultClient();
-            var response = await unauthenticatedClient.GetAsync(_baseUrl, TestContext.Current.CancellationToken);
+            var response = await unauthenticatedClient.GetAsync(
+                _baseUrl,
+                TestContext.Current.CancellationToken
+            );
             response.StatusCode.Should().Be(HttpStatusCode.OK);
-            var frontendOptions = await response.Content.ReadFromJsonAsync<FrontendOptions>(TestContext.Current.CancellationToken);
+            var frontendOptions = await response.Content.ReadFromJsonAsync<FrontendOptions>(
+                TestContext.Current.CancellationToken
+            );
             frontendOptions.Should().NotBeNull();
-            var frontendAppSettings = _testApplicationFactory.Services.GetRequiredService<IOptions<FrontendOptions>>().Value;
+            var frontendAppSettings = _testApplicationFactory
+                .Services.GetRequiredService<IOptions<FrontendOptions>>()
+                .Value;
             frontendAppSettings.BackendClientId.Should().Be(frontendOptions!.BackendClientId);
             frontendAppSettings.FrontendClientId.Should().Be(frontendOptions.FrontendClientId);
             frontendAppSettings.TenantId.Should().Be(frontendOptions.TenantId);
+            frontendOptions.MaxDismissibleRiskLevel.Should().Be(RiskLevel.Low.ToString());
             frontendOptions.HelpUrl.Should().BeNull();
         }
 
@@ -33,15 +43,22 @@ namespace MyWorkID.Server.IntegrationTests.Features.Configuration
         {
             var client = _testApplicationFactory
                 .WithWebHostBuilder(builder =>
-                    builder.ConfigureAppConfiguration((_, config) =>
-                        config.AddInMemoryCollection(new Dictionary<string, string?>
-                        {
-                            ["Frontend:HelpUrl"] = "https://example.com/help"
-                        })))
+                    builder.ConfigureAppConfiguration(
+                        (_, config) =>
+                            config.AddInMemoryCollection(
+                                new Dictionary<string, string?>
+                                {
+                                    ["Frontend:HelpUrl"] = "https://example.com/help",
+                                }
+                            )
+                    )
+                )
                 .CreateDefaultClient();
             var response = await client.GetAsync(_baseUrl, TestContext.Current.CancellationToken);
             response.StatusCode.Should().Be(HttpStatusCode.OK);
-            var frontendOptions = await response.Content.ReadFromJsonAsync<FrontendOptions>(TestContext.Current.CancellationToken);
+            var frontendOptions = await response.Content.ReadFromJsonAsync<FrontendOptions>(
+                TestContext.Current.CancellationToken
+            );
             frontendOptions.Should().NotBeNull();
             frontendOptions!.HelpUrl.Should().Be("https://example.com/help");
         }
