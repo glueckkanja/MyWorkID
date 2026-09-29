@@ -24,18 +24,18 @@ namespace MyWorkID.Server.IntegrationTests.Features.Configuration
                 TestContext.Current.CancellationToken
             );
             response.StatusCode.Should().Be(HttpStatusCode.OK);
-            var frontendOptions = await response.Content.ReadFromJsonAsync<FrontendOptions>(
+            var frontendConfigResponse = await response.Content.ReadFromJsonAsync<GetFrontendConfigTestResponse>(
                 TestContext.Current.CancellationToken
             );
-            frontendOptions.Should().NotBeNull();
+            frontendConfigResponse.Should().NotBeNull();
             var frontendAppSettings = _testApplicationFactory
                 .Services.GetRequiredService<IOptions<FrontendOptions>>()
                 .Value;
-            frontendAppSettings.BackendClientId.Should().Be(frontendOptions!.BackendClientId);
-            frontendAppSettings.FrontendClientId.Should().Be(frontendOptions.FrontendClientId);
-            frontendAppSettings.TenantId.Should().Be(frontendOptions.TenantId);
-            frontendOptions.MaxDismissibleRiskLevel.Should().Be(RiskLevel.Low.ToString());
-            frontendOptions.HelpUrl.Should().BeNull();
+            frontendAppSettings.BackendClientId.Should().Be(frontendConfigResponse!.BackendClientId);
+            frontendAppSettings.FrontendClientId.Should().Be(frontendConfigResponse.FrontendClientId);
+            frontendAppSettings.TenantId.Should().Be(frontendConfigResponse.TenantId);
+            frontendConfigResponse.MaxDismissibleRiskLevel.Should().Be(RiskLevel.Low.ToString());
+            frontendConfigResponse.HelpUrl.Should().BeNull();
         }
 
         [Fact]
@@ -56,11 +56,11 @@ namespace MyWorkID.Server.IntegrationTests.Features.Configuration
                 .CreateDefaultClient();
             var response = await client.GetAsync(_baseUrl, TestContext.Current.CancellationToken);
             response.StatusCode.Should().Be(HttpStatusCode.OK);
-            var frontendOptions = await response.Content.ReadFromJsonAsync<FrontendOptions>(
+            var frontendConfigResponse = await response.Content.ReadFromJsonAsync<GetFrontendConfigTestResponse>(
                 TestContext.Current.CancellationToken
             );
-            frontendOptions.Should().NotBeNull();
-            frontendOptions!.HelpUrl.Should().Be("https://example.com/help");
+            frontendConfigResponse.Should().NotBeNull();
+            frontendConfigResponse!.HelpUrl.Should().Be("https://example.com/help");
         }
     }
 }
