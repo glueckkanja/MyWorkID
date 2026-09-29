@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using MyWorkID.Server.Common;
+using MyWorkID.Server.Features.Configuration.Entities;
 using MyWorkID.Server.Options;
 
 namespace MyWorkID.Server.Features.Configuration.Queries
@@ -32,18 +33,7 @@ namespace MyWorkID.Server.Features.Configuration.Queries
         )
         {
             return TypedResults.Ok(
-                new FrontendOptions
-                {
-                    FrontendClientId = frontendOptions.Value.FrontendClientId,
-                    TenantId = frontendOptions.Value.TenantId,
-                    BackendClientId = frontendOptions.Value.BackendClientId,
-                    CustomCssUrl = frontendOptions.Value.CustomCssUrl,
-                    AppTitle = frontendOptions.Value.AppTitle,
-                    FaviconUrl = frontendOptions.Value.FaviconUrl,
-                    HelpUrl = frontendOptions.Value.HelpUrl,
-                    MaxDismissibleRiskLevel =
-                        userRiskStateOptions.Value.MaxDismissibleRiskLevel.ToString(),
-                }
+                new GetFrontendConfigResponse(frontendOptions.Value, userRiskStateOptions.Value)
             );
         }
     }
