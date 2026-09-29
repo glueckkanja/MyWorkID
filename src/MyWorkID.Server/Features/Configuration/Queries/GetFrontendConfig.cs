@@ -1,6 +1,6 @@
-﻿using System.Security.Claims;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using MyWorkID.Server.Common;
+using MyWorkID.Server.Features.Configuration.Entities;
 using MyWorkID.Server.Options;
 
 namespace MyWorkID.Server.Features.Configuration.Queries
@@ -24,17 +24,17 @@ namespace MyWorkID.Server.Features.Configuration.Queries
         /// <summary>
         /// Handles the request to get frontend configuration settings.
         /// </summary>
-        /// <param name="user">The claims principal representing the user.</param>
         /// <param name="frontendOptions">The frontend options.</param>
-        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <param name="userRiskStateOptions">The user risk state options.</param>
         /// <returns>The frontend configuration settings.</returns>
         public static IResult Handle(
-            ClaimsPrincipal user,
             IOptions<FrontendOptions> frontendOptions,
-            CancellationToken cancellationToken
+            IOptions<UserRiskStateOptions> userRiskStateOptions
         )
         {
-            return TypedResults.Ok(frontendOptions.Value);
+            return TypedResults.Ok(
+                new GetFrontendConfigResponse(frontendOptions.Value, userRiskStateOptions.Value)
+            );
         }
     }
 }
