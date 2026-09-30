@@ -17,8 +17,8 @@
       <Version>10.0.12</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Logging.AzureAppServices" Version="10.0.12" />
-    <PackageReference Include="Microsoft.Graph" Version="6.6.0" />
-    <PackageReference Include="Microsoft.Identity.Web" Version="4.14.2" />
+    <PackageReference Include="Microsoft.Graph" Version="6.7.0" />
+    <PackageReference Include="Microsoft.Identity.Web" Version="4.15.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
   </ItemGroup>
 
