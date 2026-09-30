@@ -94,6 +94,9 @@ resource "azurerm_linux_web_app" "backend" {
     VerifiedId__CreatePresentationRequestUri   = local.verified_id_create_presentation_request_uri
     VerifiedId__FaceMatchConfidenceThreshold   = local.verified_id_face_match_confidence_threshold
     },
+    local.max_dismissible_risk_level == null ? {} : {
+      UserRiskState__MaxDismissibleRiskLevel = local.max_dismissible_risk_level
+    },
     local.tap_lifetime_in_minutes == null ? {} : {
       Tap__LifetimeInMinutes = tostring(local.tap_lifetime_in_minutes)
     },
