@@ -62,14 +62,10 @@ namespace MyWorkID.Server.Features.UserRiskState.Commands
             catch (ODataError odataError)
                 when (odataError.ResponseStatusCode == StatusCodes.Status404NotFound)
             {
-                if (logger.IsEnabled(LogLevel.Information))
-                {
-                    logger.LogInformation(
-                        odataError,
-                        "No risky user record found for user {UserId}. User can proceed with risk dismissal for confirm-safe semantics.",
-                        userId
-                    );
-                }
+                return TypedResults.Problem(
+                    $"No risky user record found for user {userId}. User can proceed with risk dismissal for confirm-safe semantics.",
+                    statusCode: StatusCodes.Status404NotFound
+                );
             }
 
             // UnknownFutureValue is a sentinel for an active record with an absent RiskLevel.
