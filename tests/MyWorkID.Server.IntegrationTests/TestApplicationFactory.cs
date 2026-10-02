@@ -159,5 +159,14 @@ namespace MyWorkID.Server.IntegrationTests
                 [$"AppFunctions:{appFunction}"] = validAuthContextId ?? $"c{new Random().Next(1, 100)}"
             }));
         }
+
+        public static void AddMaxDismissibleRiskLevelConfig(
+            this TestApplicationFactory factory, string maxDismissibleRiskLevel)
+        {
+            factory.ConfigureConfiguration(cb => cb.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["UserRiskState:MaxDismissibleRiskLevel"] = maxDismissibleRiskLevel
+            }));
+        }
     }
 }

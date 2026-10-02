@@ -89,6 +89,12 @@ namespace MyWorkID.Server
                 .Bind(configuration.GetSection(TapOptions.SectionName))
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
+
+            services
+                .AddOptions<UserRiskStateOptions>()
+                .Bind(configuration.GetSection(UserRiskStateOptions.SectionName))
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
         }
     }
 }
