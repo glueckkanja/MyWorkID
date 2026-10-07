@@ -210,6 +210,7 @@ namespace MyWorkID.Server.IntegrationTests.Features.PasswordReset
             response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
             var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>(TestContext.Current.CancellationToken);
             problemDetails!.Detail.Should().Be(Strings.ERROR_RESET_PASSWORD_GUEST_USER);
+            AssertUserGetSelectsAccountProperties(requestAdapter);
             AssertNoPatchSent(requestAdapter);
         }
 
@@ -233,6 +234,7 @@ namespace MyWorkID.Server.IntegrationTests.Features.PasswordReset
             response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
             var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>(TestContext.Current.CancellationToken);
             problemDetails!.Detail.Should().Be(Strings.ERROR_RESET_PASSWORD_FEDERATED_USER);
+            AssertUserGetSelectsAccountProperties(requestAdapter);
             AssertNoPatchSent(requestAdapter);
         }
 
@@ -267,6 +269,20 @@ namespace MyWorkID.Server.IntegrationTests.Features.PasswordReset
             response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
             var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>(TestContext.Current.CancellationToken);
             problemDetails!.Detail.Should().Be(Strings.ERROR_RESET_PASSWORD_FEDERATED_USER);
+        }
+
+        private static void AssertUserGetSelectsAccountProperties(IRequestAdapter requestAdapter)
+        {
+            // Graph omits onPremisesSyncEnabled unless it is explicitly selected.
+            _ = requestAdapter.Received(1).SendAsync(
+                Arg.Is<RequestInformation>(ri =>
+                    ri.HttpMethod == Method.GET
+                    && ri.QueryParameters.ContainsKey("%24select")
+                    && Array.IndexOf((string[])ri.QueryParameters["%24select"], "userType") >= 0
+                    && Array.IndexOf((string[])ri.QueryParameters["%24select"], "onPremisesSyncEnabled") >= 0),
+                Arg.Any<ParsableFactory<User>>(),
+                Arg.Any<Dictionary<string, ParsableFactory<IParsable>>>(),
+                Arg.Any<CancellationToken>());
         }
 
         private static void AssertNoPatchSent(IRequestAdapter requestAdapter)
