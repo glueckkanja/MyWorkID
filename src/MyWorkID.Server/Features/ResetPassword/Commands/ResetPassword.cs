@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
+using Microsoft.Graph.Models.ODataErrors;
 using Microsoft.Identity.Web;
 using MyWorkID.Server.Common;
 using MyWorkID.Server.Features.ResetPassword.Entities;
@@ -69,19 +70,31 @@ namespace MyWorkID.Server.Features.ResetPassword.Commands
                     statusCode: StatusCodes.Status422UnprocessableEntity);
             }
 
-            await graphClient
-                .Users[userId]
-                .PatchAsync(
-                    new User
-                    {
-                        PasswordProfile = new PasswordProfile
+            try
+            {
+                await graphClient
+                    .Users[userId]
+                    .PatchAsync(
+                        new User
                         {
-                            Password = passwordResetRequest.NewPassword,
-                            ForceChangePasswordNextSignIn = false,
+                            PasswordProfile = new PasswordProfile
+                            {
+                                Password = passwordResetRequest.NewPassword,
+                                ForceChangePasswordNextSignIn = false,
+                            },
                         },
-                    },
-                    cancellationToken: cancellationToken
-                );
+                        cancellationToken: cancellationToken
+                    );
+            }
+            // Graph rejects passwordProfile updates for federated users with this error (see #152).
+            catch (ODataError error) when (
+                error.ResponseStatusCode == StatusCodes.Status400BadRequest
+                && error.Error?.Message?.Contains("userPrincipalName", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                return Results.Problem(
+                    detail: Strings.ERROR_RESET_PASSWORD_FEDERATED_USER,
+                    statusCode: StatusCodes.Status422UnprocessableEntity);
+            }
             return TypedResults.Ok();
         }
     }
