@@ -2,6 +2,11 @@
 using MyWorkID.Server.Features.ResetPassword.Entities;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Graph.Models;
+using Microsoft.Graph.Models.ODataErrors;
+using Microsoft.Kiota.Abstractions;
+using Microsoft.Kiota.Abstractions.Serialization;
+using NSubstitute;
 using System.Net;
 using System.Net.Http.Json;
 
@@ -183,6 +188,110 @@ namespace MyWorkID.Server.IntegrationTests.Features.PasswordReset
                     new PasswordResetRequest { NewPassword = "passwordA#" },
                     new PasswordResetRequest { NewPassword = "PASSWORD#1" }
             };
+        }
+
+        [Fact]
+        public async Task ResetPassword_WithGuestUser_Returns422()
+        {
+            var requestAdapter = Substitute.For<IRequestAdapter>();
+            requestAdapter
+                .SendAsync(
+                    Arg.Any<RequestInformation>(),
+                    Arg.Any<ParsableFactory<User>>(),
+                    Arg.Any<Dictionary<string, ParsableFactory<IParsable>>>(),
+                    Arg.Any<CancellationToken>())
+                .Returns(Task.FromResult<User?>(new User { UserType = "Guest" }));
+
+            var client = TestHelper.CreateClientWithRole(_configuredTestApplicationFactory,
+                provider => provider.WithRandomSubAndOid().WithResetPasswordRole().WithAuthContext(_validAuthContextId),
+                requestAdapter);
+            var request = new PasswordResetRequest { NewPassword = "passwordA0" };
+            var response = await client.PutAsJsonAsync(_baseUrl, request, TestContext.Current.CancellationToken);
+            response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+            var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>(TestContext.Current.CancellationToken);
+            problemDetails!.Detail.Should().Be(Strings.ERROR_RESET_PASSWORD_GUEST_USER);
+            AssertUserGetSelectsAccountProperties(requestAdapter);
+            AssertNoPatchSent(requestAdapter);
+        }
+
+        [Fact]
+        public async Task ResetPassword_WithFederatedUser_Returns422()
+        {
+            var requestAdapter = Substitute.For<IRequestAdapter>();
+            requestAdapter
+                .SendAsync(
+                    Arg.Any<RequestInformation>(),
+                    Arg.Any<ParsableFactory<User>>(),
+                    Arg.Any<Dictionary<string, ParsableFactory<IParsable>>>(),
+                    Arg.Any<CancellationToken>())
+                .Returns(Task.FromResult<User?>(new User { OnPremisesSyncEnabled = true }));
+
+            var client = TestHelper.CreateClientWithRole(_configuredTestApplicationFactory,
+                provider => provider.WithRandomSubAndOid().WithResetPasswordRole().WithAuthContext(_validAuthContextId),
+                requestAdapter);
+            var request = new PasswordResetRequest { NewPassword = "passwordA0" };
+            var response = await client.PutAsJsonAsync(_baseUrl, request, TestContext.Current.CancellationToken);
+            response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+            var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>(TestContext.Current.CancellationToken);
+            problemDetails!.Detail.Should().Be(Strings.ERROR_RESET_PASSWORD_FEDERATED_USER);
+            AssertUserGetSelectsAccountProperties(requestAdapter);
+            AssertNoPatchSent(requestAdapter);
+        }
+
+        [Fact]
+        public async Task ResetPassword_WithUnsyncedFederatedUser_Returns422()
+        {
+            var requestAdapter = Substitute.For<IRequestAdapter>();
+            requestAdapter
+                .SendAsync(
+                    Arg.Is<RequestInformation>(ri => ri.HttpMethod == Method.GET),
+                    Arg.Any<ParsableFactory<User>>(),
+                    Arg.Any<Dictionary<string, ParsableFactory<IParsable>>>(),
+                    Arg.Any<CancellationToken>())
+                .Returns(Task.FromResult<User?>(new User { UserType = "Member", OnPremisesSyncEnabled = false }));
+            requestAdapter
+                .SendAsync(
+                    Arg.Is<RequestInformation>(ri => ri.HttpMethod == Method.PATCH),
+                    Arg.Any<ParsableFactory<User>>(),
+                    Arg.Any<Dictionary<string, ParsableFactory<IParsable>>>(),
+                    Arg.Any<CancellationToken>())
+                .Returns(Task.FromException<User?>(new ODataError
+                {
+                    ResponseStatusCode = (int)HttpStatusCode.BadRequest,
+                    Error = new MainError { Code = "Request_BadRequest", Message = "Property userPrincipalName is invalid." },
+                }));
+
+            var client = TestHelper.CreateClientWithRole(_configuredTestApplicationFactory,
+                provider => provider.WithRandomSubAndOid().WithResetPasswordRole().WithAuthContext(_validAuthContextId),
+                requestAdapter);
+            var request = new PasswordResetRequest { NewPassword = "passwordA0" };
+            var response = await client.PutAsJsonAsync(_baseUrl, request, TestContext.Current.CancellationToken);
+            response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+            var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>(TestContext.Current.CancellationToken);
+            problemDetails!.Detail.Should().Be(Strings.ERROR_RESET_PASSWORD_FEDERATED_USER);
+        }
+
+        private static void AssertUserGetSelectsAccountProperties(IRequestAdapter requestAdapter)
+        {
+            // Graph omits onPremisesSyncEnabled unless it is explicitly selected.
+            _ = requestAdapter.Received(1).SendAsync(
+                Arg.Is<RequestInformation>(ri =>
+                    ri.HttpMethod == Method.GET
+                    && ri.QueryParameters.ContainsKey("%24select")
+                    && Array.IndexOf((string[])ri.QueryParameters["%24select"], "userType") >= 0
+                    && Array.IndexOf((string[])ri.QueryParameters["%24select"], "onPremisesSyncEnabled") >= 0),
+                Arg.Any<ParsableFactory<User>>(),
+                Arg.Any<Dictionary<string, ParsableFactory<IParsable>>>(),
+                Arg.Any<CancellationToken>());
+        }
+
+        private static void AssertNoPatchSent(IRequestAdapter requestAdapter)
+        {
+            _ = requestAdapter.DidNotReceive().SendAsync(
+                Arg.Is<RequestInformation>(ri => ri.HttpMethod == Method.PATCH),
+                Arg.Any<ParsableFactory<User>>(),
+                Arg.Any<Dictionary<string, ParsableFactory<IParsable>>>(),
+                Arg.Any<CancellationToken>());
         }
     }
 }
