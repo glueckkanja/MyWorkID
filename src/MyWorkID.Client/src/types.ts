@@ -1,18 +1,27 @@
 import { ReactNode, ComponentPropsWithoutRef } from "react";
+import type { ToastActionElement, ToastProps } from "@/components/ui/toast";
+import type { RiskLevel } from "@/lib/risk-level";
+
+export type Theme = "dark" | "light" | "system";
+export type ResolvedTheme = "dark" | "light";
+
+export type ThemeProviderState = {
+  theme: Theme;
+  resolvedTheme: ResolvedTheme;
+  setTheme: (theme: Theme) => void;
+};
+
+export type ThemeProviderProps = {
+  children: ReactNode;
+  defaultTheme?: Theme;
+  storageKey?: string;
+};
 
 export enum REQUEST_TYPE {
   GET,
   POST,
   PUT,
   DELETE,
-}
-
-export enum RiskLevel {
-  High = "high",
-  Medium = "medium",
-  Low = "low",
-  None = "none",
-  Unknown = "unknown",
 }
 
 export type CreateTapPanelProps = {
@@ -34,6 +43,8 @@ export type DismissUserRiskPanelProps = {
   onDismissed?: () => void;
   riskLevel: RiskLevel;
   riskLabel: string;
+  canDismiss: boolean;
+  dismissDisabledReason?: string;
 };
 
 export type PasswordResetPanelProps = {
@@ -58,6 +69,8 @@ export type ActionCardProps = {
   description: string;
   highlighted?: boolean;
   onClick: () => void;
+  disabled?: boolean;
+  disabledReason?: string;
 };
 
 export type PanelKey =
@@ -78,6 +91,10 @@ export type PanelProps = {
   children: ReactNode;
 };
 
+export type AppProps = {
+  maxDismissibleRiskLevel: RiskLevel;
+};
+
 export type UserProfile = {
   user: User | undefined;
   userImage: string | undefined;
@@ -95,6 +112,7 @@ export type TFrontendOptions = {
   frontendClientId: string;
   tenantId: string;
   backendClientId: string;
+  maxDismissibleRiskLevel: string;
   customCssUrl?: string;
   appTitle?: string;
   faviconUrl?: string;
@@ -146,4 +164,42 @@ export type TVerifyIdentityReponse = {
 export type TGetRiskStateResponse = {
   riskState: string;
   riskLevel?: string;
+  maxDismissibleRiskLevel: string;
+};
+
+export type ToasterToast = ToastProps & {
+  id: string;
+  title?: ReactNode;
+  description?: ReactNode;
+  action?: ToastActionElement;
+  correlationId?: string;
+};
+
+export type ToastActionType = {
+  ADD_TOAST: "ADD_TOAST";
+  UPDATE_TOAST: "UPDATE_TOAST";
+  DISMISS_TOAST: "DISMISS_TOAST";
+  REMOVE_TOAST: "REMOVE_TOAST";
+};
+
+export type ToastAction =
+  | {
+      type: ToastActionType["ADD_TOAST"];
+      toast: ToasterToast;
+    }
+  | {
+      type: ToastActionType["UPDATE_TOAST"];
+      toast: Pick<ToasterToast, "id"> & Partial<Omit<ToasterToast, "id">>;
+    }
+  | {
+      type: ToastActionType["DISMISS_TOAST"];
+      toastId?: ToasterToast["id"];
+    }
+  | {
+      type: ToastActionType["REMOVE_TOAST"];
+      toastId?: ToasterToast["id"];
+    };
+
+export type ToastState = {
+  toasts: ToasterToast[];
 };

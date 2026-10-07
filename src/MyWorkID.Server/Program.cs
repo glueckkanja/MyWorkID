@@ -41,8 +41,32 @@ builder.Services.ConfigureModules(builder.Configuration, builder.Environment, ap
 
 WebApplication app = builder.Build();
 
+// OnPrepareResponse only runs for files that are actually served, so error responses are never cached.
+StaticFileOptions staticFileOptions = new StaticFileOptions
+{
+    OnPrepareResponse = staticFileResponseContext =>
+    {
+        if (staticFileResponseContext.Context.Request.Path.StartsWithSegments("/assets"))
+        {
+            // Fingerprinted build assets: filename changes on content change.
+            staticFileResponseContext.Context.Response.Headers["Cache-Control"] =
+                "public, max-age=31536000, immutable";
+        }
+        else if (
+            staticFileResponseContext.File.Name.EndsWith(
+                ".html",
+                StringComparison.OrdinalIgnoreCase
+            )
+        )
+        {
+            staticFileResponseContext.Context.Response.Headers["Cache-Control"] =
+                "no-store, max-age=0";
+        }
+    },
+};
+
 app.UseDefaultFiles();
-app.UseStaticFiles();
+app.UseStaticFiles(staticFileOptions);
 
 app.UseExceptionHandler(exceptionHandlerApp =>
 {
@@ -85,11 +109,11 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    app.UseCors(builder =>
-        builder
+    app.UseCors(corsBuilder =>
+        corsBuilder
             .AllowAnyHeader()
             .AllowAnyMethod()
-            .AllowAnyOrigin()
+            .WithOrigins("https://localhost:5173") // port configured in vite.config.ts
             .WithExposedHeaders("Content-Disposition")
     );
 }
@@ -101,6 +125,6 @@ app.UseAuthorization();
 app.RegisterEndpoints(appAssembly);
 
 app.MapHub<VerifiedIdHub>("/hubs/verifiedId");
-app.MapFallbackToFile("/index.html");
+app.MapFallbackToFile("/index.html", staticFileOptions);
 
 await app.RunAsync();

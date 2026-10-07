@@ -139,7 +139,9 @@ export const authenticateRequest = async <T, D = undefined>(
     }
     if (response.status === 401) {
       if (!response.headers["www-authenticate"]) {
-        throw new Error("Authentication failed - no challenge provided");
+        throw new Error("Authentication failed - no challenge provided", {
+          cause: error,
+        });
       }
       const wwwAuthenticateHeader = parseChallenges(
         response.headers["www-authenticate"]

@@ -3,9 +3,14 @@ name: 'Test CI'
 on:
   pull_request:
 
+# Cancel superseded runs for the same PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
-  
+
 env:
   DOTNET_CORE_VERSION: 10.0.x
 
@@ -32,14 +37,10 @@ jobs:
           dotnet restore
           dotnet build --configuration Release --no-restore
       - name: Test
+        shell: pwsh
         run: |
-          dotnet test --logger "trx;logfilename=testResults.trx"
-      - name: Gather Test Results
-        if: success() || failure()
-        run: |
-          mkdir TestResults
-          cp tests/MyWorkID.Server.IntegrationTests/TestResults/testResults.trx TestResults/Integration-Tests.trx
-          cp tests/MyWorkID.Server.UnitTests/TestResults/testResults.trx TestResults/Unit-Tests.trx
+          dotnet test tests/MyWorkID.Server.UnitTests --configuration Release --no-build --results-directory TestResults --report-xunit-trx --report-xunit-trx-filename Unit-Tests.trx
+          dotnet test tests/MyWorkID.Server.IntegrationTests --configuration Release --no-build --results-directory TestResults --report-xunit-trx --report-xunit-trx-filename Integration-Tests.trx
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: success() || failure()
         with:
@@ -53,6 +54,6 @@ jobs:
     if: always()
     permissions:
       contents: read
-      actions: read
-      checks: write
-    uses: ./.github/workflows/test-report.yml
+      actions: read # Downloads the testResults artifact
+      checks: write # Publishes the test report as a check run
+    uses: $/.github/workflows/test-report.yml

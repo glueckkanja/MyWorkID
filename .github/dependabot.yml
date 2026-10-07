@@ -9,3 +9,38 @@ updates:
       default-days: 7
     commit-message:
       prefix: "deps(ci)"
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Maintain dependencies for .NET / NuGet (mainly backend and tests)
+  - package-ecosystem: "nuget"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "deps"
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Maintain dependencies for the frontend (npm)
+  - package-ecosystem: "npm"
+    directory: "/src/MyWorkID.Client"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "deps"
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
