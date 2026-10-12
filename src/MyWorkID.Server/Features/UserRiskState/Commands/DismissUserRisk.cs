@@ -12,7 +12,7 @@ using MyWorkID.Server.Options;
 namespace MyWorkID.Server.Features.UserRiskState.Commands
 {
     /// <summary>
-    /// Handles the dismissal of user risk state.
+    /// Handles the dismissal of user risk state and revokes all sign-in sessions of the user afterwards.
     /// </summary>
     public class DismissUserRisk : IEndpoint
     {
@@ -70,10 +70,13 @@ namespace MyWorkID.Server.Features.UserRiskState.Commands
 
             // UnknownFutureValue is a sentinel for an active record with an absent RiskLevel.
             // RiskLevelRanking.Rank maps it to int.MaxValue, so CanDismiss always denies it.
-            RiskLevel? currentRiskLevel =
-                riskyUser is { RiskState: RiskState.AtRisk or RiskState.ConfirmedCompromised, RiskLevel: null }
-                    ? RiskLevel.UnknownFutureValue
-                    : riskyUser?.RiskLevel;
+            RiskLevel? currentRiskLevel = riskyUser
+                is {
+                    RiskState: RiskState.AtRisk or RiskState.ConfirmedCompromised,
+                    RiskLevel: null
+                }
+                ? RiskLevel.UnknownFutureValue
+                : riskyUser?.RiskLevel;
             if (!RiskLevelRanking.CanDismiss(currentRiskLevel, maxDismissibleRiskLevel))
             {
                 return TypedResults.Problem(
@@ -89,6 +92,13 @@ namespace MyWorkID.Server.Features.UserRiskState.Commands
                 },
                 cancellationToken: cancellationToken
             );
+
+            // Invalidate refresh tokens and session cookies so that sessions established while the user was at risk cannot continue.
+            await graphClient
+                .Users[userId]
+                .RevokeSignInSessions.PostAsRevokeSignInSessionsPostResponseAsync(
+                    cancellationToken: cancellationToken
+                );
             return TypedResults.Ok();
         }
     }
