@@ -51,23 +51,31 @@ namespace MyWorkID.Server.Features.ResetPassword.Commands
         {
             string userId = user.GetObjectId()!;
 
-            var userInfo = await graphClient.Users[userId].GetAsync(
-                requestConfiguration =>
-                    requestConfiguration.QueryParameters.Select = ["userType", "onPremisesSyncEnabled"],
-                cancellationToken: cancellationToken);
+            User? userInfo = await graphClient
+                .Users[userId]
+                .GetAsync(
+                    requestConfiguration =>
+                        requestConfiguration.QueryParameters.Select = [
+                            "userType",
+                            "onPremisesSyncEnabled",
+                        ],
+                    cancellationToken: cancellationToken
+                );
 
             if (userInfo?.UserType == "Guest")
             {
                 return Results.Problem(
                     detail: Strings.ERROR_RESET_PASSWORD_GUEST_USER,
-                    statusCode: StatusCodes.Status422UnprocessableEntity);
+                    statusCode: StatusCodes.Status422UnprocessableEntity
+                );
             }
 
             if (userInfo?.OnPremisesSyncEnabled == true)
             {
                 return Results.Problem(
                     detail: Strings.ERROR_RESET_PASSWORD_FEDERATED_USER,
-                    statusCode: StatusCodes.Status422UnprocessableEntity);
+                    statusCode: StatusCodes.Status422UnprocessableEntity
+                );
             }
 
             try
@@ -87,13 +95,18 @@ namespace MyWorkID.Server.Features.ResetPassword.Commands
                     );
             }
             // Graph rejects passwordProfile updates for federated users with this error (see #152).
-            catch (ODataError error) when (
-                error.ResponseStatusCode == StatusCodes.Status400BadRequest
-                && error.Error?.Message?.Contains("userPrincipalName", StringComparison.OrdinalIgnoreCase) == true)
+            catch (ODataError error)
+                when (error.ResponseStatusCode == StatusCodes.Status400BadRequest
+                    && error.Error?.Message?.Contains(
+                        "userPrincipalName",
+                        StringComparison.OrdinalIgnoreCase
+                    ) == true
+                )
             {
                 return Results.Problem(
                     detail: Strings.ERROR_RESET_PASSWORD_FEDERATED_USER,
-                    statusCode: StatusCodes.Status422UnprocessableEntity);
+                    statusCode: StatusCodes.Status422UnprocessableEntity
+                );
             }
             return TypedResults.Ok();
         }
