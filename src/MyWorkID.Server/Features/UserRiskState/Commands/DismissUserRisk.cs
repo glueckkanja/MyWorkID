@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
 using Microsoft.Graph.Models.ODataErrors;
+using Microsoft.Graph.Users.Item.RevokeSignInSessions;
 using Microsoft.Identity.Web;
 using MyWorkID.Server.Common;
 using MyWorkID.Server.Filters;
@@ -94,11 +95,23 @@ namespace MyWorkID.Server.Features.UserRiskState.Commands
             );
 
             // Invalidate refresh tokens and session cookies so that sessions established while the user was at risk cannot continue.
-            await graphClient
+            RevokeSignInSessionsPostResponse? revokeSignInSessionsResponse = await graphClient
                 .Users[userId]
                 .RevokeSignInSessions.PostAsRevokeSignInSessionsPostResponseAsync(
                     cancellationToken: cancellationToken
                 );
+            if (revokeSignInSessionsResponse?.Value != true)
+            {
+                logger.LogError(
+                    "Risk was dismissed for user {UserId} but revoking sign-in sessions did not report success.",
+                    userId
+                );
+                return TypedResults.Problem(
+                    Strings.ERROR_REVOKE_SIGN_IN_SESSIONS_FAILED,
+                    statusCode: StatusCodes.Status500InternalServerError
+                );
+            }
+
             return TypedResults.Ok();
         }
     }
