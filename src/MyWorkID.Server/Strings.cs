@@ -32,6 +32,8 @@
             "Missing or invalid configuration for VerifiedId.";
         public const string ERROR_RISK_LEVEL_EXCEEDS_MAX_DISMISSIBLE =
             "The current risk level exceeds the maximum level that can be dismissed via self-service. Please contact your administrator.";
+        public const string ERROR_REVOKE_SIGN_IN_SESSIONS_FAILED =
+            "Your risk was dismissed, but your sign-in sessions could not be revoked. Please contact your administrator.";
         public const string GRAPH_VERIFIED_ID_LICENSE_ERROR_MESSAGE =
             "Premium features cannot be used until billing is enabled by the admin.";
         public const string PREMIUM_FEATURES_BILLING_MISSING_PROBLEM_DETAIL =
