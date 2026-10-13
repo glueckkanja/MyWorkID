@@ -3,9 +3,13 @@ using MyWorkID.Server.Features.ResetPassword.Entities;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Graph.Models;
+using Microsoft.Graph.Models.ODataErrors;
+using MyWorkID.Server.Features.UserRiskState.Entities;
+using Microsoft.Graph.Users.Item.RevokeSignInSessions;
 using Microsoft.Kiota.Abstractions;
 using Microsoft.Kiota.Abstractions.Serialization;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using System.Net;
 using System.Net.Http.Json;
 
@@ -113,7 +117,8 @@ namespace MyWorkID.Server.IntegrationTests.Features.UserRiskState
         public async Task DismissUserRisk_WithRandomUserId_Returns500()
         {
             var client = TestHelper.CreateClientWithRole(_configuredTestApplicationFactory,
-                provider => provider.WithDismissUserRiskRole().WithRandomSubAndOid().WithAuthContext(_validAuthContextId));
+                provider => provider.WithDismissUserRiskRole().WithRandomSubAndOid().WithAuthContext(_validAuthContextId),
+                GetGraphRequestAdapterForRiskyUser(new RiskyUser { RiskState = RiskState.AtRisk, RiskLevel = RiskLevel.Low }));
             var response = await client.PutAsync(_baseUrl, null, TestContext.Current.CancellationToken);
             response.StatusCode.Should().Be(HttpStatusCode.OK);
         }
@@ -153,6 +158,53 @@ namespace MyWorkID.Server.IntegrationTests.Features.UserRiskState
                 requestAdapter);
             var response = await client.PutAsync(_baseUrl, null, TestContext.Current.CancellationToken);
             response.StatusCode.Should().Be(HttpStatusCode.OK);
+        }
+
+        [Fact]
+        public async Task DismissUserRisk_WhenDismissSucceeds_RevokesSignInSessions()
+        {
+            var testApp = new TestApplicationFactory();
+            testApp.AddAuthContextConfig(AppFunctions.DismissUserRisk.ToString(), _validAuthContextId);
+            testApp.AddMaxDismissibleRiskLevelConfig(RiskLevel.High.ToString());
+
+            IRequestAdapter requestAdapter = GetGraphRequestAdapterForRiskyUser(
+                new RiskyUser { RiskState = RiskState.AtRisk, RiskLevel = RiskLevel.Low });
+
+            var client = TestHelper.CreateClientWithRole(testApp,
+                provider => provider.WithDismissUserRiskRole().WithRandomSubAndOid().WithAuthContext(_validAuthContextId),
+                requestAdapter);
+            var response = await client.PutAsync(_baseUrl, null, TestContext.Current.CancellationToken);
+
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            await requestAdapter.Received(1).SendAsync(
+                Arg.Is<RequestInformation>(requestInformation =>
+                    requestInformation.HttpMethod == Method.POST
+                    && requestInformation.URI.AbsoluteUri.EndsWith("/revokeSignInSessions")),
+                Arg.Any<ParsableFactory<RevokeSignInSessionsPostResponse>>(),
+                Arg.Any<Dictionary<string, ParsableFactory<IParsable>>>(),
+                Arg.Any<CancellationToken>());
+        }
+
+        [Fact]
+        public async Task DismissUserRisk_WhenRiskLevelExceedsMax_DoesNotRevokeSignInSessions()
+        {
+            var testApp = new TestApplicationFactory();
+            testApp.AddAuthContextConfig(AppFunctions.DismissUserRisk.ToString(), _validAuthContextId);
+            testApp.AddMaxDismissibleRiskLevelConfig(RiskLevel.Low.ToString());
+
+            IRequestAdapter requestAdapter = GetGraphRequestAdapterForRiskyUser(
+                new RiskyUser { RiskState = RiskState.AtRisk, RiskLevel = RiskLevel.High });
+
+            var client = TestHelper.CreateClientWithRole(testApp,
+                provider => provider.WithDismissUserRiskRole().WithRandomSubAndOid().WithAuthContext(_validAuthContextId),
+                requestAdapter);
+            await client.PutAsync(_baseUrl, null, TestContext.Current.CancellationToken);
+
+            await requestAdapter.DidNotReceive().SendAsync(
+                Arg.Any<RequestInformation>(),
+                Arg.Any<ParsableFactory<RevokeSignInSessionsPostResponse>>(),
+                Arg.Any<Dictionary<string, ParsableFactory<IParsable>>>(),
+                Arg.Any<CancellationToken>());
         }
 
         [Fact]
@@ -208,7 +260,10 @@ namespace MyWorkID.Server.IntegrationTests.Features.UserRiskState
             await act.Should().ThrowAsync<Microsoft.Extensions.Options.OptionsValidationException>();
         }
 
-        private static IRequestAdapter GetGraphRequestAdapterForRiskyUser(RiskyUser riskyUser)
+        private static IRequestAdapter GetGraphRequestAdapterForRiskyUser(
+            RiskyUser riskyUser,
+            RevokeSignInSessionsPostResponse? revokeSignInSessionsResponse = null,
+            bool useDefaultRevokeSignInSessionsResponse = true)
         {
             var requestAdapter = Substitute.For<IRequestAdapter>();
             requestAdapter.SendAsync(
@@ -217,7 +272,102 @@ namespace MyWorkID.Server.IntegrationTests.Features.UserRiskState
                 Arg.Any<Dictionary<string, ParsableFactory<IParsable>>>(),
                 Arg.Any<CancellationToken>())
                 .ReturnsForAnyArgs(riskyUser);
+            requestAdapter.SendAsync(
+                Arg.Any<RequestInformation>(),
+                Arg.Any<ParsableFactory<RevokeSignInSessionsPostResponse>>(),
+                Arg.Any<Dictionary<string, ParsableFactory<IParsable>>>(),
+                Arg.Any<CancellationToken>())
+                .ReturnsForAnyArgs(useDefaultRevokeSignInSessionsResponse
+                    ? new RevokeSignInSessionsPostResponse { Value = true }
+                    : revokeSignInSessionsResponse);
             return requestAdapter;
+        }
+
+        [Fact]
+        public async Task DismissUserRisk_WhenRevokeSignInSessionsSucceeds_ReportsSessionsRevoked()
+        {
+            var response = await DismissWithRevokeSignInSessionsResponse(
+                new RevokeSignInSessionsPostResponse { Value = true });
+
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            var body = await response.Content.ReadFromJsonAsync<DismissUserRiskResponse>(TestContext.Current.CancellationToken);
+            body!.SessionsRevoked.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task DismissUserRisk_WhenRevokeSignInSessionsIsForbidden_Returns200WithSessionsNotRevoked()
+        {
+            var testApp = new TestApplicationFactory();
+            testApp.AddAuthContextConfig(AppFunctions.DismissUserRisk.ToString(), _validAuthContextId);
+            testApp.AddMaxDismissibleRiskLevelConfig(RiskLevel.High.ToString());
+
+            IRequestAdapter requestAdapter = GetGraphRequestAdapterForRiskyUser(
+                new RiskyUser { RiskState = RiskState.AtRisk, RiskLevel = RiskLevel.Low });
+            requestAdapter.SendAsync(
+                Arg.Any<RequestInformation>(),
+                Arg.Any<ParsableFactory<RevokeSignInSessionsPostResponse>>(),
+                Arg.Any<Dictionary<string, ParsableFactory<IParsable>>>(),
+                Arg.Any<CancellationToken>())
+                .ThrowsAsyncForAnyArgs(new ODataError { ResponseStatusCode = (int)HttpStatusCode.Forbidden });
+
+            var client = TestHelper.CreateClientWithRole(testApp,
+                provider => provider.WithDismissUserRiskRole().WithRandomSubAndOid().WithAuthContext(_validAuthContextId),
+                requestAdapter);
+            var response = await client.PutAsync(_baseUrl, null, TestContext.Current.CancellationToken);
+
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            var body = await response.Content.ReadFromJsonAsync<DismissUserRiskResponse>(TestContext.Current.CancellationToken);
+            body!.SessionsRevoked.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task DismissUserRisk_WhenRevokeSignInSessionsReportsFalse_Returns200WithSessionsNotRevoked()
+        {
+            var response = await DismissWithRevokeSignInSessionsResponse(
+                new RevokeSignInSessionsPostResponse { Value = false });
+
+            await AssertSessionsNotRevoked(response);
+        }
+
+        [Fact]
+        public async Task DismissUserRisk_WhenRevokeSignInSessionsValueIsMissing_Returns200WithSessionsNotRevoked()
+        {
+            var response = await DismissWithRevokeSignInSessionsResponse(new RevokeSignInSessionsPostResponse());
+
+            await AssertSessionsNotRevoked(response);
+        }
+
+        [Fact]
+        public async Task DismissUserRisk_WhenRevokeSignInSessionsReturnsNoResponse_Returns200WithSessionsNotRevoked()
+        {
+            var response = await DismissWithRevokeSignInSessionsResponse(null);
+
+            await AssertSessionsNotRevoked(response);
+        }
+
+        private static async Task AssertSessionsNotRevoked(HttpResponseMessage response)
+        {
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            var body = await response.Content.ReadFromJsonAsync<DismissUserRiskResponse>(TestContext.Current.CancellationToken);
+            body!.SessionsRevoked.Should().BeFalse();
+        }
+
+        private async Task<HttpResponseMessage> DismissWithRevokeSignInSessionsResponse(
+            RevokeSignInSessionsPostResponse? revokeSignInSessionsResponse)
+        {
+            var testApp = new TestApplicationFactory();
+            testApp.AddAuthContextConfig(AppFunctions.DismissUserRisk.ToString(), _validAuthContextId);
+            testApp.AddMaxDismissibleRiskLevelConfig(RiskLevel.High.ToString());
+
+            IRequestAdapter requestAdapter = GetGraphRequestAdapterForRiskyUser(
+                new RiskyUser { RiskState = RiskState.AtRisk, RiskLevel = RiskLevel.Low },
+                revokeSignInSessionsResponse,
+                useDefaultRevokeSignInSessionsResponse: false);
+
+            var client = TestHelper.CreateClientWithRole(testApp,
+                provider => provider.WithDismissUserRiskRole().WithRandomSubAndOid().WithAuthContext(_validAuthContextId),
+                requestAdapter);
+            return await client.PutAsync(_baseUrl, null, TestContext.Current.CancellationToken);
         }
     }
 }

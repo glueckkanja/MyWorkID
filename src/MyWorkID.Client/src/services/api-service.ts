@@ -6,6 +6,7 @@ import {
 import {
   EApiFunctionTypes,
   REQUEST_TYPE,
+  TDismissUserRiskResponse,
   TFunctionResult,
   TGenerateTapResponse,
   TGetRiskStateResponse,
@@ -59,8 +60,10 @@ export const getUserImage = async (): Promise<Blob> => {
   ).data;
 };
 
-export const dismissUserRisk = async (): Promise<TFunctionResult<unknown>> => {
-  return convertTFunctionResult(
+export const dismissUserRisk = async (): Promise<
+  TFunctionResult<TDismissUserRiskResponse>
+> => {
+  return convertTFunctionResult<TDismissUserRiskResponse>(
     authenticateRequest(
       `${backendApiUrl}/me/riskstate/dismiss`,
       REQUEST_TYPE.PUT,

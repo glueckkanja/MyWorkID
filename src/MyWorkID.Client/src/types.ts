@@ -149,6 +149,10 @@ export type User = {
   userPrincipalName?: string;
 };
 
+export type TDismissUserRiskResponse = {
+  sessionsRevoked: boolean;
+};
+
 export type TGenerateTapResponse = {
   temporaryAccessPassId: string;
   temporaryAccessPassword: string;

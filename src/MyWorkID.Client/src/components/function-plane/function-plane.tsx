@@ -127,7 +127,7 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
             <ActionCard
               icon={DISMISS_ICON}
               title="Dismiss Risk"
-              description="Resolve your risk status to regain full access"
+              description="Resolve your risk status and revoke all your sessions to regain full access"
               highlighted
               onClick={openDismissPanel}
             />
@@ -157,7 +157,7 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
           <ActionCard
             icon={DISMISS_ICON}
             title="Dismiss User Risk"
-            description="Clear your account risk status"
+            description="Clear your account risk status and revoke all your sessions"
             onClick={openDismissPanel}
           />
         )}
