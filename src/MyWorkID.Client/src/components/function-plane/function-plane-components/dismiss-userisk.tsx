@@ -1,4 +1,11 @@
-import { memo, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { Panel } from "../../panel";
 import { dismissUserRisk } from "../../../services/api-service";
 import { DismissUserRiskPanelProps } from "../../../types";
@@ -77,11 +84,18 @@ export const DismissUserRiskPanel = memo(function DismissUserRiskPanel({
   const triggerDismiss = useCallback(() => {
     setSubmitting(true);
     dismissUserRisk()
-      .then(() => {
-        toastSuccess(
-          "Risk Dismissed",
-          "Your risk status has been cleared and all your sessions have been revoked. You may need to sign in again.",
-        );
+      .then((result) => {
+        if (result.data?.sessionsRevoked === false) {
+          toastSuccess(
+            "Risk Dismissed",
+            "Your risk status has been cleared, but your sessions could not be revoked.",
+          );
+        } else {
+          toastSuccess(
+            "Risk Dismissed",
+            "Your risk status has been cleared and all your sessions have been revoked. You may need to sign in again.",
+          );
+        }
         onDismissed?.();
         handleClose();
       })

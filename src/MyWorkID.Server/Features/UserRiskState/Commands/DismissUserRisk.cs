@@ -7,6 +7,7 @@ using Microsoft.Graph.Models.ODataErrors;
 using Microsoft.Graph.Users.Item.RevokeSignInSessions;
 using Microsoft.Identity.Web;
 using MyWorkID.Server.Common;
+using MyWorkID.Server.Features.UserRiskState.Entities;
 using MyWorkID.Server.Filters;
 using MyWorkID.Server.Options;
 
@@ -95,24 +96,35 @@ namespace MyWorkID.Server.Features.UserRiskState.Commands
             );
 
             // Invalidate refresh tokens and session cookies so that sessions established while the user was at risk cannot continue.
-            RevokeSignInSessionsPostResponse? revokeSignInSessionsResponse = await graphClient
-                .Users[userId]
-                .RevokeSignInSessions.PostAsRevokeSignInSessionsPostResponseAsync(
-                    cancellationToken: cancellationToken
-                );
-            if (revokeSignInSessionsResponse?.Value != true)
+            // The risk is already dismissed at this point, so a missing permission must not fail the request.
+            bool sessionsRevoked = false;
+            try
             {
-                logger.LogError(
-                    "Risk was dismissed for user {UserId} but revoking sign-in sessions did not report success.",
+                RevokeSignInSessionsPostResponse? revokeSignInSessionsResponse = await graphClient
+                    .Users[userId]
+                    .RevokeSignInSessions.PostAsRevokeSignInSessionsPostResponseAsync(
+                        cancellationToken: cancellationToken
+                    );
+                sessionsRevoked = revokeSignInSessionsResponse?.Value == true;
+                if (!sessionsRevoked)
+                {
+                    logger.LogWarning(
+                        "Risk was dismissed for user {UserId} but revoking sign-in sessions did not report success.",
+                        userId
+                    );
+                }
+            }
+            catch (ODataError odataError)
+                when (odataError.ResponseStatusCode == StatusCodes.Status403Forbidden)
+            {
+                logger.LogWarning(
+                    odataError,
+                    "Risk was dismissed for user {UserId} but the backend is not permitted to revoke sign-in sessions. Grant the User.RevokeSessions.All permission to enable this.",
                     userId
-                );
-                return TypedResults.Problem(
-                    Strings.ERROR_REVOKE_SIGN_IN_SESSIONS_FAILED,
-                    statusCode: StatusCodes.Status500InternalServerError
                 );
             }
 
-            return TypedResults.Ok();
+            return TypedResults.Ok(new DismissUserRiskResponse(sessionsRevoked));
         }
     }
 }

@@ -3,10 +3,13 @@ using MyWorkID.Server.Features.ResetPassword.Entities;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Graph.Models;
+using Microsoft.Graph.Models.ODataErrors;
+using MyWorkID.Server.Features.UserRiskState.Entities;
 using Microsoft.Graph.Users.Item.RevokeSignInSessions;
 using Microsoft.Kiota.Abstractions;
 using Microsoft.Kiota.Abstractions.Serialization;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using System.Net;
 using System.Net.Http.Json;
 
@@ -281,30 +284,72 @@ namespace MyWorkID.Server.IntegrationTests.Features.UserRiskState
         }
 
         [Fact]
-        public async Task DismissUserRisk_WhenRevokeSignInSessionsReportsFalse_Returns500()
+        public async Task DismissUserRisk_WhenRevokeSignInSessionsSucceeds_ReportsSessionsRevoked()
+        {
+            var response = await DismissWithRevokeSignInSessionsResponse(
+                new RevokeSignInSessionsPostResponse { Value = true });
+
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            var body = await response.Content.ReadFromJsonAsync<DismissUserRiskResponse>(TestContext.Current.CancellationToken);
+            body!.SessionsRevoked.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task DismissUserRisk_WhenRevokeSignInSessionsIsForbidden_Returns200WithSessionsNotRevoked()
+        {
+            var testApp = new TestApplicationFactory();
+            testApp.AddAuthContextConfig(AppFunctions.DismissUserRisk.ToString(), _validAuthContextId);
+            testApp.AddMaxDismissibleRiskLevelConfig(RiskLevel.High.ToString());
+
+            IRequestAdapter requestAdapter = GetGraphRequestAdapterForRiskyUser(
+                new RiskyUser { RiskState = RiskState.AtRisk, RiskLevel = RiskLevel.Low });
+            requestAdapter.SendAsync(
+                Arg.Any<RequestInformation>(),
+                Arg.Any<ParsableFactory<RevokeSignInSessionsPostResponse>>(),
+                Arg.Any<Dictionary<string, ParsableFactory<IParsable>>>(),
+                Arg.Any<CancellationToken>())
+                .ThrowsAsyncForAnyArgs(new ODataError { ResponseStatusCode = (int)HttpStatusCode.Forbidden });
+
+            var client = TestHelper.CreateClientWithRole(testApp,
+                provider => provider.WithDismissUserRiskRole().WithRandomSubAndOid().WithAuthContext(_validAuthContextId),
+                requestAdapter);
+            var response = await client.PutAsync(_baseUrl, null, TestContext.Current.CancellationToken);
+
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            var body = await response.Content.ReadFromJsonAsync<DismissUserRiskResponse>(TestContext.Current.CancellationToken);
+            body!.SessionsRevoked.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task DismissUserRisk_WhenRevokeSignInSessionsReportsFalse_Returns200WithSessionsNotRevoked()
         {
             var response = await DismissWithRevokeSignInSessionsResponse(
                 new RevokeSignInSessionsPostResponse { Value = false });
 
-            response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
-            var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>(TestContext.Current.CancellationToken);
-            problemDetails!.Detail.Should().Be(Strings.ERROR_REVOKE_SIGN_IN_SESSIONS_FAILED);
+            await AssertSessionsNotRevoked(response);
         }
 
         [Fact]
-        public async Task DismissUserRisk_WhenRevokeSignInSessionsValueIsMissing_Returns500()
+        public async Task DismissUserRisk_WhenRevokeSignInSessionsValueIsMissing_Returns200WithSessionsNotRevoked()
         {
             var response = await DismissWithRevokeSignInSessionsResponse(new RevokeSignInSessionsPostResponse());
 
-            response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+            await AssertSessionsNotRevoked(response);
         }
 
         [Fact]
-        public async Task DismissUserRisk_WhenRevokeSignInSessionsReturnsNoResponse_Returns500()
+        public async Task DismissUserRisk_WhenRevokeSignInSessionsReturnsNoResponse_Returns200WithSessionsNotRevoked()
         {
             var response = await DismissWithRevokeSignInSessionsResponse(null);
 
-            response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+            await AssertSessionsNotRevoked(response);
+        }
+
+        private static async Task AssertSessionsNotRevoked(HttpResponseMessage response)
+        {
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            var body = await response.Content.ReadFromJsonAsync<DismissUserRiskResponse>(TestContext.Current.CancellationToken);
+            body!.SessionsRevoked.Should().BeFalse();
         }
 
         private async Task<HttpResponseMessage> DismissWithRevokeSignInSessionsResponse(
