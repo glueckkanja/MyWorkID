@@ -4,15 +4,17 @@ using Microsoft.Extensions.Options;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
 using Microsoft.Graph.Models.ODataErrors;
+using Microsoft.Graph.Users.Item.RevokeSignInSessions;
 using Microsoft.Identity.Web;
 using MyWorkID.Server.Common;
+using MyWorkID.Server.Features.UserRiskState.Entities;
 using MyWorkID.Server.Filters;
 using MyWorkID.Server.Options;
 
 namespace MyWorkID.Server.Features.UserRiskState.Commands
 {
     /// <summary>
-    /// Handles the dismissal of user risk state.
+    /// Handles the dismissal of user risk state and revokes all sign-in sessions of the user afterwards.
     /// </summary>
     public class DismissUserRisk : IEndpoint
     {
@@ -70,10 +72,13 @@ namespace MyWorkID.Server.Features.UserRiskState.Commands
 
             // UnknownFutureValue is a sentinel for an active record with an absent RiskLevel.
             // RiskLevelRanking.Rank maps it to int.MaxValue, so CanDismiss always denies it.
-            RiskLevel? currentRiskLevel =
-                riskyUser is { RiskState: RiskState.AtRisk or RiskState.ConfirmedCompromised, RiskLevel: null }
-                    ? RiskLevel.UnknownFutureValue
-                    : riskyUser?.RiskLevel;
+            RiskLevel? currentRiskLevel = riskyUser
+                is {
+                    RiskState: RiskState.AtRisk or RiskState.ConfirmedCompromised,
+                    RiskLevel: null
+                }
+                ? RiskLevel.UnknownFutureValue
+                : riskyUser?.RiskLevel;
             if (!RiskLevelRanking.CanDismiss(currentRiskLevel, maxDismissibleRiskLevel))
             {
                 return TypedResults.Problem(
@@ -89,7 +94,37 @@ namespace MyWorkID.Server.Features.UserRiskState.Commands
                 },
                 cancellationToken: cancellationToken
             );
-            return TypedResults.Ok();
+
+            // Invalidate refresh tokens and session cookies so that sessions established while the user was at risk cannot continue.
+            // The risk is already dismissed at this point, so a missing permission must not fail the request.
+            bool sessionsRevoked = false;
+            try
+            {
+                RevokeSignInSessionsPostResponse? revokeSignInSessionsResponse = await graphClient
+                    .Users[userId]
+                    .RevokeSignInSessions.PostAsRevokeSignInSessionsPostResponseAsync(
+                        cancellationToken: cancellationToken
+                    );
+                sessionsRevoked = revokeSignInSessionsResponse?.Value == true;
+                if (!sessionsRevoked)
+                {
+                    logger.LogWarning(
+                        "Risk was dismissed for user {UserId} but revoking sign-in sessions did not report success.",
+                        userId
+                    );
+                }
+            }
+            catch (ODataError odataError)
+                when (odataError.ResponseStatusCode == StatusCodes.Status403Forbidden)
+            {
+                logger.LogWarning(
+                    odataError,
+                    "Risk was dismissed for user {UserId} but the backend is not permitted to revoke sign-in sessions. Grant the User.RevokeSessions.All permission to enable this.",
+                    userId
+                );
+            }
+
+            return TypedResults.Ok(new DismissUserRiskResponse(sessionsRevoked));
         }
     }
 }

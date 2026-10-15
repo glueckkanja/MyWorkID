@@ -28,7 +28,7 @@ locals {
   allow_credential_operations_for_privileged_users = var.allow_credential_operations_for_privileged_users
 }
 
-# Permissions necessary for the banend managed identity
+# Permissions necessary for the backend managed identity
 locals {
   backend_graph_permissions = ["IdentityRiskyUser.ReadWrite.All", "CustomSecAttributeAssignment.ReadWrite.All"]
 }
