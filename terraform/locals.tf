@@ -30,7 +30,7 @@ locals {
 
 # Permissions necessary for the backend managed identity
 locals {
-  backend_graph_permissions = ["IdentityRiskyUser.ReadWrite.All", "CustomSecAttributeAssignment.ReadWrite.All"]
+  backend_graph_permissions = ["IdentityRiskyUser.ReadWrite.All", "CustomSecAttributeAssignment.ReadWrite.All", "User.Read.All"]
 }
 
 # settings that change if in dev
