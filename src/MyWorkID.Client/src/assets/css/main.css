@@ -507,6 +507,45 @@
   background: currentColor;
 }
 
+.user-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.user-card__badges .risk-badge,
+.user-card__badges .verification-badge {
+  margin-top: 0;
+}
+
+.verification-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.verification-badge--verified {
+  background: var(--risk-dismissed-bg);
+  color: var(--risk-dismissed);
+}
+
+.verification-badge--expired {
+  background: var(--risk-medium-bg);
+  color: var(--risk-medium);
+}
+
+.verification-badge--loading {
+  background: var(--surface-hover);
+  color: var(--text-secondary);
+}
+
 .section-label {
   font-size: 12px;
   font-weight: 600;

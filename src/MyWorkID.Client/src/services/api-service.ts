@@ -9,6 +9,7 @@ import {
   TFunctionResult,
   TGenerateTapResponse,
   TGetRiskStateResponse,
+  TVerifiedIdStatusResponse,
   TVerifyIdentityReponse,
   User,
 } from "../types";
@@ -143,3 +144,11 @@ export const getUserRiskState = async (): Promise<TGetRiskStateResponse> => {
     REQUEST_TYPE.GET
   );
 };
+
+export const getVerifiedIdStatus =
+  async (): Promise<TVerifiedIdStatusResponse> => {
+    return await authenticateRequest(
+      `${backendApiUrl}/me/verifiedId/status`,
+      REQUEST_TYPE.GET
+    );
+  };

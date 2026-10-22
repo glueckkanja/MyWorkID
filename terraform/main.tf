@@ -102,6 +102,12 @@ resource "azurerm_linux_web_app" "backend" {
     },
     local.tap_is_usable_once == null ? {} : {
       Tap__IsUsableOnce = tostring(local.tap_is_usable_once)
+    },
+    local.require_recent_verified_id == null ? {} : {
+      VerifiedIdRequirement__Enabled = tostring(local.require_recent_verified_id)
+    },
+    local.verified_id_validity_in_minutes == null ? {} : {
+      VerifiedIdRequirement__ValidityInMinutes = tostring(local.verified_id_validity_in_minutes)
   })
 
   lifecycle {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 // Import services
 import {
@@ -12,6 +12,8 @@ import type { AppProps } from "../../types";
 
 // Import app state and utilities
 import { useUserProfile } from "@/hooks/use-user-profile";
+import { useVerifiedIdStatus } from "@/hooks/use-verified-id-status";
+import { useToast } from "@/hooks/use-toast";
 import {
   canDismissRiskLevel,
   getRiskLabelFromLevel,
@@ -44,6 +46,17 @@ const PANEL_BY_ACTION: Record<
   [EApiFunctionTypes.UNKNOWN]: null,
 };
 
+// Panels whose actions require a recent Verified ID verification when the feature is enabled.
+const VERIFICATION_GATED_PANELS: ReadonlySet<Exclude<PanelKey, null>> =
+  new Set(["password", "tap", "revokeTap", "dismiss"]);
+
+const VERIFICATION_REQUIRED_REASON =
+  "Validate your identity first to unlock this action.";
+const VERIFICATION_EXPIRED_REASON =
+  "Your identity verification has expired. Validate your identity again to unlock this action.";
+const VERIFICATION_NOT_POSSIBLE_REASON =
+  "Identity verification is required for this action, but you don't have permission to validate your identity. Please contact your administrator.";
+
 const DISMISS_ICON = (
   <CircleCheckIcon width={20} height={20} strokeWidth={1.8} />
 );
@@ -56,8 +69,11 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
   const [redirectAction, setRedirectAction] = useState<EApiFunctionTypes>();
   const signedInUserInfo = useSignedInUser();
   const profile = useUserProfile();
+  const verifiedIdStatus = useVerifiedIdStatus();
+  const { toastInfo } = useToast();
 
   const openDismissPanel = useCallback(() => setActivePanel("dismiss"), []);
+  const openValidatePanel = useCallback(() => setActivePanel("validate"), []);
 
   useEffect(() => {
     handleRedirectPromise()
@@ -97,6 +113,77 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
   const canDismissRisk = hasRole(Role.ALLOW_DISMISS_USER_RISK);
   const canValidateIdentity = hasRole(Role.ALLOW_VALIDATE_IDENTITY);
 
+  // When the optional "require recent Verified ID" feature is enabled, sensitive actions are
+  // blocked until the user completed a face check within the configured validity window.
+  const verificationBlocked =
+    verifiedIdStatus.required &&
+    !verifiedIdStatus.loading &&
+    !verifiedIdStatus.isVerified;
+  const verificationHasExpired =
+    verificationBlocked && verifiedIdStatus.lastVerifiedAt !== undefined;
+  let verificationBlockedReason: string | undefined;
+  if (verificationBlocked) {
+    if (!canValidateIdentity) {
+      verificationBlockedReason = VERIFICATION_NOT_POSSIBLE_REASON;
+    } else if (verificationHasExpired) {
+      verificationBlockedReason = VERIFICATION_EXPIRED_REASON;
+    } else {
+      verificationBlockedReason = VERIFICATION_REQUIRED_REASON;
+    }
+  }
+
+  // Inform the user when a verification expires while the page is open.
+  const previousIsVerifiedRef = useRef<boolean | undefined>(undefined);
+  useEffect(() => {
+    if (!verifiedIdStatus.required || verifiedIdStatus.loading) {
+      return;
+    }
+    if (previousIsVerifiedRef.current === true && !verifiedIdStatus.isVerified) {
+      toastInfo(
+        "Identity verification expired",
+        "Please validate your identity again before resetting your password, creating an access pass or dismissing your risk.",
+      );
+    }
+    previousIsVerifiedRef.current = verifiedIdStatus.isVerified;
+  }, [verifiedIdStatus.required, verifiedIdStatus.loading, verifiedIdStatus.isVerified, toastInfo]);
+
+  // If a gated panel is requested (e.g. after returning from an authentication redirect) while the
+  // verification is missing or expired, show the identity validation instead and tell the user why.
+  const requestedPanelIsBlocked =
+    verificationBlocked &&
+    activePanel !== null &&
+    VERIFICATION_GATED_PANELS.has(activePanel);
+  let effectivePanel: PanelKey = activePanel;
+  if (requestedPanelIsBlocked) {
+    effectivePanel = canValidateIdentity ? "validate" : null;
+  }
+  const effectiveRedirectAction = requestedPanelIsBlocked
+    ? undefined
+    : redirectAction;
+  useEffect(() => {
+    if (!requestedPanelIsBlocked) {
+      return;
+    }
+    if (!canValidateIdentity) {
+      toastInfo(
+        "Identity verification required",
+        VERIFICATION_NOT_POSSIBLE_REASON,
+      );
+      return;
+    }
+    toastInfo(
+      "Identity verification required",
+      verificationHasExpired
+        ? "Your identity verification has expired. Please validate your identity again to continue."
+        : "Please validate your identity before using this action.",
+    );
+  }, [
+    requestedPanelIsBlocked,
+    verificationHasExpired,
+    canValidateIdentity,
+    toastInfo,
+  ]);
+
   const dismissAllowedForCurrentLevel =
     profile.riskLoading ||
     canDismissRiskLevel(profile.riskLevel, maxDismissibleRiskLevel);
@@ -106,10 +193,14 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
 
   const showRecommendedDismiss =
     canDismissRisk &&
+    !verificationBlocked &&
     !profile.riskLoading &&
     dismissAllowedForCurrentLevel &&
     (profile.riskLevel === RiskLevel.High ||
       profile.riskLevel === RiskLevel.Medium);
+
+  const showRecommendedValidate = verificationBlocked && canValidateIdentity;
+  const showRecommendedSection = showRecommendedDismiss || showRecommendedValidate;
 
   const closePanel = useCallback(() => {
     setActivePanel(null);
@@ -118,19 +209,34 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
 
   return (
     <main className="app-main">
-      <UserDisplay profile={profile} />
+      <UserDisplay profile={profile} verifiedIdStatus={verifiedIdStatus} />
 
-      {showRecommendedDismiss && (
+      {showRecommendedSection && (
         <>
           <div className="section-label">Recommended</div>
           <div className="actions-list">
-            <ActionCard
-              icon={DISMISS_ICON}
-              title="Dismiss Risk"
-              description="Resolve your risk status to regain full access"
-              highlighted
-              onClick={openDismissPanel}
-            />
+            {showRecommendedValidate && (
+              <ActionCard
+                icon={IDENTITY_VERIFICATION_ICON}
+                title="Validate Identity"
+                description={
+                  verificationHasExpired
+                    ? "Your verification has expired. Verify again to unlock all actions"
+                    : "Verify who you are to unlock all actions"
+                }
+                highlighted
+                onClick={openValidatePanel}
+              />
+            )}
+            {showRecommendedDismiss && (
+              <ActionCard
+                icon={DISMISS_ICON}
+                title="Dismiss Risk"
+                description="Resolve your risk status to regain full access"
+                highlighted
+                onClick={openDismissPanel}
+              />
+            )}
           </div>
         </>
       )}
@@ -143,6 +249,8 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
             title="Reset Password"
             description="Set a new password for your account"
             onClick={() => setActivePanel("password")}
+            disabled={verificationBlocked}
+            disabledReason={verificationBlockedReason}
           />
         )}
         {canCreateTap && (
@@ -151,6 +259,8 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
             title="Temporary Access Pass"
             description="Get a one-time code to sign in or set up a new device"
             onClick={() => setActivePanel("tap")}
+            disabled={verificationBlocked}
+            disabledReason={verificationBlockedReason}
           />
         )}
         {canDismissRisk && !showRecommendedDismiss && (
@@ -159,40 +269,44 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
             title="Dismiss User Risk"
             description="Clear your account risk status"
             onClick={openDismissPanel}
+            disabled={verificationBlocked}
+            disabledReason={verificationBlockedReason}
           />
         )}
-        {canValidateIdentity && (
+        {canValidateIdentity && !showRecommendedValidate && (
           <ActionCard
             icon={IDENTITY_VERIFICATION_ICON}
             title="Validate Identity"
             description="Verify who you are using Face Check"
-            onClick={() => setActivePanel("validate")}
+            onClick={openValidatePanel}
           />
         )}
       </div>
 
       {canResetPassword && (
         <PasswordResetPanel
-          open={activePanel === "password"}
+          open={effectivePanel === "password"}
           onClose={closePanel}
           comingFromRedirect={
-            redirectAction === EApiFunctionTypes.PASSWORD_RESET
+            effectiveRedirectAction === EApiFunctionTypes.PASSWORD_RESET
           }
         />
       )}
       {canCreateTap && (
         <CreateTapPanel
-          open={activePanel === "tap" || activePanel === "revokeTap"}
+          open={effectivePanel === "tap" || effectivePanel === "revokeTap"}
           onClose={closePanel}
-          comingFromRedirect={redirectAction === EApiFunctionTypes.CREATE_TAP}
+          comingFromRedirect={
+            effectiveRedirectAction === EApiFunctionTypes.CREATE_TAP
+          }
         />
       )}
       {canDismissRisk && (
         <DismissUserRiskPanel
-          open={activePanel === "dismiss"}
+          open={effectivePanel === "dismiss"}
           onClose={closePanel}
           comingFromRedirect={
-            redirectAction === EApiFunctionTypes.DISMISS_USER_RISK
+            effectiveRedirectAction === EApiFunctionTypes.DISMISS_USER_RISK
           }
           onDismissed={profile.refreshRiskState}
           riskLevel={profile.riskLevel}
@@ -203,8 +317,10 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
       )}
       {canValidateIdentity && (
         <ValidateIdentityPanel
-          open={activePanel === "validate"}
+          open={effectivePanel === "validate"}
           onClose={closePanel}
+          onVerified={verifiedIdStatus.refresh}
+          verifiedIdStatus={verifiedIdStatus}
         />
       )}
     </main>

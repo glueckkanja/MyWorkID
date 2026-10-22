@@ -16,3 +16,5 @@ favicon_url = "REPLACE_WITH_FAVICON_URL" # URL to a favicon image for the MyWork
 app_title = "REPLACE_WITH_APP_TITLE" # The title displayed in the browser tab and app header. Set to customize the application name.
 help_url = "REPLACE_WITH_HELP_URL" # URL to a help page. When set, a help icon is shown in the header that links to this URL. Leave empty to hide the help icon.
 max_dismissible_risk_level = Low # Optional override for the maximum risk level a user may dismiss themselves. One of: Low, Medium, High. Defaults to Low when not set.
+require_recent_verified_id = false # Optional. Set to true to require a Verified ID face check (not older than verified_id_validity_in_minutes) before users can reset their password, create a TAP or dismiss their user risk. Defaults to false (disabled).
+verified_id_validity_in_minutes = 1440 # Optional. How long (in minutes) a Verified ID face check counts as recent. Only relevant if require_recent_verified_id = true. Defaults to 1440 (24 hours).

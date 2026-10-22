@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Panel } from "../../panel";
 import { verifyIdentity } from "../../../services/api-service";
 import { HubConnectionState } from "@microsoft/signalr";
@@ -6,20 +6,34 @@ import { getVerifiedIdConnection } from "../../../services/signal-r-service";
 import { ValidateIdentityPanelProps, VerifyState } from "../../../types";
 import { useToast } from "@/hooks/use-toast";
 import { Spinner } from "@/components/ui/spinner";
+import {
+  formatDateTime,
+  formatValidityDuration,
+} from "@/lib/verified-id-status";
 
 // Import Icons
 import { FaceCheckCameraIcon } from "@/components/ui/icons/face-check-camera-icon";
 import { InformationCircleIcon } from "@/components/ui/icons/information-circle-icon";
+import { CircleCheckIcon } from "@/components/ui/icons/circle-check-icon";
+import { AlertWarningIcon } from "@/components/ui/icons/alert-warning-icon";
 import VerifiedIdentityIllustrationSvg from "../../../assets/svg/verified-identity-illustration.svg";
 
 export const ValidateIdentityPanel = ({
   open,
   onClose,
+  onVerified,
+  verifiedIdStatus,
 }: ValidateIdentityPanelProps) => {
   const [verifyState, setVerifyState] = useState<VerifyState>({
     status: "idle",
   });
   const { toastError, toastException, toastInfo, toastSuccess } = useToast();
+
+  // The SignalR handlers are registered once; keep the latest callback reachable from them.
+  const onVerifiedRef = useRef(onVerified);
+  useEffect(() => {
+    onVerifiedRef.current = onVerified;
+  }, [onVerified]);
 
   useEffect(() => {
     getVerifiedIdConnection().then((connection) => {
@@ -39,6 +53,7 @@ export const ValidateIdentityPanel = ({
             "Identity Verified",
             "Your identity has been successfully verified.",
           );
+          onVerifiedRef.current?.();
           onClose();
         });
 
@@ -76,6 +91,43 @@ export const ValidateIdentityPanel = ({
         setVerifyState({ status: "idle" });
         toastException(error);
       });
+  };
+
+  const renderRequirementHint = () => {
+    if (!verifiedIdStatus?.required || verifiedIdStatus.loading) {
+      return null;
+    }
+    const validity = formatValidityDuration(verifiedIdStatus.validityInMinutes);
+    if (verifiedIdStatus.isVerified) {
+      return (
+        <div className="confirm-box confirm-box--neutral">
+          <CircleCheckIcon aria-hidden="true" />
+          <span>
+            Your identity is verified until{" "}
+            <strong>{formatDateTime(verifiedIdStatus.validUntil)}</strong>.
+            Verifying again renews it for {validity}.
+          </span>
+        </div>
+      );
+    }
+    return (
+      <div className="confirm-box confirm-box--warning">
+        <AlertWarningIcon aria-hidden="true" />
+        <span>
+          {verifiedIdStatus.lastVerifiedAt ? (
+            <>
+              Your identity verification has <strong>expired</strong>.
+            </>
+          ) : (
+            <>
+              Your identity is <strong>not verified</strong> yet.
+            </>
+          )}{" "}
+          Resetting your password, creating an access pass and dismissing
+          your risk require a verification that is not older than {validity}.
+        </span>
+      </div>
+    );
   };
 
   const renderBody = () => {
@@ -118,6 +170,7 @@ export const ValidateIdentityPanel = ({
             className="verify-illustration__icon"
           />
         </div>
+        {renderRequirementHint()}
         <div className="form-hint">
           <InformationCircleIcon />
           <span>

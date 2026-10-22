@@ -56,6 +56,10 @@ export type PasswordResetPanelProps = {
 export type ValidateIdentityPanelProps = {
   open: boolean;
   onClose: () => void;
+  /** Called after the server confirmed a successful verification. */
+  onVerified?: () => void;
+  /** Current verification requirement/state, used to explain the validity window to the user. */
+  verifiedIdStatus?: VerifiedIdStatus;
 };
 
 export type VerifyState =
@@ -102,6 +106,25 @@ export type UserProfile = {
   riskLevel: RiskLevel;
   riskLabel: string;
   refreshRiskState: () => void;
+};
+
+/**
+ * Verification state of the signed-in user with regard to the optional
+ * "require recent Verified ID" feature.
+ */
+export type VerifiedIdStatus = {
+  /** True while the first status request is in flight. */
+  loading: boolean;
+  /** True if the status could not be loaded. The server still enforces the requirement. */
+  error: boolean;
+  /** True if sensitive actions require a recent verification. */
+  required: boolean;
+  /** True if the user has a verification that is still within the validity window. */
+  isVerified: boolean;
+  lastVerifiedAt: Date | undefined;
+  validUntil: Date | undefined;
+  validityInMinutes: number;
+  refresh: () => void;
 };
 
 export type TWWWAuthenticateHeader = {
@@ -165,6 +188,14 @@ export type TGetRiskStateResponse = {
   riskState: string;
   riskLevel?: string;
   maxDismissibleRiskLevel: string;
+};
+
+export type TVerifiedIdStatusResponse = {
+  required: boolean;
+  validityInMinutes: number;
+  isVerified: boolean;
+  lastVerifiedAt?: string | null;
+  validUntil?: string | null;
 };
 
 export type ToasterToast = ToastProps & {
