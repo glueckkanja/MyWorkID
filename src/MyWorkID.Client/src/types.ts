@@ -28,6 +28,8 @@ export type CreateTapPanelProps = {
   open: boolean;
   onClose: () => void;
   comingFromRedirect: boolean;
+  /** When set, the action is blocked (e.g. identity not verified) and this reason is shown instead of the form. */
+  blockedReason?: string;
 };
 
 export type TapState =
@@ -51,6 +53,8 @@ export type PasswordResetPanelProps = {
   open: boolean;
   onClose: () => void;
   comingFromRedirect: boolean;
+  /** When set, the action is blocked (e.g. identity not verified) and this reason is shown instead of the form. */
+  blockedReason?: string;
 };
 
 export type ValidateIdentityPanelProps = {

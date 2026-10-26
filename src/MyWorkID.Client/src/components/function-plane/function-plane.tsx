@@ -46,10 +46,6 @@ const PANEL_BY_ACTION: Record<
   [EApiFunctionTypes.UNKNOWN]: null,
 };
 
-// Panels whose actions require a recent Verified ID verification when the feature is enabled.
-const VERIFICATION_GATED_PANELS: ReadonlySet<Exclude<PanelKey, null>> =
-  new Set(["password", "tap", "revokeTap", "dismiss"]);
-
 const VERIFICATION_REQUIRED_REASON =
   "Validate your identity first to unlock this action.";
 const VERIFICATION_EXPIRED_REASON =
@@ -147,49 +143,12 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
     previousIsVerifiedRef.current = verifiedIdStatus.isVerified;
   }, [verifiedIdStatus.required, verifiedIdStatus.loading, verifiedIdStatus.isVerified, toastInfo]);
 
-  // If a gated panel is requested (e.g. after returning from an authentication redirect) while the
-  // verification is missing or expired, show the identity validation instead and tell the user why.
-  const requestedPanelIsBlocked =
-    verificationBlocked &&
-    activePanel !== null &&
-    VERIFICATION_GATED_PANELS.has(activePanel);
-  let effectivePanel: PanelKey = activePanel;
-  if (requestedPanelIsBlocked) {
-    effectivePanel = canValidateIdentity ? "validate" : null;
-  }
-  const effectiveRedirectAction = requestedPanelIsBlocked
-    ? undefined
-    : redirectAction;
-  useEffect(() => {
-    if (!requestedPanelIsBlocked) {
-      return;
-    }
-    if (!canValidateIdentity) {
-      toastInfo(
-        "Identity verification required",
-        VERIFICATION_NOT_POSSIBLE_REASON,
-      );
-      return;
-    }
-    toastInfo(
-      "Identity verification required",
-      verificationHasExpired
-        ? "Your identity verification has expired. Please validate your identity again to continue."
-        : "Please validate your identity before using this action.",
-    );
-  }, [
-    requestedPanelIsBlocked,
-    verificationHasExpired,
-    canValidateIdentity,
-    toastInfo,
-  ]);
-
   const dismissAllowedForCurrentLevel =
     profile.riskLoading ||
     canDismissRiskLevel(profile.riskLevel, maxDismissibleRiskLevel);
   const dismissDisabledReason = !dismissAllowedForCurrentLevel
     ? `Your ${getRiskLabelFromLevel(profile.riskLevel)} risk level cannot be dismissed via self-service. Please contact your administrator.`
-    : undefined;
+    : verificationBlockedReason;
 
   const showRecommendedDismiss =
     canDismissRisk &&
@@ -249,8 +208,6 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
             title="Reset Password"
             description="Set a new password for your account"
             onClick={() => setActivePanel("password")}
-            disabled={verificationBlocked}
-            disabledReason={verificationBlockedReason}
           />
         )}
         {canCreateTap && (
@@ -259,8 +216,6 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
             title="Temporary Access Pass"
             description="Get a one-time code to sign in or set up a new device"
             onClick={() => setActivePanel("tap")}
-            disabled={verificationBlocked}
-            disabledReason={verificationBlockedReason}
           />
         )}
         {canDismissRisk && !showRecommendedDismiss && (
@@ -269,8 +224,6 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
             title="Dismiss User Risk"
             description="Clear your account risk status"
             onClick={openDismissPanel}
-            disabled={verificationBlocked}
-            disabledReason={verificationBlockedReason}
           />
         )}
         {canValidateIdentity && !showRecommendedValidate && (
@@ -285,39 +238,44 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
 
       {canResetPassword && (
         <PasswordResetPanel
-          open={effectivePanel === "password"}
+          open={activePanel === "password"}
           onClose={closePanel}
           comingFromRedirect={
-            effectiveRedirectAction === EApiFunctionTypes.PASSWORD_RESET
+            !verificationBlocked &&
+            redirectAction === EApiFunctionTypes.PASSWORD_RESET
           }
+          blockedReason={verificationBlockedReason}
         />
       )}
       {canCreateTap && (
         <CreateTapPanel
-          open={effectivePanel === "tap" || effectivePanel === "revokeTap"}
+          open={activePanel === "tap" || activePanel === "revokeTap"}
           onClose={closePanel}
           comingFromRedirect={
-            effectiveRedirectAction === EApiFunctionTypes.CREATE_TAP
+            !verificationBlocked &&
+            redirectAction === EApiFunctionTypes.CREATE_TAP
           }
+          blockedReason={verificationBlockedReason}
         />
       )}
       {canDismissRisk && (
         <DismissUserRiskPanel
-          open={effectivePanel === "dismiss"}
+          open={activePanel === "dismiss"}
           onClose={closePanel}
           comingFromRedirect={
-            effectiveRedirectAction === EApiFunctionTypes.DISMISS_USER_RISK
+            !verificationBlocked &&
+            redirectAction === EApiFunctionTypes.DISMISS_USER_RISK
           }
           onDismissed={profile.refreshRiskState}
           riskLevel={profile.riskLevel}
           riskLabel={profile.riskLabel}
-          canDismiss={dismissAllowedForCurrentLevel}
+          canDismiss={dismissAllowedForCurrentLevel && !verificationBlocked}
           dismissDisabledReason={dismissDisabledReason}
         />
       )}
       {canValidateIdentity && (
         <ValidateIdentityPanel
-          open={effectivePanel === "validate"}
+          open={activePanel === "validate"}
           onClose={closePanel}
           onVerified={verifiedIdStatus.refresh}
           verifiedIdStatus={verifiedIdStatus}

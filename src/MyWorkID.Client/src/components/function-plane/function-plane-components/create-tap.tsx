@@ -14,11 +14,13 @@ import { CheckmarkIcon } from "@/components/ui/icons/checkmark-icon";
 import { CopyDocumentIcon } from "@/components/ui/icons/copy-document-icon";
 import { RefreshArrowIcon } from "@/components/ui/icons/refresh-arrow-icon";
 import { InformationCircleIcon } from "@/components/ui/icons/information-circle-icon";
+import { AlertErrorIcon } from "@/components/ui/icons/alert-error-icon";
 
 export const CreateTapPanel = ({
   open,
   onClose,
   comingFromRedirect,
+  blockedReason,
 }: CreateTapPanelProps) => {
   const [tap, setTap] = useState<TapState>({ status: "empty" });
   const [copiedTap, setCopiedTap] = useState(false);
@@ -86,7 +88,7 @@ export const CreateTapPanel = ({
 
   // auto start TAP creation if coming from redirect
   useEffect(() => {
-    if (open && comingFromRedirect) {
+    if (open && comingFromRedirect && !blockedReason) {
       createTap();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -101,6 +103,25 @@ export const CreateTapPanel = ({
   }, [open]);
 
   const renderBody = () => {
+    if (blockedReason) {
+      return (
+        <>
+          <div className="confirm-box">
+            <AlertErrorIcon aria-hidden="true" />
+            <span>{blockedReason}</span>
+          </div>
+          <button
+            type="button"
+            className="panel-primary-button"
+            disabled
+            aria-disabled
+          >
+            Generate Access Pass
+          </button>
+        </>
+      );
+    }
+
     if (tap.status === "loading" || tap.status === "revoking") {
       return (
         <div className="panel-loading">

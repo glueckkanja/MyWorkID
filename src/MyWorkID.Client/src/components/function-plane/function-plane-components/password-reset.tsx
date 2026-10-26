@@ -12,6 +12,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { EyeIcon } from "@/components/ui/icons/eye-icon";
 import { EyeOffIcon } from "@/components/ui/icons/eye-off-icon";
 import { InformationCircleIcon } from "@/components/ui/icons/information-circle-icon";
+import { AlertErrorIcon } from "@/components/ui/icons/alert-error-icon";
 
 const PASSWORD_LENGTH_ERROR_MESSAGE =
   "Password must be at least 8 characters long.";
@@ -48,6 +49,7 @@ export const PasswordResetPanel = ({
   open,
   onClose,
   comingFromRedirect,
+  blockedReason,
 }: PasswordResetPanelProps) => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -76,7 +78,7 @@ export const PasswordResetPanel = ({
 
   // Handle the case where the panel is opened via a redirect
   useEffect(() => {
-    if (open) {
+    if (open && !blockedReason) {
       checkResetPasswordClaimOnOpen();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -125,7 +127,22 @@ export const PasswordResetPanel = ({
       subtitle="Choose a strong password you haven't used before."
       onClose={onClose}
     >
-      {submitting ? (
+      {blockedReason ? (
+        <>
+          <div className="confirm-box">
+            <AlertErrorIcon aria-hidden="true" />
+            <span>{blockedReason}</span>
+          </div>
+          <button
+            type="button"
+            className="panel-primary-button"
+            disabled
+            aria-disabled
+          >
+            Change Password
+          </button>
+        </>
+      ) : submitting ? (
         <div className="panel-loading">
           <Spinner />
         </div>
