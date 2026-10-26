@@ -31,7 +31,7 @@ const getBadgeClass = (riskLevel: RiskLevel, riskLoading: boolean): string => {
 
 const getVerificationBadge = (
   verifiedIdStatus: VerifiedIdStatus,
-): { className: string; label: string; title?: string } => {
+): { className: string; label: string; title?: string } | undefined => {
   if (verifiedIdStatus.loading) {
     return {
       className: "verification-badge verification-badge--loading",
@@ -39,16 +39,7 @@ const getVerificationBadge = (
     };
   }
   if (verifiedIdStatus.isVerified) {
-    const validUntil = formatDateTime(verifiedIdStatus.validUntil);
-    return {
-      className: "verification-badge verification-badge--verified",
-      label: validUntil
-        ? `Identity verified until ${validUntil}`
-        : "Identity verified",
-      title: verifiedIdStatus.lastVerifiedAt
-        ? `Last verified ${formatDateTime(verifiedIdStatus.lastVerifiedAt)}`
-        : undefined,
-    };
+    return undefined;
   }
   if (verifiedIdStatus.lastVerifiedAt) {
     return {

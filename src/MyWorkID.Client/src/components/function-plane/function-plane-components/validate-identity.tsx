@@ -6,15 +6,11 @@ import { getVerifiedIdConnection } from "../../../services/signal-r-service";
 import { ValidateIdentityPanelProps, VerifyState } from "../../../types";
 import { useToast } from "@/hooks/use-toast";
 import { Spinner } from "@/components/ui/spinner";
-import {
-  formatDateTime,
-  formatValidityDuration,
-} from "@/lib/verified-id-status";
+import { formatValidityDuration } from "@/lib/verified-id-status";
 
 // Import Icons
 import { FaceCheckCameraIcon } from "@/components/ui/icons/face-check-camera-icon";
 import { InformationCircleIcon } from "@/components/ui/icons/information-circle-icon";
-import { CircleCheckIcon } from "@/components/ui/icons/circle-check-icon";
 import { AlertWarningIcon } from "@/components/ui/icons/alert-warning-icon";
 import VerifiedIdentityIllustrationSvg from "../../../assets/svg/verified-identity-illustration.svg";
 
@@ -99,16 +95,7 @@ export const ValidateIdentityPanel = ({
     }
     const validity = formatValidityDuration(verifiedIdStatus.validityInMinutes);
     if (verifiedIdStatus.isVerified) {
-      return (
-        <div className="confirm-box confirm-box--neutral">
-          <CircleCheckIcon aria-hidden="true" />
-          <span>
-            Your identity is verified until{" "}
-            <strong>{formatDateTime(verifiedIdStatus.validUntil)}</strong>.
-            Verifying again renews it for {validity}.
-          </span>
-        </div>
-      );
+      return null;
     }
     return (
       <div className="confirm-box confirm-box--warning">
