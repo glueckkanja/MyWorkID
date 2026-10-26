@@ -129,6 +129,8 @@ export type VerifiedIdStatus = {
   validUntil: Date | undefined;
   validityInMinutes: number;
   refresh: () => void;
+  /** Reloads the status repeatedly until the fresh verification is visible (the directory can lag behind). */
+  refreshAfterVerification: () => void;
 };
 
 export type TWWWAuthenticateHeader = {

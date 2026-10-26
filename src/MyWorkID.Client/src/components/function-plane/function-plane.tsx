@@ -277,7 +277,7 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
         <ValidateIdentityPanel
           open={activePanel === "validate"}
           onClose={closePanel}
-          onVerified={verifiedIdStatus.refresh}
+          onVerified={verifiedIdStatus.refreshAfterVerification}
           verifiedIdStatus={verifiedIdStatus}
         />
       )}
