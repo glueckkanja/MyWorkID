@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 // Import services
 import {
@@ -13,7 +13,6 @@ import type { AppProps } from "../../types";
 // Import app state and utilities
 import { useUserProfile } from "@/hooks/use-user-profile";
 import { useVerifiedIdStatus } from "@/hooks/use-verified-id-status";
-import { useToast } from "@/hooks/use-toast";
 import {
   canDismissRiskLevel,
   getRiskLabelFromLevel,
@@ -66,7 +65,6 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
   const signedInUserInfo = useSignedInUser();
   const profile = useUserProfile();
   const verifiedIdStatus = useVerifiedIdStatus();
-  const { toastInfo } = useToast();
 
   const openDismissPanel = useCallback(() => setActivePanel("dismiss"), []);
   const openValidatePanel = useCallback(() => setActivePanel("validate"), []);
@@ -127,21 +125,6 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
       verificationBlockedReason = VERIFICATION_REQUIRED_REASON;
     }
   }
-
-  // Inform the user when a verification expires while the page is open.
-  const previousIsVerifiedRef = useRef<boolean | undefined>(undefined);
-  useEffect(() => {
-    if (!verifiedIdStatus.required || verifiedIdStatus.loading) {
-      return;
-    }
-    if (previousIsVerifiedRef.current === true && !verifiedIdStatus.isVerified) {
-      toastInfo(
-        "Identity verification expired",
-        "Please validate your identity again before resetting your password, creating an access pass or dismissing your risk.",
-      );
-    }
-    previousIsVerifiedRef.current = verifiedIdStatus.isVerified;
-  }, [verifiedIdStatus.required, verifiedIdStatus.loading, verifiedIdStatus.isVerified, toastInfo]);
 
   const dismissAllowedForCurrentLevel =
     profile.riskLoading ||
