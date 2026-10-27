@@ -87,22 +87,21 @@ namespace MyWorkID.Server.Features.VerifiedId
                         ? ObjectToString(dictionaryValue)
                         : null;
                 case JsonElement { ValueKind: JsonValueKind.Object } jsonElement:
-                    foreach (JsonProperty property in jsonElement.EnumerateObject())
-                    {
-                        if (
+                    return jsonElement
+                        .EnumerateObject()
+                        .Where(property =>
                             string.Equals(
                                 property.Name,
                                 attributeName,
                                 StringComparison.OrdinalIgnoreCase
                             )
                         )
-                        {
-                            return property.Value.ValueKind == JsonValueKind.String
+                        .Select(property =>
+                            property.Value.ValueKind == JsonValueKind.String
                                 ? property.Value.GetString()
-                                : property.Value.ToString();
-                        }
-                    }
-                    return null;
+                                : property.Value.ToString()
+                        )
+                        .FirstOrDefault();
                 default:
                     return null;
             }
@@ -147,16 +146,17 @@ namespace MyWorkID.Server.Features.VerifiedId
                 return true;
             }
 
-            foreach (KeyValuePair<string, TValue> entry in dictionary)
+            // Dictionary keys are never null, so a null key identifies the "not found" default.
+            KeyValuePair<string, TValue> caseInsensitiveMatch = dictionary.FirstOrDefault(entry =>
+                string.Equals(entry.Key, key, StringComparison.OrdinalIgnoreCase)
+            );
+            if (caseInsensitiveMatch.Key is null)
             {
-                if (string.Equals(entry.Key, key, StringComparison.OrdinalIgnoreCase))
-                {
-                    value = entry.Value;
-                    return true;
-                }
+                return false;
             }
 
-            return false;
+            value = caseInsensitiveMatch.Value;
+            return true;
         }
     }
 }

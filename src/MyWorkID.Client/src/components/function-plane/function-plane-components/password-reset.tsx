@@ -12,7 +12,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { EyeIcon } from "@/components/ui/icons/eye-icon";
 import { EyeOffIcon } from "@/components/ui/icons/eye-off-icon";
 import { InformationCircleIcon } from "@/components/ui/icons/information-circle-icon";
-import { AlertErrorIcon } from "@/components/ui/icons/alert-error-icon";
+import { BlockedActionNotice } from "./blocked-action-notice";
 
 const PASSWORD_LENGTH_ERROR_MESSAGE =
   "Password must be at least 8 characters long.";
@@ -50,7 +50,7 @@ export const PasswordResetPanel = ({
   onClose,
   comingFromRedirect,
   blockedReason,
-}: PasswordResetPanelProps) => {
+}: Readonly<PasswordResetPanelProps>) => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -59,7 +59,9 @@ export const PasswordResetPanel = ({
   const { toastError, toastException, toastSuccess } = useToast();
 
   // Reset state when the panel is closed
-  useEffect(() => {
+  const [previousOpen, setPreviousOpen] = useState(open);
+  if (open !== previousOpen) {
+    setPreviousOpen(open);
     if (!open) {
       setPassword("");
       setConfirmPassword("");
@@ -67,7 +69,7 @@ export const PasswordResetPanel = ({
       setShowConfirmPassword(false);
       setSubmitting(false);
     }
-  }, [open]);
+  }
 
   const checkResetPasswordClaimOnOpen = () => {
     if (!comingFromRedirect) {
@@ -120,6 +122,95 @@ export const PasswordResetPanel = ({
   const canSubmit =
     password.length > 0 && confirmPassword.length > 0 && !submitting;
 
+  const renderBody = () => {
+    if (blockedReason) {
+      return (
+        <BlockedActionNotice
+          reason={blockedReason}
+          actionLabel="Change Password"
+        />
+      );
+    }
+
+    if (submitting) {
+      return (
+        <div className="panel-loading">
+          <Spinner />
+        </div>
+      );
+    }
+
+    return (
+      <>
+        <div className="form-group">
+          <label className="form-label" htmlFor="password-reset-new">
+            New Password
+          </label>
+          <div className="form-input-wrapper">
+            <input
+              id="password-reset-new"
+              type={showPassword ? "text" : "password"}
+              className="form-input"
+              placeholder="Enter new password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              autoComplete="new-password"
+            />
+            <button
+              type="button"
+              className="form-toggle-visibility"
+              onClick={() => setShowPassword((value) => !value)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+            </button>
+          </div>
+        </div>
+        <div className="form-group">
+          <label className="form-label" htmlFor="password-reset-confirm">
+            Confirm Password
+          </label>
+          <div className="form-input-wrapper">
+            <input
+              id="password-reset-confirm"
+              type={showConfirmPassword ? "text" : "password"}
+              className="form-input"
+              placeholder="Repeat new password"
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+              autoComplete="new-password"
+            />
+            <button
+              type="button"
+              className="form-toggle-visibility"
+              onClick={() => setShowConfirmPassword((value) => !value)}
+              aria-label={
+                showConfirmPassword ? "Hide password" : "Show password"
+              }
+            >
+              {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
+            </button>
+          </div>
+        </div>
+        <div className="form-hint">
+          <InformationCircleIcon />
+          <span>
+            At least 8 characters (24 for admin accounts) including uppercase
+            and lowercase letters, a number, and a symbol.
+          </span>
+        </div>
+        <button
+          type="button"
+          className="panel-primary-button"
+          disabled={!canSubmit}
+          onClick={handleSubmit}
+        >
+          Change Password
+        </button>
+      </>
+    );
+  };
+
   return (
     <Panel
       open={open}
@@ -127,94 +218,7 @@ export const PasswordResetPanel = ({
       subtitle="Choose a strong password you haven't used before."
       onClose={onClose}
     >
-      {blockedReason ? (
-        <>
-          <div className="confirm-box">
-            <AlertErrorIcon aria-hidden="true" />
-            <span>{blockedReason}</span>
-          </div>
-          <button
-            type="button"
-            className="panel-primary-button"
-            disabled
-            aria-disabled
-          >
-            Change Password
-          </button>
-        </>
-      ) : submitting ? (
-        <div className="panel-loading">
-          <Spinner />
-        </div>
-      ) : (
-        <>
-          <div className="form-group">
-            <label className="form-label" htmlFor="password-reset-new">
-              New Password
-            </label>
-            <div className="form-input-wrapper">
-              <input
-                id="password-reset-new"
-                type={showPassword ? "text" : "password"}
-                className="form-input"
-                placeholder="Enter new password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                autoComplete="new-password"
-              />
-              <button
-                type="button"
-                className="form-toggle-visibility"
-                onClick={() => setShowPassword((value) => !value)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-              </button>
-            </div>
-          </div>
-          <div className="form-group">
-            <label className="form-label" htmlFor="password-reset-confirm">
-              Confirm Password
-            </label>
-            <div className="form-input-wrapper">
-              <input
-                id="password-reset-confirm"
-                type={showConfirmPassword ? "text" : "password"}
-                className="form-input"
-                placeholder="Repeat new password"
-                value={confirmPassword}
-                onChange={(event) => setConfirmPassword(event.target.value)}
-                autoComplete="new-password"
-              />
-              <button
-                type="button"
-                className="form-toggle-visibility"
-                onClick={() => setShowConfirmPassword((value) => !value)}
-                aria-label={
-                  showConfirmPassword ? "Hide password" : "Show password"
-                }
-              >
-                {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
-              </button>
-            </div>
-          </div>
-          <div className="form-hint">
-            <InformationCircleIcon />
-            <span>
-              At least 8 characters (24 for admin accounts) including uppercase
-              and lowercase letters, a number, and a symbol.
-            </span>
-          </div>
-          <button
-            type="button"
-            className="panel-primary-button"
-            disabled={!canSubmit}
-            onClick={handleSubmit}
-          >
-            Change Password
-          </button>
-        </>
-      )}
+      {renderBody()}
     </Panel>
   );
 };

@@ -19,13 +19,12 @@ export const ValidateIdentityPanel = ({
   onClose,
   onVerified,
   verifiedIdStatus,
-}: ValidateIdentityPanelProps) => {
+}: Readonly<ValidateIdentityPanelProps>) => {
   const [verifyState, setVerifyState] = useState<VerifyState>({
     status: "idle",
   });
   const { toastError, toastException, toastInfo, toastSuccess } = useToast();
 
-  // The SignalR handlers are registered once; keep the latest callback reachable from them.
   const onVerifiedRef = useRef(onVerified);
   useEffect(() => {
     onVerifiedRef.current = onVerified;
@@ -65,11 +64,13 @@ export const ValidateIdentityPanel = ({
     });
   }, [toastError, toastInfo, toastSuccess, onClose]);
 
-  useEffect(() => {
+  const [previousOpen, setPreviousOpen] = useState(open);
+  if (open !== previousOpen) {
+    setPreviousOpen(open);
     if (!open) {
       setVerifyState({ status: "idle" });
     }
-  }, [open]);
+  }
 
   const startVerification = () => {
     setVerifyState({ status: "loading" });
@@ -90,13 +91,14 @@ export const ValidateIdentityPanel = ({
   };
 
   const renderRequirementHint = () => {
-    if (!verifiedIdStatus?.required || verifiedIdStatus.loading) {
+    if (
+      !verifiedIdStatus?.required ||
+      verifiedIdStatus.loading ||
+      verifiedIdStatus.isVerified
+    ) {
       return null;
     }
     const validity = formatValidityDuration(verifiedIdStatus.validityInMinutes);
-    if (verifiedIdStatus.isVerified) {
-      return null;
-    }
     return (
       <div className="confirm-box confirm-box--warning">
         <AlertWarningIcon aria-hidden="true" />
@@ -110,8 +112,8 @@ export const ValidateIdentityPanel = ({
               Your identity is <strong>not verified</strong> yet.
             </>
           )}{" "}
-          Resetting your password, creating an access pass and dismissing
-          your risk require a verification that is not older than {validity}.
+          Resetting your password, creating an access pass and dismissing your
+          risk require a verification that is not older than {validity}.
         </span>
       </div>
     );

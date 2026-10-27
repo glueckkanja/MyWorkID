@@ -30,39 +30,44 @@ export const useVerifiedIdStatus = (): VerifiedIdStatus => {
 
   const postVerificationTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  const loadStatus = useCallback(async (): Promise<boolean> => {
-    try {
-      const result = await getVerifiedIdStatus();
-      setResponse(result);
-      setError(false);
-      setLoading(false);
-      setNowInMilliseconds(Date.now());
-      return result.isVerified;
-    } catch (requestError) {
-      console.error("Could not get Verified ID status", requestError);
-      setError(true);
-      setLoading(false);
-      return false;
-    }
-  }, []);
+  // Never rejects: failures are reported through the error state and resolve to false.
+  const loadStatus = useCallback(
+    (): Promise<boolean> =>
+      getVerifiedIdStatus()
+        .then((result) => {
+          setResponse(result);
+          setError(false);
+          setLoading(false);
+          setNowInMilliseconds(Date.now());
+          return result.isVerified;
+        })
+        .catch((requestError) => {
+          console.error("Could not get Verified ID status", requestError);
+          setError(true);
+          setLoading(false);
+          return false;
+        }),
+    [],
+  );
 
   const refresh = useCallback(() => {
-    void loadStatus();
+    loadStatus();
   }, [loadStatus]);
 
   const refreshAfterVerification = useCallback(() => {
     clearTimeout(postVerificationTimeoutRef.current);
-    const attempt = async (attemptNumber: number) => {
-      const isVerifiedNow = await loadStatus();
-      if (isVerifiedNow || attemptNumber >= POST_VERIFICATION_MAXIMUM_ATTEMPTS) {
-        return;
-      }
-      postVerificationTimeoutRef.current = setTimeout(
-        () => void attempt(attemptNumber + 1),
-        POST_VERIFICATION_RETRY_INTERVAL_MILLISECONDS,
-      );
+    const attempt = (attemptNumber: number) => {
+      loadStatus().then((isVerifiedNow) => {
+        if (isVerifiedNow || attemptNumber >= POST_VERIFICATION_MAXIMUM_ATTEMPTS) {
+          return;
+        }
+        postVerificationTimeoutRef.current = setTimeout(
+          () => attempt(attemptNumber + 1),
+          POST_VERIFICATION_RETRY_INTERVAL_MILLISECONDS,
+        );
+      });
     };
-    void attempt(1);
+    attempt(1);
   }, [loadStatus]);
 
   useEffect(() => () => clearTimeout(postVerificationTimeoutRef.current), []);

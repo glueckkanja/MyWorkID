@@ -129,9 +129,9 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
   const dismissAllowedForCurrentLevel =
     profile.riskLoading ||
     canDismissRiskLevel(profile.riskLevel, maxDismissibleRiskLevel);
-  const dismissDisabledReason = !dismissAllowedForCurrentLevel
-    ? `Your ${getRiskLabelFromLevel(profile.riskLevel)} risk level cannot be dismissed via self-service. Please contact your administrator.`
-    : verificationBlockedReason;
+  const dismissDisabledReason = dismissAllowedForCurrentLevel
+    ? verificationBlockedReason
+    : `Your ${getRiskLabelFromLevel(profile.riskLevel)} risk level cannot be dismissed via self-service. Please contact your administrator.`;
 
   const showRecommendedDismiss =
     canDismissRisk &&

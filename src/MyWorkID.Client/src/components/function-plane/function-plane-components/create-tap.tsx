@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 import { Panel } from "../../panel";
 import { CreateTapPanelProps, TapState } from "../../../types";
 import {
@@ -14,20 +14,20 @@ import { CheckmarkIcon } from "@/components/ui/icons/checkmark-icon";
 import { CopyDocumentIcon } from "@/components/ui/icons/copy-document-icon";
 import { RefreshArrowIcon } from "@/components/ui/icons/refresh-arrow-icon";
 import { InformationCircleIcon } from "@/components/ui/icons/information-circle-icon";
-import { AlertErrorIcon } from "@/components/ui/icons/alert-error-icon";
+import { BlockedActionNotice } from "./blocked-action-notice";
 
 export const CreateTapPanel = ({
   open,
   onClose,
   comingFromRedirect,
   blockedReason,
-}: CreateTapPanelProps) => {
+}: Readonly<CreateTapPanelProps>) => {
   const [tap, setTap] = useState<TapState>({ status: "empty" });
   const [copiedTap, setCopiedTap] = useState(false);
   const { toastError, toastException } = useToast();
 
-  const createTap = () => {
-    setTap({ status: "loading" });
+  // Expects the caller to have set the "loading" state already.
+  const requestTemporaryAccessPass = () => {
     generateTAP()
       .then((result) => {
         const password = result.data?.temporaryAccessPassword;
@@ -48,6 +48,11 @@ export const CreateTapPanel = ({
         setTap({ status: "empty" });
         toastException(error);
       });
+  };
+
+  const createTap = () => {
+    setTap({ status: "loading" });
+    requestTemporaryAccessPass();
   };
 
   const revokeTap = () => {
@@ -86,39 +91,46 @@ export const CreateTapPanel = ({
       });
   };
 
-  // auto start TAP creation if coming from redirect
-  useEffect(() => {
-    if (open && comingFromRedirect && !blockedReason) {
-      createTap();
+  // auto start TAP creation if coming from redirect: the loading state is set while rendering,
+  // the request itself is sent from the effect below
+  const redirectCreationRequested = open && comingFromRedirect;
+  const [previousRedirectCreationRequested, setPreviousRedirectCreationRequested] =
+    useState(false);
+  if (redirectCreationRequested !== previousRedirectCreationRequested) {
+    setPreviousRedirectCreationRequested(redirectCreationRequested);
+    if (redirectCreationRequested && !blockedReason) {
+      setTap({ status: "loading" });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, comingFromRedirect]);
+  }
+
+  const requestTemporaryAccessPassFromRedirect = useEffectEvent(() => {
+    if (!blockedReason) {
+      requestTemporaryAccessPass();
+    }
+  });
+  useEffect(() => {
+    if (redirectCreationRequested) {
+      requestTemporaryAccessPassFromRedirect();
+    }
+  }, [redirectCreationRequested]);
 
   // clear TAP state when panel is closed
-  useEffect(() => {
+  const [previousOpen, setPreviousOpen] = useState(open);
+  if (open !== previousOpen) {
+    setPreviousOpen(open);
     if (!open) {
       setTap({ status: "empty" });
       setCopiedTap(false);
     }
-  }, [open]);
+  }
 
   const renderBody = () => {
     if (blockedReason) {
       return (
-        <>
-          <div className="confirm-box">
-            <AlertErrorIcon aria-hidden="true" />
-            <span>{blockedReason}</span>
-          </div>
-          <button
-            type="button"
-            className="panel-primary-button"
-            disabled
-            aria-disabled
-          >
-            Generate Access Pass
-          </button>
-        </>
+        <BlockedActionNotice
+          reason={blockedReason}
+          actionLabel="Generate Access Pass"
+        />
       );
     }
 

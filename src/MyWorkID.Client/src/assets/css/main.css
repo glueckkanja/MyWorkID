@@ -531,11 +531,6 @@
   letter-spacing: 0.02em;
 }
 
-.verification-badge--verified {
-  background: var(--status-success-bg);
-  color: var(--status-success);
-}
-
 .verification-badge--expired {
   background: var(--status-warning-bg);
   color: var(--status-warning);

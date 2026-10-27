@@ -59,7 +59,10 @@ type UserDisplayProps = {
   verifiedIdStatus?: VerifiedIdStatus;
 };
 
-export const UserDisplay = ({ profile, verifiedIdStatus }: UserDisplayProps) => {
+export const UserDisplay = ({
+  profile,
+  verifiedIdStatus,
+}: Readonly<UserDisplayProps>) => {
   const { user, userImage, riskLoading, riskLevel, riskLabel } = profile;
   const displayName = user?.displayName;
   const email = user?.mail ?? user?.userPrincipalName;
@@ -90,14 +93,13 @@ export const UserDisplay = ({ profile, verifiedIdStatus }: UserDisplayProps) => 
           {riskLoading ? "Checking risk…" : riskLabel}
         </div>
         {verificationBadge && (
-          <div
+          <output
             className={verificationBadge.className}
             title={verificationBadge.title}
-            role="status"
           >
             <span className="risk-badge__dot" />
             {verificationBadge.label}
-          </div>
+          </output>
         )}
       </div>
     </div>

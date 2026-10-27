@@ -20,7 +20,7 @@ namespace MyWorkID.Server.Options
         /// Enables the requirement. When <c>false</c> (default) sensitive actions behave exactly as
         /// before and do not depend on a Verified ID verification.
         /// </summary>
-        public bool Enabled { get; set; } = false;
+        public bool Enabled { get; set; }
 
         /// <summary>
         /// How long (in minutes) a successful Verified ID verification counts as recent.
