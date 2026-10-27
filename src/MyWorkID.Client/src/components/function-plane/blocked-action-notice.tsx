@@ -1,11 +1,5 @@
 import { AlertErrorIcon } from "@/components/ui/icons/alert-error-icon";
-
-type BlockedActionNoticeProps = {
-  /** Explains why the action is currently unavailable. */
-  reason: string;
-  /** Label of the disabled primary button that would normally trigger the action. */
-  actionLabel: string;
-};
+import type { BlockedActionNoticeProps } from "../../types";
 
 /**
  * Shown inside an action panel instead of its form while the action is blocked

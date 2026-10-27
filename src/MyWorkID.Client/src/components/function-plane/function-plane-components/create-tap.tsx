@@ -14,7 +14,7 @@ import { CheckmarkIcon } from "@/components/ui/icons/checkmark-icon";
 import { CopyDocumentIcon } from "@/components/ui/icons/copy-document-icon";
 import { RefreshArrowIcon } from "@/components/ui/icons/refresh-arrow-icon";
 import { InformationCircleIcon } from "@/components/ui/icons/information-circle-icon";
-import { BlockedActionNotice } from "./blocked-action-notice";
+import { BlockedActionNotice } from "../blocked-action-notice";
 
 export const CreateTapPanel = ({
   open,

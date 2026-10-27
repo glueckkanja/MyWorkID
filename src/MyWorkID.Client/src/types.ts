@@ -81,6 +81,13 @@ export type ActionCardProps = {
   disabledReason?: string;
 };
 
+export type BlockedActionNoticeProps = {
+  /** Explains why the action is currently unavailable. */
+  reason: string;
+  /** Label of the disabled primary button that would normally trigger the action. */
+  actionLabel: string;
+};
+
 export type PanelKey =
   | "password"
   | "tap"

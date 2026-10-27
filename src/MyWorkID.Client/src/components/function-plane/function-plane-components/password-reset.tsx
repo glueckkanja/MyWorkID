@@ -12,7 +12,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { EyeIcon } from "@/components/ui/icons/eye-icon";
 import { EyeOffIcon } from "@/components/ui/icons/eye-off-icon";
 import { InformationCircleIcon } from "@/components/ui/icons/information-circle-icon";
-import { BlockedActionNotice } from "./blocked-action-notice";
+import { BlockedActionNotice } from "../blocked-action-notice";
 
 const PASSWORD_LENGTH_ERROR_MESSAGE =
   "Password must be at least 8 characters long.";
