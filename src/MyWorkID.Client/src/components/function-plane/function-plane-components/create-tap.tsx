@@ -125,7 +125,11 @@ export const CreateTapPanel = ({
   }
 
   const renderBody = () => {
-    if (blockedReason) {
+    // An existing pass stays usable (and revocable) even when generating a new one is blocked,
+    // so only replace the body while there is no pass to revoke.
+    const hasExistingTemporaryAccessPass =
+      tap.status === "ready" || tap.status === "revoking";
+    if (blockedReason && !hasExistingTemporaryAccessPass) {
       return (
         <BlockedActionNotice
           reason={blockedReason}
@@ -197,14 +201,21 @@ export const CreateTapPanel = ({
             generate a new pass.
           </span>
         </div>
-        <button
-          type="button"
-          className="panel-secondary-button"
-          onClick={createTap}
-        >
-          <RefreshArrowIcon />
-          Create New Pass
-        </button>
+        {blockedReason ? (
+          <BlockedActionNotice
+            reason={blockedReason}
+            actionLabel="Create New Pass"
+          />
+        ) : (
+          <button
+            type="button"
+            className="panel-secondary-button"
+            onClick={createTap}
+          >
+            <RefreshArrowIcon />
+            Create New Pass
+          </button>
+        )}
         <button
           type="button"
           className="panel-secondary-button panel-secondary-button--danger"
