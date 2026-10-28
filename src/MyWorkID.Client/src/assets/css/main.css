@@ -96,10 +96,12 @@
     --text-tertiary: #94a3b8;
 
     --status-danger: #dc2626;
-    --status-danger-bg: #fef2f2;
-    --status-danger-border: #fecaca;
+    --status-danger-bg: #fee2e2;
+    --status-danger-border: #fca5a5;
+    --status-danger-text: #991b1b;
     --status-warning: #f59e0b;
-    --status-warning-bg: #fffbeb;
+    --status-warning-bg: #fef3c7;
+    --status-warning-text: #92400e;
     --status-success: #16a34a;
     --status-success-bg: #f0fdf4;
 
@@ -149,7 +151,9 @@
     --brand-primary-subtle: #1e3a5f;
     --status-danger-bg: #451a1a;
     --status-danger-border: #7f1d1d;
+    --status-danger-text: #dc2626;
     --status-warning-bg: #452a1a;
+    --status-warning-text: #f59e0b;
     --status-success-bg: #1a3a2a;
     --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.5);
   }
@@ -384,7 +388,7 @@
   border: 1px solid var(--status-danger-border);
   border-radius: var(--radius-control);
   background: var(--status-danger-bg);
-  color: var(--status-danger);
+  color: var(--status-danger-text);
   font-family: inherit;
   font-size: 13px;
   font-weight: 600;
@@ -477,12 +481,12 @@
 
 .risk-badge--high {
   background: var(--status-danger-bg);
-  color: var(--status-danger);
+  color: var(--status-danger-text);
 }
 
 .risk-badge--medium {
   background: var(--status-warning-bg);
-  color: var(--status-warning);
+  color: var(--status-warning-text);
 }
 
 .risk-badge--dismissed {
@@ -533,7 +537,7 @@
 
 .verification-badge--expired {
   background: var(--status-warning-bg);
-  color: var(--status-warning);
+  color: var(--status-warning-text);
 }
 
 .verification-badge--loading {
@@ -981,13 +985,13 @@
 }
 
 .confirm-box strong {
-  color: var(--status-danger);
+  color: var(--status-danger-text);
 }
 
 .confirm-box svg {
   flex-shrink: 0;
   margin-top: 1px;
-  color: var(--status-danger);
+  color: var(--status-danger-text);
 }
 
 .confirm-box--neutral {
@@ -1009,11 +1013,11 @@
 }
 
 .confirm-box--warning strong {
-  color: var(--status-warning);
+  color: var(--status-warning-text);
 }
 
 .confirm-box--warning svg {
-  color: var(--status-warning);
+  color: var(--status-warning-text);
 }
 
 .verify-illustration {
