@@ -121,7 +121,7 @@ variable "verified_id_validity_in_minutes" {
   default     = null
   nullable    = true
   validation {
-    condition     = var.verified_id_validity_in_minutes == null || var.verified_id_validity_in_minutes >= 1
+    condition     = var.verified_id_validity_in_minutes == null ? true : var.verified_id_validity_in_minutes >= 1
     error_message = "Must be null or a positive number of minutes."
   }
 }
@@ -162,7 +162,7 @@ variable "max_dismissible_risk_level" {
   default     = null
   nullable    = true
   validation {
-    condition = var.max_dismissible_risk_level == null || contains(["Low", "Medium", "High"], var.max_dismissible_risk_level)
+    condition     = var.max_dismissible_risk_level == null || contains(["Low", "Medium", "High"], var.max_dismissible_risk_level)
     error_message = "Must be null or one of: Low, Medium, High."
   }
 }
