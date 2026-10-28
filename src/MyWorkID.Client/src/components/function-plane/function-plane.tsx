@@ -49,6 +49,10 @@ const VERIFICATION_REQUIRED_REASON =
   "Validate your identity first to unlock this action.";
 const VERIFICATION_EXPIRED_REASON =
   "Your identity verification has expired. Validate your identity again to unlock this action.";
+const VERIFICATION_STATUS_LOADING_REASON =
+  "Loading your account status. This action becomes available once loading has finished.";
+const VERIFICATION_STATUS_ERROR_REASON =
+  "Your identity verification status could not be loaded. Please try again later.";
 const VERIFICATION_NOT_POSSIBLE_REASON =
   "Identity verification is required for this action, but you don't have permission to validate your identity. Please contact your administrator.";
 
@@ -109,14 +113,26 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
 
   // When the optional "require recent Verified ID" feature is enabled, sensitive actions are
   // blocked until the user completed a face check within the configured validity window.
+  // Until the status is known, actions stay blocked so that neither a click nor an automatic
+  // resume after an authentication redirect can run against an unknown requirement.
+  const verificationStatusLoading = verifiedIdStatus.loading;
+  const verificationStatusFailed =
+    !verifiedIdStatus.loading && verifiedIdStatus.error;
+  const verificationStatusUnknown =
+    verificationStatusLoading || verificationStatusFailed;
   const verificationBlocked =
+    !verificationStatusUnknown &&
     verifiedIdStatus.required &&
-    !verifiedIdStatus.loading &&
     !verifiedIdStatus.isVerified;
   const verificationHasExpired =
     verificationBlocked && verifiedIdStatus.lastVerifiedAt !== undefined;
+  const actionsBlocked = verificationStatusUnknown || verificationBlocked;
   let verificationBlockedReason: string | undefined;
-  if (verificationBlocked) {
+  if (verificationStatusLoading) {
+    verificationBlockedReason = VERIFICATION_STATUS_LOADING_REASON;
+  } else if (verificationStatusFailed) {
+    verificationBlockedReason = VERIFICATION_STATUS_ERROR_REASON;
+  } else if (verificationBlocked) {
     if (!canValidateIdentity) {
       verificationBlockedReason = VERIFICATION_NOT_POSSIBLE_REASON;
     } else if (verificationHasExpired) {
@@ -135,7 +151,7 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
 
   const showRecommendedDismiss =
     canDismissRisk &&
-    !verificationBlocked &&
+    !actionsBlocked &&
     !profile.riskLoading &&
     dismissAllowedForCurrentLevel &&
     (profile.riskLevel === RiskLevel.High ||
@@ -224,7 +240,7 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
           open={activePanel === "password"}
           onClose={closePanel}
           comingFromRedirect={
-            !verificationBlocked &&
+            !actionsBlocked &&
             redirectAction === EApiFunctionTypes.PASSWORD_RESET
           }
           blockedReason={verificationBlockedReason}
@@ -235,7 +251,7 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
           open={activePanel === "tap" || activePanel === "revokeTap"}
           onClose={closePanel}
           comingFromRedirect={
-            !verificationBlocked &&
+            !actionsBlocked &&
             redirectAction === EApiFunctionTypes.CREATE_TAP
           }
           blockedReason={verificationBlockedReason}
@@ -246,13 +262,13 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
           open={activePanel === "dismiss"}
           onClose={closePanel}
           comingFromRedirect={
-            !verificationBlocked &&
+            !actionsBlocked &&
             redirectAction === EApiFunctionTypes.DISMISS_USER_RISK
           }
           onDismissed={profile.refreshRiskState}
           riskLevel={profile.riskLevel}
           riskLabel={profile.riskLabel}
-          canDismiss={dismissAllowedForCurrentLevel && !verificationBlocked}
+          canDismiss={dismissAllowedForCurrentLevel && !actionsBlocked}
           dismissDisabledReason={dismissDisabledReason}
         />
       )}
