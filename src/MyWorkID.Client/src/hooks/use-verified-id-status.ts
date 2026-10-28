@@ -51,23 +51,22 @@ export const useVerifiedIdStatus = (): VerifiedIdStatus => {
   );
 
   const refresh = useCallback(() => {
-    loadStatus();
+    void loadStatus();
   }, [loadStatus]);
 
   const refreshAfterVerification = useCallback(() => {
     clearTimeout(postVerificationTimeoutRef.current);
-    const attempt = (attemptNumber: number) => {
-      loadStatus().then((isVerifiedNow) => {
-        if (isVerifiedNow || attemptNumber >= POST_VERIFICATION_MAXIMUM_ATTEMPTS) {
-          return;
-        }
-        postVerificationTimeoutRef.current = setTimeout(
-          () => attempt(attemptNumber + 1),
-          POST_VERIFICATION_RETRY_INTERVAL_MILLISECONDS,
-        );
-      });
+    const attempt = async (attemptNumber: number) => {
+      const isVerifiedNow = await loadStatus();
+      if (isVerifiedNow || attemptNumber >= POST_VERIFICATION_MAXIMUM_ATTEMPTS) {
+        return;
+      }
+      postVerificationTimeoutRef.current = setTimeout(
+        () => void attempt(attemptNumber + 1),
+        POST_VERIFICATION_RETRY_INTERVAL_MILLISECONDS,
+      );
     };
-    attempt(1);
+    void attempt(1);
   }, [loadStatus]);
 
   useEffect(() => () => clearTimeout(postVerificationTimeoutRef.current), []);
@@ -78,9 +77,10 @@ export const useVerifiedIdStatus = (): VerifiedIdStatus => {
 
   const required = response?.required ?? false;
 
-  // Poll only while the requirement is active - otherwise the status never changes.
+  // Poll while the requirement is active, and keep retrying while the status is unknown after a
+  // failed request. Otherwise the status never changes.
   useEffect(() => {
-    if (!required) {
+    if (!required && !error) {
       return;
     }
     const intervalId = setInterval(
@@ -88,7 +88,7 @@ export const useVerifiedIdStatus = (): VerifiedIdStatus => {
       VERIFIED_ID_STATUS_POLL_INTERVAL_MILLISECONDS,
     );
     return () => clearInterval(intervalId);
-  }, [refresh, required]);
+  }, [refresh, required, error]);
 
   const lastVerifiedAt = useMemo(
     () => parseTimestamp(response?.lastVerifiedAt),
