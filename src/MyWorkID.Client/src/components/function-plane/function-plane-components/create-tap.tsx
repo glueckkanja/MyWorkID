@@ -92,27 +92,23 @@ export const CreateTapPanel = memo(function CreateTapPanel({
   };
 
   // auto start TAP creation if coming from redirect: the loading state is set while rendering,
-  // the request itself is sent from the effect below
-  const redirectCreationRequested = open && comingFromRedirect;
-  const [previousRedirectCreationRequested, setPreviousRedirectCreationRequested] =
-    useState(false);
-  if (redirectCreationRequested !== previousRedirectCreationRequested) {
-    setPreviousRedirectCreationRequested(redirectCreationRequested);
-    if (redirectCreationRequested && !blockedReason) {
-      setTap({ status: "loading" });
-    }
+  // the request itself is sent from the effect below. The redirect is consumed once its request
+  // is dispatched, so a later toggle of comingFromRedirect (e.g. after a failed verification
+  // status poll recovers) cannot generate another TAP. Until then the request waits while blocked.
+  const [redirectConsumed, setRedirectConsumed] = useState(false);
+  if (open && comingFromRedirect && !blockedReason && !redirectConsumed) {
+    setRedirectConsumed(true);
+    setTap({ status: "loading" });
   }
 
   const requestTemporaryAccessPassFromRedirect = useEffectEvent(() => {
-    if (!blockedReason) {
-      requestTemporaryAccessPass();
-    }
+    requestTemporaryAccessPass();
   });
   useEffect(() => {
-    if (redirectCreationRequested) {
+    if (redirectConsumed) {
       requestTemporaryAccessPassFromRedirect();
     }
-  }, [redirectCreationRequested]);
+  }, [redirectConsumed]);
 
   // clear TAP state when panel is closed
   const [previousOpen, setPreviousOpen] = useState(open);
