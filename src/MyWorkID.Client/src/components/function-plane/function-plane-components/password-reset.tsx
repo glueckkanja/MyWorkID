@@ -71,20 +71,14 @@ export const PasswordResetPanel = memo(function PasswordResetPanel({
     }
   }
 
-  const checkResetPasswordClaimOnOpen = () => {
-    if (!comingFromRedirect) {
+  // Handle the case where the panel is opened via a redirect.
+  // Re-runs when blockedReason clears (e.g. verification status finished loading).
+  useEffect(() => {
+    if (open && !blockedReason && !comingFromRedirect) {
       // check authorization of current user
       checkResetPasswordClaim().catch(() => undefined);
     }
-  };
-
-  // Handle the case where the panel is opened via a redirect
-  useEffect(() => {
-    if (open && !blockedReason) {
-      checkResetPasswordClaimOnOpen();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, blockedReason, comingFromRedirect]);
 
   const handleSubmit = () => {
     if (!isPasswordLengthValid(password)) {
