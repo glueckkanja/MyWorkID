@@ -1,4 +1,4 @@
-import { useEffect, useEffectEvent, useState } from "react";
+import { memo, useEffect, useEffectEvent, useState } from "react";
 import { Panel } from "../../panel";
 import { CreateTapPanelProps, TapState } from "../../../types";
 import {
@@ -16,12 +16,12 @@ import { RefreshArrowIcon } from "@/components/ui/icons/refresh-arrow-icon";
 import { InformationCircleIcon } from "@/components/ui/icons/information-circle-icon";
 import { BlockedActionNotice } from "../blocked-action-notice";
 
-export const CreateTapPanel = ({
+export const CreateTapPanel = memo(function CreateTapPanel({
   open,
   onClose,
   comingFromRedirect,
   blockedReason,
-}: Readonly<CreateTapPanelProps>) => {
+}: Readonly<CreateTapPanelProps>) {
   const [tap, setTap] = useState<TapState>({ status: "empty" });
   const [copiedTap, setCopiedTap] = useState(false);
   const { toastError, toastException } = useToast();
@@ -238,4 +238,4 @@ export const CreateTapPanel = ({
       {renderBody()}
     </Panel>
   );
-};
+});

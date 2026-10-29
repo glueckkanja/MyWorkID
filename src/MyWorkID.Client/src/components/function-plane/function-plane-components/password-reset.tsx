@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { Panel } from "../../panel";
 import { PasswordResetPanelProps } from "../../../types";
 import {
@@ -45,12 +45,12 @@ const isPasswordComplexityValid = (password: string) => {
   return satisfied >= 3;
 };
 
-export const PasswordResetPanel = ({
+export const PasswordResetPanel = memo(function PasswordResetPanel({
   open,
   onClose,
   comingFromRedirect,
   blockedReason,
-}: Readonly<PasswordResetPanelProps>) => {
+}: Readonly<PasswordResetPanelProps>) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -221,4 +221,4 @@ export const PasswordResetPanel = ({
       {renderBody()}
     </Panel>
   );
-};
+});

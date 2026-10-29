@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { Panel } from "../../panel";
 import { verifyIdentity } from "../../../services/api-service";
-import { HubConnectionState } from "@microsoft/signalr";
+import { HubConnectionState, type HubConnection } from "@microsoft/signalr";
 import { getVerifiedIdConnection } from "../../../services/signal-r-service";
 import { ValidateIdentityPanelProps, VerifyState } from "../../../types";
 import { useToast } from "@/hooks/use-toast";
@@ -14,12 +14,12 @@ import { InformationCircleIcon } from "@/components/ui/icons/information-circle-
 import { AlertWarningIcon } from "@/components/ui/icons/alert-warning-icon";
 import VerifiedIdentityIllustrationSvg from "../../../assets/svg/verified-identity-illustration.svg";
 
-export const ValidateIdentityPanel = ({
+export const ValidateIdentityPanel = memo(function ValidateIdentityPanel({
   open,
   onClose,
   onVerified,
   verifiedIdStatus,
-}: Readonly<ValidateIdentityPanelProps>) => {
+}: Readonly<ValidateIdentityPanelProps>) {
   const [verifyState, setVerifyState] = useState<VerifyState>({
     status: "idle",
   });
@@ -31,37 +31,50 @@ export const ValidateIdentityPanel = ({
   }, [onVerified]);
 
   useEffect(() => {
-    getVerifiedIdConnection().then((connection) => {
-      if (connection.state === HubConnectionState.Disconnected) {
-        connection.on("HideQrCode", () => {
-          setVerifyState({ status: "idle" });
-          toastInfo(
-            "QR code scanned",
-            "Please continue on your mobile device.",
-          );
-          onClose();
-        });
-
-        connection.on("VerificationSuccess", () => {
-          setVerifyState({ status: "idle" });
-          toastSuccess(
-            "Identity Verified",
-            "Your identity has been successfully verified.",
-          );
-          onVerifiedRef.current?.();
-          onClose();
-        });
-
-        connection.on("VerificationFailed", (errorMessage: string) => {
-          setVerifyState({ status: "idle" });
-          toastError(
-            errorMessage || "Identity verification failed. Please try again.",
-          );
-        });
-
-        connection.start();
+    const connectToVerifiedId = async () => {
+      let connection: HubConnection;
+      try {
+        connection = await getVerifiedIdConnection();
+      } catch (connectionError) {
+        console.error("Could not get Verified ID connection", connectionError);
+        return;
       }
-    });
+
+      if (connection.state !== HubConnectionState.Disconnected) {
+        return;
+      }
+
+      connection.on("HideQrCode", () => {
+        setVerifyState({ status: "idle" });
+        toastInfo("QR code scanned", "Please continue on your mobile device.");
+        onClose();
+      });
+
+      connection.on("VerificationSuccess", () => {
+        setVerifyState({ status: "idle" });
+        toastSuccess(
+          "Identity Verified",
+          "Your identity has been successfully verified.",
+        );
+        onVerifiedRef.current?.();
+        onClose();
+      });
+
+      connection.on("VerificationFailed", (errorMessage: string) => {
+        setVerifyState({ status: "idle" });
+        toastError(
+          errorMessage || "Identity verification failed. Please try again.",
+        );
+      });
+
+      try {
+        await connection.start();
+      } catch (startError) {
+        console.error("Could not start Verified ID connection", startError);
+      }
+    };
+
+    void connectToVerifiedId();
   }, [toastError, toastInfo, toastSuccess, onClose]);
 
   const [previousOpen, setPreviousOpen] = useState(open);
@@ -189,4 +202,4 @@ export const ValidateIdentityPanel = ({
       {renderBody()}
     </Panel>
   );
-};
+});

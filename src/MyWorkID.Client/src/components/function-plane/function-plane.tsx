@@ -70,6 +70,11 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
   const profile = useUserProfile();
   const verifiedIdStatus = useVerifiedIdStatus();
 
+  const openPasswordPanel = useCallback(() => setActivePanel("password"), []);
+  const openTemporaryAccessPassPanel = useCallback(
+    () => setActivePanel("tap"),
+    [],
+  );
   const openDismissPanel = useCallback(() => setActivePanel("dismiss"), []);
   const openValidatePanel = useCallback(() => setActivePanel("validate"), []);
 
@@ -206,7 +211,7 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
             icon={PASSWORD_ICON}
             title="Reset Password"
             description="Set a new password for your account"
-            onClick={() => setActivePanel("password")}
+            onClick={openPasswordPanel}
           />
         )}
         {canCreateTap && (
@@ -214,7 +219,7 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
             icon={TEMPORARY_ACCESS_PASS_ICON}
             title="Temporary Access Pass"
             description="Get a one-time code to sign in or set up a new device"
-            onClick={() => setActivePanel("tap")}
+            onClick={openTemporaryAccessPassPanel}
           />
         )}
         {canDismissRisk && !showRecommendedDismiss && (
