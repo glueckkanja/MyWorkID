@@ -19,6 +19,11 @@ namespace MyWorkID.Server.Features.VerifiedId
         TimeSpan Validity { get; }
 
         /// <summary>
+        /// How long a successful verification counts as recent, in whole minutes.
+        /// </summary>
+        int ValidityInMinutes { get; }
+
+        /// <summary>
         /// Reads the last verification timestamp of the user from the configured custom security attribute
         /// and evaluates it against the configured validity.
         /// </summary>

@@ -45,7 +45,7 @@ namespace MyWorkID.Server.Features.VerifiedId.Queries
             CancellationToken cancellationToken
         )
         {
-            int validityInMinutes = (int)verifiedIdRequirementService.Validity.TotalMinutes;
+            int validityInMinutes = verifiedIdRequirementService.ValidityInMinutes;
 
             if (!verifiedIdRequirementService.IsEnabled)
             {

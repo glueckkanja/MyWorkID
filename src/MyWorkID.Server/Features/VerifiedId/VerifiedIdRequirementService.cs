@@ -46,6 +46,9 @@ namespace MyWorkID.Server.Features.VerifiedId
         public TimeSpan Validity => _requirementOptions.Validity;
 
         /// <inheritdoc/>
+        public int ValidityInMinutes => _requirementOptions.ValidityInMinutes;
+
+        /// <inheritdoc/>
         public async Task<VerifiedIdVerificationState> GetVerificationStateAsync(
             string userId,
             CancellationToken cancellationToken

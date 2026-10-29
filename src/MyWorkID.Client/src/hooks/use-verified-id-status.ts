@@ -54,6 +54,7 @@ export const useVerifiedIdStatus = (): VerifiedIdStatus => {
     void loadStatus();
   }, [loadStatus]);
 
+  // Tries to update the verification status after a successful verification attempt
   const refreshAfterVerification = useCallback(() => {
     clearTimeout(postVerificationTimeoutRef.current);
     const attempt = async (attemptNumber: number) => {

@@ -107,6 +107,13 @@ namespace MyWorkID.Server.Features.VerifiedId
             }
         }
 
+        /// <summary>
+        /// Converts an attribute value to a string. The switch expression handles null, strings,
+        /// Kiota untyped nodes and JSON string values explicitly, and falls back to
+        /// <see cref="object.ToString"/> for other types.
+        /// </summary>
+        /// <param name="value">The deserialized attribute value.</param>
+        /// <returns>The string representation of the value, or <c>null</c> when it is null or unsupported.</returns>
         private static string? ObjectToString(object? value)
         {
             return value switch
@@ -119,6 +126,12 @@ namespace MyWorkID.Server.Features.VerifiedId
             };
         }
 
+        /// <summary>
+        /// Extracts the string value from a Kiota untyped node when it is a
+        /// <see cref="UntypedString"/>.
+        /// </summary>
+        /// <param name="node">The untyped node to convert.</param>
+        /// <returns>The string value, or <c>null</c> when the node is null or not a string.</returns>
         private static string? UntypedNodeToString(UntypedNode? node)
         {
             return node switch

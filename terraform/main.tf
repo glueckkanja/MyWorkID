@@ -93,6 +93,7 @@ resource "azurerm_linux_web_app" "backend" {
     VerifiedId__BackendUrl                     = local.is_custom_domain_configured ? "https://${local.custom_domains[0]}" : "https://${local.api_name}.azurewebsites.net"
     VerifiedId__CreatePresentationRequestUri   = local.verified_id_create_presentation_request_uri
     VerifiedId__FaceMatchConfidenceThreshold   = local.verified_id_face_match_confidence_threshold
+    VerifiedIdRequirement__Enabled             = tostring(local.require_recent_verified_id)
     },
     local.max_dismissible_risk_level == null ? {} : {
       UserRiskState__MaxDismissibleRiskLevel = local.max_dismissible_risk_level
@@ -102,9 +103,6 @@ resource "azurerm_linux_web_app" "backend" {
     },
     local.tap_is_usable_once == null ? {} : {
       Tap__IsUsableOnce = tostring(local.tap_is_usable_once)
-    },
-    local.require_recent_verified_id == null ? {} : {
-      VerifiedIdRequirement__Enabled = tostring(local.require_recent_verified_id)
     },
     local.verified_id_validity_in_minutes == null ? {} : {
       VerifiedIdRequirement__ValidityInMinutes = tostring(local.verified_id_validity_in_minutes)
