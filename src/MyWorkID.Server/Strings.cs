@@ -43,7 +43,12 @@
         public const string PREMIUM_FEATURES_BILLING_MISSING_PROBLEM_DETAIL =
             "Verified Id premium features billing missing.";
         public const string VERIFIED_ID_VERIFIED_EMPLOYEE_CREDENTIAL_TYPE = "VerifiedEmployee";
-        public const string VERIFIED_ID_USER_PRINCIPAL_NAME_CLAIM = "userPrincipalName";
+
+        /// <summary>
+        /// Claim of the directory-based <c>VerifiedEmployee</c> credential that carries the user's
+        /// userPrincipalName. The credential has no claim named <c>userPrincipalName</c>.
+        /// </summary>
+        public const string VERIFIED_ID_USER_PRINCIPAL_NAME_CLAIM = "revocationId";
 
         /// <summary>
         /// Prefix of verification timestamps that were written after the presented credential was

@@ -264,7 +264,8 @@ namespace MyWorkID.Server.Features.VerifiedId
 
         /// <summary>
         /// Checks that the presentation contains a <c>VerifiedEmployee</c> credential issued by the
-        /// configured authority whose <c>userPrincipalName</c> claim matches the given user. Without this
+        /// configured authority whose <c>revocationId</c> claim (the user's userPrincipalName) matches the
+        /// given user. Without this
         /// check, anyone with access to a user's session could present their own credential and record a
         /// verification for that user.
         /// </summary>
