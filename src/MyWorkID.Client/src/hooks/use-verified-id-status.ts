@@ -30,25 +30,38 @@ export const useVerifiedIdStatus = (): VerifiedIdStatus => {
 
   const postVerificationTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
+  const latestRequestNumberRef = useRef(0);
+
   // Never rejects: failures are reported through the error state and resolve to false.
-  const loadStatus = useCallback(
-    (): Promise<boolean> =>
-      getVerifiedIdStatus()
-        .then((result) => {
-          setResponse(result);
-          setError(false);
-          setLoading(false);
-          setNowInMilliseconds(Date.now());
-          return result.isVerified;
-        })
-        .catch((requestError) => {
-          console.error("Could not get Verified ID status", requestError);
-          setError(true);
-          setLoading(false);
-          return false;
-        }),
-    [],
-  );
+  // Only the most recently started request may update state, so an older response (or error)
+  // that finishes late cannot overwrite a newer result. Superseded requests resolve to false.
+  const loadStatus = useCallback((): Promise<boolean> => {
+    latestRequestNumberRef.current += 1;
+    const requestNumber = latestRequestNumberRef.current;
+    const isSuperseded = () => requestNumber !== latestRequestNumberRef.current;
+    let isVerifiedResult = false;
+
+    return getVerifiedIdStatus()
+      .then((result) => {
+        if (isSuperseded()) {
+          return;
+        }
+        setResponse(result);
+        setError(false);
+        setLoading(false);
+        setNowInMilliseconds(Date.now());
+        isVerifiedResult = result.isVerified;
+      })
+      .catch((requestError) => {
+        if (isSuperseded()) {
+          return;
+        }
+        console.error("Could not get Verified ID status", requestError);
+        setError(true);
+        setLoading(false);
+      })
+      .then(() => isVerifiedResult);
+  }, []);
 
   const refresh = useCallback(() => {
     void loadStatus();
