@@ -32,14 +32,17 @@ export const useVerifiedIdStatus = (): VerifiedIdStatus => {
 
   const latestRequestNumberRef = useRef(0);
 
-  // Never rejects: failures are reported through the error state and resolve to false.
+  // Timestamp (in milliseconds) of the last verification seen by the most recently applied response.
+  const lastVerifiedAtInMillisecondsRef = useRef<number | undefined>(undefined);
+
+  // Never rejects: failures are reported through the error state and resolve to undefined.
   // Only the most recently started request may update state, so an older response (or error)
-  // that finishes late cannot overwrite a newer result. Superseded requests resolve to false.
-  const loadStatus = useCallback((): Promise<boolean> => {
+  // that finishes late cannot overwrite a newer result. Superseded requests resolve to undefined.
+  const loadStatus = useCallback((): Promise<TVerifiedIdStatusResponse | undefined> => {
     latestRequestNumberRef.current += 1;
     const requestNumber = latestRequestNumberRef.current;
     const isSuperseded = () => requestNumber !== latestRequestNumberRef.current;
-    let isVerifiedResult = false;
+    let appliedResult: TVerifiedIdStatusResponse | undefined;
 
     return getVerifiedIdStatus()
       .then((result) => {
@@ -50,7 +53,8 @@ export const useVerifiedIdStatus = (): VerifiedIdStatus => {
         setError(false);
         setLoading(false);
         setNowInMilliseconds(Date.now());
-        isVerifiedResult = result.isVerified;
+        lastVerifiedAtInMillisecondsRef.current = parseTimestamp(result.lastVerifiedAt)?.getTime();
+        appliedResult = result;
       })
       .catch((requestError) => {
         if (isSuperseded()) {
@@ -60,19 +64,31 @@ export const useVerifiedIdStatus = (): VerifiedIdStatus => {
         setError(true);
         setLoading(false);
       })
-      .then(() => isVerifiedResult);
+      .then(() => appliedResult);
   }, []);
 
   const refresh = useCallback(() => {
     void loadStatus();
   }, [loadStatus]);
 
-  // Tries to update the verification status after a successful verification attempt
+  // Tries to update the verification status after a successful verification attempt. A user may
+  // re-verify while a previous verification is still valid, so retries continue until a
+  // verification newer than the one known at the start becomes visible.
   const refreshAfterVerification = useCallback(() => {
     clearTimeout(postVerificationTimeoutRef.current);
+    const previousLastVerifiedAtInMilliseconds = lastVerifiedAtInMillisecondsRef.current;
     const attempt = async (attemptNumber: number) => {
-      const isVerifiedNow = await loadStatus();
-      if (isVerifiedNow || attemptNumber >= POST_VERIFICATION_MAXIMUM_ATTEMPTS) {
+      const result = await loadStatus();
+      const lastVerifiedAtInMilliseconds = parseTimestamp(result?.lastVerifiedAt)?.getTime();
+      const isVerified = result?.isVerified === true;
+      const hasLastVerifiedAt = lastVerifiedAtInMilliseconds !== undefined;
+      const hadNoPreviousVerification = previousLastVerifiedAtInMilliseconds === undefined;
+      const isNewerThanPreviousVerification =
+        hasLastVerifiedAt &&
+        (hadNoPreviousVerification ||
+          lastVerifiedAtInMilliseconds > previousLastVerifiedAtInMilliseconds);
+      const isNewVerificationVisible = isVerified && isNewerThanPreviousVerification;
+      if (isNewVerificationVisible || attemptNumber >= POST_VERIFICATION_MAXIMUM_ATTEMPTS) {
         return;
       }
       postVerificationTimeoutRef.current = setTimeout(
