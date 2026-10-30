@@ -8,11 +8,13 @@ namespace MyWorkID.Server.Features.VerifiedId.Entities
     /// <param name="IsVerified"><c>true</c> if the user has a verification that is still within the validity window. Always <c>false</c> when the requirement is disabled, because the verification state is not looked up in that case.</param>
     /// <param name="LastVerifiedAt">Timestamp of the last successful verification, if known.</param>
     /// <param name="ValidUntil">Point in time until which the last verification counts as recent, if known.</param>
+    /// <param name="ServerTime">The server's current time when the response was created. Lets the client evaluate <c>ValidUntil</c> without relying on its own, possibly skewed, clock.</param>
     public record GetVerifiedIdStatusResponse(
         bool Required,
         int ValidityInMinutes,
         bool IsVerified,
         DateTimeOffset? LastVerifiedAt,
-        DateTimeOffset? ValidUntil
+        DateTimeOffset? ValidUntil,
+        DateTimeOffset ServerTime
     );
 }

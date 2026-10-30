@@ -35,12 +35,14 @@ namespace MyWorkID.Server.Features.VerifiedId.Queries
         /// </summary>
         /// <param name="user">The claims principal representing the user.</param>
         /// <param name="verifiedIdRequirementService">The service that evaluates the verification state.</param>
+        /// <param name="timeProvider">The time provider used to report the server time.</param>
         /// <param name="logger">The logger.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The Verified ID status of the user.</returns>
         public static async Task<IResult> HandleAsync(
             ClaimsPrincipal user,
             IVerifiedIdRequirementService verifiedIdRequirementService,
+            TimeProvider timeProvider,
             ILogger<GetVerifiedIdStatus> logger,
             CancellationToken cancellationToken
         )
@@ -55,7 +57,8 @@ namespace MyWorkID.Server.Features.VerifiedId.Queries
                         ValidityInMinutes: validityInMinutes,
                         IsVerified: false,
                         LastVerifiedAt: null,
-                        ValidUntil: null
+                        ValidUntil: null,
+                        ServerTime: timeProvider.GetUtcNow()
                     )
                 );
             }
@@ -88,7 +91,8 @@ namespace MyWorkID.Server.Features.VerifiedId.Queries
                     ValidityInMinutes: validityInMinutes,
                     IsVerified: verificationState.IsValid,
                     LastVerifiedAt: verificationState.LastVerifiedAt,
-                    ValidUntil: verificationState.ValidUntil
+                    ValidUntil: verificationState.ValidUntil,
+                    ServerTime: timeProvider.GetUtcNow()
                 )
             );
         }

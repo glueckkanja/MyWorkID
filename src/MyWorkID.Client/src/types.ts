@@ -209,6 +209,7 @@ export type TVerifiedIdStatusResponse = {
   isVerified: boolean;
   lastVerifiedAt?: string | null;
   validUntil?: string | null;
+  serverTime?: string | null;
 };
 
 export type ToasterToast = ToastProps & {

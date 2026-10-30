@@ -18,15 +18,21 @@ const MAXIMUM_TIMEOUT_MILLISECONDS = 2147483647;
  * the verification state of the signed-in user. The state is stored server-side (custom security
  * attribute on the user), so it survives page reloads and is shared across sessions and devices.
  *
- * The hook re-evaluates the expiry on the client as time passes, so the UI flips to
- * "expired" at the right moment even without a server round trip, and it polls the server
+ * The hook re-evaluates the expiry on the client as time passes, using the server's clock (the
+ * offset to the device clock is taken from `serverTime`), so the UI flips to "expired" at the
+ * right moment even without a server round trip or with a skewed device clock, and it polls the server
  * periodically to pick up verifications completed elsewhere.
  */
 export const useVerifiedIdStatus = (): VerifiedIdStatus => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [response, setResponse] = useState<TVerifiedIdStatusResponse>();
+  // Current time in milliseconds on the server's clock, so a skewed device clock cannot make a
+  // valid verification look expired (or an expired one look valid).
   const [nowInMilliseconds, setNowInMilliseconds] = useState(() => Date.now());
+
+  // Difference between the server clock and the device clock, measured when a response arrives.
+  const clockOffsetInMillisecondsRef = useRef(0);
 
   const postVerificationTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -49,10 +55,13 @@ export const useVerifiedIdStatus = (): VerifiedIdStatus => {
         if (isSuperseded()) {
           return;
         }
+        const serverTimeInMilliseconds = parseTimestamp(result.serverTime)?.getTime();
+        clockOffsetInMillisecondsRef.current =
+          serverTimeInMilliseconds === undefined ? 0 : serverTimeInMilliseconds - Date.now();
         setResponse(result);
         setError(false);
         setLoading(false);
-        setNowInMilliseconds(Date.now());
+        setNowInMilliseconds(Date.now() + clockOffsetInMillisecondsRef.current);
         lastVerifiedAtInMillisecondsRef.current = parseTimestamp(result.lastVerifiedAt)?.getTime();
         appliedResult = result;
       })
@@ -142,7 +151,7 @@ export const useVerifiedIdStatus = (): VerifiedIdStatus => {
     }
     const remainingMilliseconds = validUntil.getTime() - nowInMilliseconds;
     const timeoutId = setTimeout(
-      () => setNowInMilliseconds(Date.now()),
+      () => setNowInMilliseconds(Date.now() + clockOffsetInMillisecondsRef.current),
       Math.max(0, Math.min(remainingMilliseconds, MAXIMUM_TIMEOUT_MILLISECONDS)),
     );
     return () => clearTimeout(timeoutId);
