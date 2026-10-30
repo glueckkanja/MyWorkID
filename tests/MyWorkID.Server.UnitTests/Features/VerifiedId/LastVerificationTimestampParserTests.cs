@@ -16,7 +16,7 @@ namespace MyWorkID.Server.UnitTests.Features.VerifiedId
         [Fact]
         public void TryGetLastVerifiedAt_WithUntypedObjectFromGraph_ParsesTimestamp()
         {
-            User user = CreateUserWithUntypedAttribute(_timestamp.UtcDateTime.ToString("O", CultureInfo.InvariantCulture));
+            User user = CreateUserWithUntypedAttribute(BoundValue(_timestamp));
 
             bool found = LastVerificationTimestampParser.TryGetLastVerifiedAt(user, AttributeSetName, AttributeName, out DateTimeOffset lastVerifiedAt);
 
@@ -28,7 +28,7 @@ namespace MyWorkID.Server.UnitTests.Features.VerifiedId
         [Fact]
         public void TryGetLastVerifiedAt_WithDifferentCasing_ParsesTimestamp()
         {
-            User user = CreateUserWithUntypedAttribute(_timestamp.UtcDateTime.ToString("O", CultureInfo.InvariantCulture));
+            User user = CreateUserWithUntypedAttribute(BoundValue(_timestamp));
 
             bool found = LastVerificationTimestampParser.TryGetLastVerifiedAt(user, "myworkid", "LASTVERIFIEDFACECHECK", out DateTimeOffset lastVerifiedAt);
 
@@ -49,7 +49,7 @@ namespace MyWorkID.Server.UnitTests.Features.VerifiedId
                         {
                             AdditionalData = new Dictionary<string, object>
                             {
-                                [AttributeName] = _timestamp.UtcDateTime.ToString("O", CultureInfo.InvariantCulture),
+                                [AttributeName] = BoundValue(_timestamp),
                             },
                         },
                     },
@@ -65,7 +65,7 @@ namespace MyWorkID.Server.UnitTests.Features.VerifiedId
         [Fact]
         public void TryGetLastVerifiedAt_WithJsonElement_ParsesTimestamp()
         {
-            using JsonDocument document = JsonDocument.Parse($$"""{"{{AttributeName}}":"{{_timestamp.UtcDateTime:O}}"}""");
+            using JsonDocument document = JsonDocument.Parse($$"""{"{{AttributeName}}":"{{BoundValue(_timestamp)}}"}""");
             User user = new()
             {
                 CustomSecurityAttributes = new CustomSecurityAttributeValue
@@ -86,7 +86,7 @@ namespace MyWorkID.Server.UnitTests.Features.VerifiedId
         [Fact]
         public void TryGetLastVerifiedAt_WithTimestampWithoutOffset_AssumesUtc()
         {
-            User user = CreateUserWithUntypedAttribute("2026-10-20T08:30:15");
+            User user = CreateUserWithUntypedAttribute(Strings.VERIFIED_ID_BOUND_TIMESTAMP_PREFIX + "2026-10-20T08:30:15");
 
             bool found = LastVerificationTimestampParser.TryGetLastVerifiedAt(user, AttributeSetName, AttributeName, out DateTimeOffset lastVerifiedAt);
 
@@ -113,7 +113,7 @@ namespace MyWorkID.Server.UnitTests.Features.VerifiedId
         [Fact]
         public void TryGetLastVerifiedAt_WithOtherAttributeSet_ReturnsFalse()
         {
-            User user = CreateUserWithUntypedAttribute(_timestamp.UtcDateTime.ToString("O", CultureInfo.InvariantCulture));
+            User user = CreateUserWithUntypedAttribute(BoundValue(_timestamp));
 
             bool found = LastVerificationTimestampParser.TryGetLastVerifiedAt(user, "OtherSet", AttributeName, out _);
 
@@ -123,7 +123,7 @@ namespace MyWorkID.Server.UnitTests.Features.VerifiedId
         [Fact]
         public void TryGetLastVerifiedAt_WithOtherAttribute_ReturnsFalse()
         {
-            User user = CreateUserWithUntypedAttribute(_timestamp.UtcDateTime.ToString("O", CultureInfo.InvariantCulture));
+            User user = CreateUserWithUntypedAttribute(BoundValue(_timestamp));
 
             bool found = LastVerificationTimestampParser.TryGetLastVerifiedAt(user, AttributeSetName, "otherAttribute", out _);
 
@@ -163,6 +163,31 @@ namespace MyWorkID.Server.UnitTests.Features.VerifiedId
             bool found = LastVerificationTimestampParser.TryGetLastVerifiedAt(user, AttributeSetName, AttributeName, out _);
 
             found.Should().BeFalse();
+        }
+
+        [Fact]
+        public void TryGetLastVerifiedAt_WithLegacyUnboundTimestamp_ReturnsFalse()
+        {
+            User user = CreateUserWithUntypedAttribute(_timestamp.UtcDateTime.ToString("O", CultureInfo.InvariantCulture));
+
+            bool found = LastVerificationTimestampParser.TryGetLastVerifiedAt(user, AttributeSetName, AttributeName, out _);
+
+            found.Should().BeFalse();
+        }
+
+        [Fact]
+        public void TryGetLastVerifiedAt_WithPrefixOnly_ReturnsFalse()
+        {
+            User user = CreateUserWithUntypedAttribute(Strings.VERIFIED_ID_BOUND_TIMESTAMP_PREFIX);
+
+            bool found = LastVerificationTimestampParser.TryGetLastVerifiedAt(user, AttributeSetName, AttributeName, out _);
+
+            found.Should().BeFalse();
+        }
+
+        private static string BoundValue(DateTimeOffset timestamp)
+        {
+            return Strings.VERIFIED_ID_BOUND_TIMESTAMP_PREFIX + timestamp.UtcDateTime.ToString("O", CultureInfo.InvariantCulture);
         }
 
         private static User CreateUserWithUntypedAttribute(string value)

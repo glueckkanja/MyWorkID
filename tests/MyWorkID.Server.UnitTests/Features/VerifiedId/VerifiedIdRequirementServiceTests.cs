@@ -108,7 +108,7 @@ namespace MyWorkID.Server.UnitTests.Features.VerifiedId
         public async Task GetVerificationStateAsync_WithFutureTimestampInGraph_ReturnsInvalidStateWithTimestamp()
         {
             DateTimeOffset lastVerifiedAt = _now.AddMinutes(5);
-            IRequestAdapter requestAdapter = CreateRequestAdapterReturning(CreateUser(lastVerifiedAt.UtcDateTime.ToString("O", CultureInfo.InvariantCulture)));
+            IRequestAdapter requestAdapter = CreateRequestAdapterReturning(CreateUser(Strings.VERIFIED_ID_BOUND_TIMESTAMP_PREFIX + lastVerifiedAt.UtcDateTime.ToString("O", CultureInfo.InvariantCulture)));
             var sut = CreateService(enabled: true, validityInMinutes: 60, requestAdapter);
 
             VerifiedIdVerificationState state = await sut.GetVerificationStateAsync(Guid.NewGuid().ToString(), TestContext.Current.CancellationToken);
@@ -122,7 +122,7 @@ namespace MyWorkID.Server.UnitTests.Features.VerifiedId
         public async Task GetVerificationStateAsync_WithRecentTimestampInGraph_ReturnsValidState()
         {
             DateTimeOffset lastVerifiedAt = _now.AddMinutes(-10);
-            IRequestAdapter requestAdapter = CreateRequestAdapterReturning(CreateUser(lastVerifiedAt.UtcDateTime.ToString("O", CultureInfo.InvariantCulture)));
+            IRequestAdapter requestAdapter = CreateRequestAdapterReturning(CreateUser(Strings.VERIFIED_ID_BOUND_TIMESTAMP_PREFIX + lastVerifiedAt.UtcDateTime.ToString("O", CultureInfo.InvariantCulture)));
             var sut = CreateService(enabled: true, validityInMinutes: 60, requestAdapter);
 
             VerifiedIdVerificationState state = await sut.GetVerificationStateAsync(Guid.NewGuid().ToString(), TestContext.Current.CancellationToken);
@@ -136,7 +136,7 @@ namespace MyWorkID.Server.UnitTests.Features.VerifiedId
         public async Task GetVerificationStateAsync_RequestsCustomSecurityAttributesForUser()
         {
             string userId = Guid.NewGuid().ToString();
-            IRequestAdapter requestAdapter = CreateRequestAdapterReturning(CreateUser(_now.UtcDateTime.ToString("O", CultureInfo.InvariantCulture)));
+            IRequestAdapter requestAdapter = CreateRequestAdapterReturning(CreateUser(Strings.VERIFIED_ID_BOUND_TIMESTAMP_PREFIX + _now.UtcDateTime.ToString("O", CultureInfo.InvariantCulture)));
             var sut = CreateService(enabled: true, validityInMinutes: 60, requestAdapter);
 
             await sut.GetVerificationStateAsync(userId, TestContext.Current.CancellationToken);

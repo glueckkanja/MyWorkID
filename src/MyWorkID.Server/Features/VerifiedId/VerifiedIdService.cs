@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Globalization;
+using System.Text.Json;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Options;
 using Microsoft.Graph;
@@ -90,8 +91,9 @@ namespace MyWorkID.Server.Features.VerifiedId
             List<RequestCredential> credentialList = new()
             {
                 new RequestCredential(
-                    type: "VerifiedEmployee",
+                    type: Strings.VERIFIED_ID_VERIFIED_EMPLOYEE_CREDENTIAL_TYPE,
                     purpose: "Verify users identity",
+                    acceptedIssuers: [_verifiedIdOptions.DecentralizedIdentifier!],
                     configuration: new Entities.Configuration(validation)
                 ),
             };
@@ -241,13 +243,97 @@ namespace MyWorkID.Server.Features.VerifiedId
                     );
                 }
 
+                if (!await IsCredentialBoundToUser(userId, callbackBody))
+                {
+                    await NotifyVerificationFailed(
+                        userId,
+                        Strings.ERROR_VERIFIED_ID_CREDENTIAL_NOT_BOUND_TO_USER
+                    );
+                    return;
+                }
+
                 User requestBody = CreateSetTargetSecurityAttributeRequestBody(
-                    DateTime.UtcNow.ToString("O")
+                    Strings.VERIFIED_ID_BOUND_TIMESTAMP_PREFIX
+                        + DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)
                 );
 
                 await _graphClient.Users[userId].PatchAsync(requestBody);
                 await NotifyVerificationSuccess(userId);
             }
+        }
+
+        /// <summary>
+        /// Checks that the presentation contains a <c>VerifiedEmployee</c> credential issued by the
+        /// configured authority whose <c>userPrincipalName</c> claim matches the given user. Without this
+        /// check, anyone with access to a user's session could present their own credential and record a
+        /// verification for that user.
+        /// </summary>
+        /// <param name="userId">The object ID of the user the verification is recorded for.</param>
+        /// <param name="callbackBody">The verified presentation callback.</param>
+        /// <returns><c>true</c> if a matching credential was presented.</returns>
+        private async Task<bool> IsCredentialBoundToUser(
+            string userId,
+            CreatePresentationRequestCallback callbackBody
+        )
+        {
+            string? trustedIssuer = _verifiedIdOptions.DecentralizedIdentifier;
+            List<VerifiedCredentialsData> trustedCredentials = (
+                callbackBody.VerifiedCredentialsData ?? []
+            )
+                .Where(credential =>
+                    !string.IsNullOrWhiteSpace(trustedIssuer)
+                    && string.Equals(credential.Issuer, trustedIssuer, StringComparison.Ordinal)
+                    && (credential.Type ?? []).Contains(
+                        Strings.VERIFIED_ID_VERIFIED_EMPLOYEE_CREDENTIAL_TYPE,
+                        StringComparer.Ordinal
+                    )
+                )
+                .ToList();
+            if (trustedCredentials.Count == 0)
+            {
+                _logger.LogWarning(
+                    "Verified ID presentation for user {UserId} contains no VerifiedEmployee credential from the trusted issuer.",
+                    userId
+                );
+                return false;
+            }
+
+            User? user = await _graphClient
+                .Users[userId]
+                .GetAsync(requestConfiguration =>
+                {
+                    requestConfiguration.QueryParameters.Select = ["id", "userPrincipalName"];
+                });
+            string? userPrincipalName = user?.UserPrincipalName;
+            if (string.IsNullOrWhiteSpace(userPrincipalName))
+            {
+                _logger.LogWarning(
+                    "Could not resolve the userPrincipalName of user {UserId}.",
+                    userId
+                );
+                return false;
+            }
+
+            bool isBound = trustedCredentials.Any(credential =>
+                credential.Claims is not null
+                && credential.Claims.TryGetValue(
+                    Strings.VERIFIED_ID_USER_PRINCIPAL_NAME_CLAIM,
+                    out string? credentialUserPrincipalName
+                )
+                && string.Equals(
+                    credentialUserPrincipalName,
+                    userPrincipalName,
+                    StringComparison.OrdinalIgnoreCase
+                )
+            );
+            if (!isBound)
+            {
+                _logger.LogWarning(
+                    "Verified ID presentation for user {UserId} was made with a credential of a different user.",
+                    userId
+                );
+            }
+            return isBound;
         }
 
         /// <summary>

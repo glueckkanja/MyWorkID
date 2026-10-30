@@ -213,13 +213,7 @@ namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
             string userId = Guid.NewGuid().ToString();
             var provider = new TestClaimsProvider().WithUserId(userId);
             IVerifiedIdSignalRRepository verifiedIdSignalRRepository = GetVerifiedSignalRRepositoryWithConnections();
-            var requestAdapter = Substitute.For<IRequestAdapter>();
-            requestAdapter.SendAsync(
-                Arg.Any<RequestInformation>(),
-                Arg.Any<ParsableFactory<User>>(),
-                Arg.Any<Dictionary<string, ParsableFactory<IParsable>>>(),
-                Arg.Any<CancellationToken>())
-                .ReturnsForAnyArgs(new User());
+            IRequestAdapter requestAdapter = CreateRequestAdapterReturningUserPrincipalName(UserPrincipalName);
             var hubContext = Substitute.For<IHubContext<VerifiedIdHub, IVerifiedIdHub>>();
 
             var client = _testApplicationFactory.WithAuthenticationVerifiedId(
@@ -241,12 +235,149 @@ namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
             Arg.Any<CancellationToken>());
         }
 
+        [Fact]
+        public async Task RequestPresentation_WithUserPrincipalNameInDifferentCasing_RecordsVerification()
+        {
+            string userId = Guid.NewGuid().ToString();
+            CreatePresentationRequestCallback callback = GetValidPresentationRequestCallback(userId);
+            callback.VerifiedCredentialsData!.Single().Claims![Strings.VERIFIED_ID_USER_PRINCIPAL_NAME_CLAIM] = UserPrincipalName.ToUpperInvariant();
+
+            IRequestAdapter requestAdapter = await PostCallback(userId, callback, UserPrincipalName);
+
+            await AssertVerificationRecorded(requestAdapter, userId, expected: true);
+        }
+
+        [Fact]
+        public async Task RequestPresentation_WithCredentialOfOtherUser_DoesNotRecordVerification()
+        {
+            string userId = Guid.NewGuid().ToString();
+            CreatePresentationRequestCallback callback = GetValidPresentationRequestCallback(userId);
+            callback.VerifiedCredentialsData!.Single().Claims![Strings.VERIFIED_ID_USER_PRINCIPAL_NAME_CLAIM] = "attacker@contoso.com";
+
+            IRequestAdapter requestAdapter = await PostCallback(userId, callback, UserPrincipalName);
+
+            await AssertVerificationRecorded(requestAdapter, userId, expected: false);
+        }
+
+        [Fact]
+        public async Task RequestPresentation_WithCredentialWithoutUserPrincipalName_DoesNotRecordVerification()
+        {
+            string userId = Guid.NewGuid().ToString();
+            CreatePresentationRequestCallback callback = GetValidPresentationRequestCallback(userId);
+            callback.VerifiedCredentialsData!.Single().Claims!.Remove(Strings.VERIFIED_ID_USER_PRINCIPAL_NAME_CLAIM);
+
+            IRequestAdapter requestAdapter = await PostCallback(userId, callback, UserPrincipalName);
+
+            await AssertVerificationRecorded(requestAdapter, userId, expected: false);
+        }
+
+        [Fact]
+        public async Task RequestPresentation_WithUntrustedIssuer_DoesNotRecordVerification()
+        {
+            string userId = Guid.NewGuid().ToString();
+            CreatePresentationRequestCallback callback = GetValidPresentationRequestCallback(userId);
+            callback.VerifiedCredentialsData!.Single().Issuer = "did:web:untrusted.example.com";
+
+            IRequestAdapter requestAdapter = await PostCallback(userId, callback, UserPrincipalName);
+
+            await AssertVerificationRecorded(requestAdapter, userId, expected: false);
+        }
+
+        [Fact]
+        public async Task RequestPresentation_WithOtherCredentialType_DoesNotRecordVerification()
+        {
+            string userId = Guid.NewGuid().ToString();
+            CreatePresentationRequestCallback callback = GetValidPresentationRequestCallback(userId);
+            callback.VerifiedCredentialsData!.Single().Type = ["VerifiableCredential", "SomeOtherCredential"];
+
+            IRequestAdapter requestAdapter = await PostCallback(userId, callback, UserPrincipalName);
+
+            await AssertVerificationRecorded(requestAdapter, userId, expected: false);
+        }
+
+        [Fact]
+        public async Task RequestPresentation_WithoutVerifiedCredentialsData_DoesNotRecordVerification()
+        {
+            string userId = Guid.NewGuid().ToString();
+            CreatePresentationRequestCallback callback = GetValidPresentationRequestCallback(userId);
+            callback.VerifiedCredentialsData = null;
+
+            IRequestAdapter requestAdapter = await PostCallback(userId, callback, UserPrincipalName);
+
+            await AssertVerificationRecorded(requestAdapter, userId, expected: false);
+        }
+
+        [Fact]
+        public async Task RequestPresentation_WhenUserPrincipalNameCannotBeResolved_DoesNotRecordVerification()
+        {
+            string userId = Guid.NewGuid().ToString();
+            CreatePresentationRequestCallback callback = GetValidPresentationRequestCallback(userId);
+
+            IRequestAdapter requestAdapter = await PostCallback(userId, callback, userPrincipalName: null);
+
+            await AssertVerificationRecorded(requestAdapter, userId, expected: false);
+        }
+
+        private const string UserPrincipalName = "jane.doe@contoso.com";
+
+        private async Task<IRequestAdapter> PostCallback(
+            string userId,
+            CreatePresentationRequestCallback callback,
+            string? userPrincipalName)
+        {
+            var provider = new TestClaimsProvider().WithUserId(userId);
+            IRequestAdapter requestAdapter = CreateRequestAdapterReturningUserPrincipalName(userPrincipalName);
+            var client = _testApplicationFactory.WithAuthenticationVerifiedId(
+                provider,
+                GetVerifiedSignalRRepositoryWithConnections(),
+                Substitute.For<IHubContext<VerifiedIdHub, IVerifiedIdHub>>(),
+                requestAdapter).CreateClient();
+
+            var response = await client.PostAsJsonAsync(_baseUrl, callback, TestContext.Current.CancellationToken);
+
+            response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+            return requestAdapter;
+        }
+
+        private static async Task AssertVerificationRecorded(IRequestAdapter requestAdapter, string userId, bool expected)
+        {
+            await requestAdapter.Received(expected ? 1 : 0).SendAsync(
+                Arg.Is<RequestInformation>(ri => ri.PathParameters.Values.Contains(userId) && ri.HttpMethod == Method.PATCH),
+                Arg.Any<ParsableFactory<User>>(),
+                Arg.Any<Dictionary<string, ParsableFactory<IParsable>>>(),
+                Arg.Any<CancellationToken>());
+        }
+
+        private static IRequestAdapter CreateRequestAdapterReturningUserPrincipalName(string? userPrincipalName)
+        {
+            var requestAdapter = Substitute.For<IRequestAdapter>();
+            requestAdapter.SendAsync(
+                Arg.Any<RequestInformation>(),
+                Arg.Any<ParsableFactory<User>>(),
+                Arg.Any<Dictionary<string, ParsableFactory<IParsable>>>(),
+                Arg.Any<CancellationToken>())
+                .ReturnsForAnyArgs(new User { UserPrincipalName = userPrincipalName });
+            return requestAdapter;
+        }
+
         private static CreatePresentationRequestCallback GetValidPresentationRequestCallback(string userId)
         {
             return new CreatePresentationRequestCallback
             {
                 RequestStatus = "presentation_verified",
                 State = userId,
+                VerifiedCredentialsData =
+                [
+                    new VerifiedCredentialsData
+                    {
+                        Issuer = TestHelper.GetValidVerifiedIdSettings()["VerifiedId:DecentralizedIdentifier"],
+                        Type = ["VerifiableCredential", Strings.VERIFIED_ID_VERIFIED_EMPLOYEE_CREDENTIAL_TYPE],
+                        Claims = new Dictionary<string, string>
+                        {
+                            [Strings.VERIFIED_ID_USER_PRINCIPAL_NAME_CLAIM] = UserPrincipalName,
+                        },
+                    },
+                ],
             };
         }
 

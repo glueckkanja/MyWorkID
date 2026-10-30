@@ -18,7 +18,8 @@ namespace MyWorkID.Server.Features.VerifiedId
         /// <param name="attributeSetName">Name of the custom security attribute set.</param>
         /// <param name="attributeName">Name of the custom security attribute inside the set.</param>
         /// <param name="lastVerifiedAt">The parsed timestamp (UTC) when the method returns <c>true</c>.</param>
-        /// <returns><c>true</c> if the attribute exists and contains a parsable timestamp.</returns>
+        /// <returns><c>true</c> if the attribute exists and contains a parsable timestamp carrying the
+        /// <see cref="Strings.VERIFIED_ID_BOUND_TIMESTAMP_PREFIX"/> prefix.</returns>
         public static bool TryGetLastVerifiedAt(
             User? user,
             string attributeSetName,
@@ -45,8 +46,15 @@ namespace MyWorkID.Server.Features.VerifiedId
                 return false;
             }
 
+            // Values without the prefix were written before the presented credential was bound to the
+            // user, so they do not prove that this user was verified.
+            if (!rawValue.StartsWith(Strings.VERIFIED_ID_BOUND_TIMESTAMP_PREFIX, StringComparison.Ordinal))
+            {
+                return false;
+            }
+
             return DateTimeOffset.TryParse(
-                rawValue,
+                rawValue[Strings.VERIFIED_ID_BOUND_TIMESTAMP_PREFIX.Length..],
                 CultureInfo.InvariantCulture,
                 DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
                 out lastVerifiedAt

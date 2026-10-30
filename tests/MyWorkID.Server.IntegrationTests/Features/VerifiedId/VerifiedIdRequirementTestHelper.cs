@@ -58,7 +58,7 @@ namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
                         [AttributeSetName] = new UntypedObject(new Dictionary<string, UntypedNode>
                         {
                             ["@odata.type"] = new UntypedString("#microsoft.graph.customSecurityAttributeValue"),
-                            [AttributeName] = new UntypedString(lastVerifiedAt.UtcDateTime.ToString("O", CultureInfo.InvariantCulture)),
+                            [AttributeName] = new UntypedString(Strings.VERIFIED_ID_BOUND_TIMESTAMP_PREFIX + lastVerifiedAt.UtcDateTime.ToString("O", CultureInfo.InvariantCulture)),
                         }),
                     },
                 },

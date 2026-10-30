@@ -42,5 +42,16 @@
             "Premium features cannot be used until billing is enabled by the admin.";
         public const string PREMIUM_FEATURES_BILLING_MISSING_PROBLEM_DETAIL =
             "Verified Id premium features billing missing.";
+        public const string VERIFIED_ID_VERIFIED_EMPLOYEE_CREDENTIAL_TYPE = "VerifiedEmployee";
+        public const string VERIFIED_ID_USER_PRINCIPAL_NAME_CLAIM = "userPrincipalName";
+
+        /// <summary>
+        /// Prefix of verification timestamps that were written after the presented credential was
+        /// bound to the signed-in user. Timestamps without this prefix were written by an earlier
+        /// version that did not check the credential's identity and must not be trusted.
+        /// </summary>
+        public const string VERIFIED_ID_BOUND_TIMESTAMP_PREFIX = "bound-v1:";
+        public const string ERROR_VERIFIED_ID_CREDENTIAL_NOT_BOUND_TO_USER =
+            "The presented credential does not belong to the signed-in user.";
     }
 }
