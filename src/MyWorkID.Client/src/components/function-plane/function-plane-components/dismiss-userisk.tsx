@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { memo, useCallback, useEffect, useEffectEvent, useMemo, useState, type ReactNode } from "react";
 import { Panel } from "../../panel";
 import { dismissUserRisk } from "../../../services/api-service";
 import { DismissUserRiskPanelProps } from "../../../types";
@@ -88,14 +88,23 @@ export const DismissUserRiskPanel = memo(function DismissUserRiskPanel({
       });
   }, [toastSuccess, toastException, onDismissed, handleClose]);
 
-  // auto-dismiss risk when returning from authentication redirect
+  // auto-dismiss risk when returning from authentication redirect. The redirect is consumed once
+  // its request is dispatched, so a later toggle of comingFromRedirect or canDismiss (e.g. after a
+  // failed verification status poll recovers) cannot dispatch another dismissal. Until then the
+  // request waits while dismissing is not allowed.
+  const [redirectConsumed, setRedirectConsumed] = useState(false);
+  if (open && comingFromRedirect && canDismiss && !redirectConsumed) {
+    setRedirectConsumed(true);
+  }
+
+  const triggerDismissFromRedirect = useEffectEvent(() => {
+    triggerDismiss();
+  });
   useEffect(() => {
-    if (!open || !comingFromRedirect || !canDismiss) {
-      return;
+    if (redirectConsumed) {
+      triggerDismissFromRedirect();
     }
-    const timeoutId = setTimeout(triggerDismiss, 0);
-    return () => clearTimeout(timeoutId);
-  }, [open, comingFromRedirect, canDismiss, triggerDismiss]);
+  }, [redirectConsumed]);
 
   let confirmationBox: ReactNode;
   if (!canDismiss && dismissDisabledReason) {
