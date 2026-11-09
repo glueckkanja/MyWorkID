@@ -28,6 +28,8 @@ export type CreateTapPanelProps = {
   open: boolean;
   onClose: () => void;
   comingFromRedirect: boolean;
+  /** When set, the action is blocked (e.g. identity not verified) and this reason is shown instead of the form. */
+  blockedReason?: string;
 };
 
 export type TapState =
@@ -51,11 +53,17 @@ export type PasswordResetPanelProps = {
   open: boolean;
   onClose: () => void;
   comingFromRedirect: boolean;
+  /** When set, the action is blocked (e.g. identity not verified) and this reason is shown instead of the form. */
+  blockedReason?: string;
 };
 
 export type ValidateIdentityPanelProps = {
   open: boolean;
   onClose: () => void;
+  /** Called after the server confirmed a successful verification. */
+  onVerified?: () => void;
+  /** Current verification requirement/state, used to explain the validity window to the user. */
+  verifiedIdStatus?: VerifiedIdStatus;
 };
 
 export type VerifyState =
@@ -71,6 +79,13 @@ export type ActionCardProps = {
   onClick: () => void;
   disabled?: boolean;
   disabledReason?: string;
+};
+
+export type BlockedActionNoticeProps = {
+  /** Explains why the action is currently unavailable. */
+  reason: string;
+  /** Label of the disabled primary button that would normally trigger the action. */
+  actionLabel: string;
 };
 
 export type PanelKey =
@@ -102,6 +117,27 @@ export type UserProfile = {
   riskLevel: RiskLevel;
   riskLabel: string;
   refreshRiskState: () => void;
+};
+
+/**
+ * Verification state of the signed-in user with regard to the optional
+ * "require recent Verified ID" feature.
+ */
+export type VerifiedIdStatus = {
+  /** True while the first status request is in flight. */
+  loading: boolean;
+  /** True if the status could not be loaded. The server still enforces the requirement. */
+  error: boolean;
+  /** True if sensitive actions require a recent verification. */
+  required: boolean;
+  /** True if the user has a verification that is still within the validity window. */
+  isVerified: boolean;
+  lastVerifiedAt: Date | undefined;
+  validUntil: Date | undefined;
+  validityInMinutes: number;
+  refresh: () => void;
+  /** Reloads the status repeatedly until the fresh verification is visible (the directory can lag behind). */
+  refreshAfterVerification: () => void;
 };
 
 export type TWWWAuthenticateHeader = {
@@ -169,6 +205,15 @@ export type TGetRiskStateResponse = {
   riskState: string;
   riskLevel?: string;
   maxDismissibleRiskLevel: string;
+};
+
+export type TVerifiedIdStatusResponse = {
+  required: boolean;
+  validityInMinutes: number;
+  isVerified: boolean;
+  lastVerifiedAt?: string | null;
+  validUntil?: string | null;
+  serverTime?: string | null;
 };
 
 export type ToasterToast = ToastProps & {
