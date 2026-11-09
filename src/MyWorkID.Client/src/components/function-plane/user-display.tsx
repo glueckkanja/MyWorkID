@@ -1,5 +1,6 @@
-import { UserProfile } from "../../types";
+import { UserProfile, VerifiedIdStatus } from "../../types";
 import { RiskLevel } from "@/lib/risk-level";
+import { formatDateTime } from "@/lib/verified-id-status";
 
 const getInitials = (displayName: string | undefined): string => {
   if (!displayName) {
@@ -28,15 +29,48 @@ const getBadgeClass = (riskLevel: RiskLevel, riskLoading: boolean): string => {
   return "risk-badge risk-badge--dismissed";
 };
 
-type UserDisplayProps = {
-  profile: UserProfile;
+const getVerificationBadge = (
+  verifiedIdStatus: VerifiedIdStatus,
+): { className: string; label: string; title?: string } | undefined => {
+  if (verifiedIdStatus.loading) {
+    return {
+      className: "verification-badge verification-badge--loading",
+      label: "Checking verification…",
+    };
+  }
+  if (verifiedIdStatus.isVerified) {
+    return undefined;
+  }
+  if (verifiedIdStatus.lastVerifiedAt) {
+    return {
+      className: "verification-badge verification-badge--expired",
+      label: "Identity verification expired",
+      title: `Last verified ${formatDateTime(verifiedIdStatus.lastVerifiedAt)}`,
+    };
+  }
+  return {
+    className: "verification-badge verification-badge--expired",
+    label: "Identity verification required",
+  };
 };
 
-export const UserDisplay = ({ profile }: UserDisplayProps) => {
+type UserDisplayProps = {
+  profile: UserProfile;
+  verifiedIdStatus?: VerifiedIdStatus;
+};
+
+export const UserDisplay = ({
+  profile,
+  verifiedIdStatus,
+}: Readonly<UserDisplayProps>) => {
   const { user, userImage, riskLoading, riskLevel, riskLabel } = profile;
   const displayName = user?.displayName;
   const email = user?.mail ?? user?.userPrincipalName;
   const initials = getInitials(displayName);
+  const showVerificationBadge = !!verifiedIdStatus?.required;
+  const verificationBadge = showVerificationBadge
+    ? getVerificationBadge(verifiedIdStatus)
+    : undefined;
 
   return (
     <div className="user-card">
@@ -49,13 +83,24 @@ export const UserDisplay = ({ profile }: UserDisplayProps) => {
           )}
         </div>
         <div>
-          <h2 className="user-card__name">{displayName ?? " "}</h2>
+          <h2 className="user-card__name">{displayName ?? " "}</h2>
           {email && <p className="user-card__email">{email}</p>}
         </div>
       </div>
-      <div className={getBadgeClass(riskLevel, riskLoading)}>
-        <span className="risk-badge__dot" />
-        {riskLoading ? "Checking risk…" : riskLabel}
+      <div className="user-card__badges">
+        <div className={getBadgeClass(riskLevel, riskLoading)}>
+          <span className="risk-badge__dot" />
+          {riskLoading ? "Checking risk…" : riskLabel}
+        </div>
+        {verificationBadge && (
+          <output
+            className={verificationBadge.className}
+            title={verificationBadge.title}
+          >
+            <span className="risk-badge__dot" />
+            {verificationBadge.label}
+          </output>
+        )}
       </div>
     </div>
   );
