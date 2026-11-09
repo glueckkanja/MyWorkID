@@ -36,6 +36,10 @@ export const useVerifiedIdStatus = (): VerifiedIdStatus => {
 
   const postVerificationTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
+  // Incremented whenever a post-verification retry chain is started or the hook unmounts, so a
+  // chain that is awaiting a request can detect that it was cancelled before scheduling a retry.
+  const postVerificationRetryGenerationRef = useRef(0);
+
   const latestRequestNumberRef = useRef(0);
 
   // Timestamp (in milliseconds) of the last verification seen by the most recently applied response.
@@ -85,9 +89,14 @@ export const useVerifiedIdStatus = (): VerifiedIdStatus => {
   // verification newer than the one known at the start becomes visible.
   const refreshAfterVerification = useCallback(() => {
     clearTimeout(postVerificationTimeoutRef.current);
+    postVerificationRetryGenerationRef.current += 1;
+    const retryGeneration = postVerificationRetryGenerationRef.current;
     const previousLastVerifiedAtInMilliseconds = lastVerifiedAtInMillisecondsRef.current;
     const attempt = async (attemptNumber: number) => {
       const result = await loadStatus();
+      if (retryGeneration !== postVerificationRetryGenerationRef.current) {
+        return;
+      }
       const lastVerifiedAtInMilliseconds = parseTimestamp(result?.lastVerifiedAt)?.getTime();
       const isVerified = result?.isVerified === true;
       const hasLastVerifiedAt = lastVerifiedAtInMilliseconds !== undefined;
@@ -108,7 +117,14 @@ export const useVerifiedIdStatus = (): VerifiedIdStatus => {
     void attempt(1);
   }, [loadStatus]);
 
-  useEffect(() => () => clearTimeout(postVerificationTimeoutRef.current), []);
+  useEffect(
+    () => () => {
+      // Invalidate retry chains that are awaiting a request, so they do not schedule another timer.
+      postVerificationRetryGenerationRef.current += 1;
+      clearTimeout(postVerificationTimeoutRef.current);
+    },
+    [],
+  );
 
   useEffect(() => {
     refresh();
