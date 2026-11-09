@@ -107,6 +107,25 @@ variable "verified_id_face_match_confidence_threshold" {
   }
 }
 
+# VerifiedId requirement (optional, non-breaking: disabled by default)
+variable "require_recent_verified_id" {
+  type        = bool
+  description = "Optional. When true, users must have completed a Verified ID face check within verified_id_validity_in_minutes before they can reset their password, create a TAP or dismiss their user risk. The timestamp of the last verification is read from the custom security attribute configured via verified_id_verify_security_attribute_set / verified_id_verify_security_attribute. Defaults to false (feature disabled, existing behavior)."
+  default     = false
+  nullable    = false
+}
+
+variable "verified_id_validity_in_minutes" {
+  type        = number
+  description = "Optional. How long (in minutes) a successful Verified ID face check counts as recent. Only relevant when require_recent_verified_id = true. Defaults to 1440 (24 hours) when not set."
+  default     = null
+  nullable    = true
+  validation {
+    condition     = var.verified_id_validity_in_minutes == null ? true : var.verified_id_validity_in_minutes >= 1
+    error_message = "Must be null or a positive number of minutes."
+  }
+}
+
 # Frontend
 variable "custom_css_url" {
   type        = string
@@ -143,7 +162,7 @@ variable "max_dismissible_risk_level" {
   default     = null
   nullable    = true
   validation {
-    condition = var.max_dismissible_risk_level == null || contains(["Low", "Medium", "High"], var.max_dismissible_risk_level)
+    condition     = var.max_dismissible_risk_level == null || contains(["Low", "Medium", "High"], var.max_dismissible_risk_level)
     error_message = "Must be null or one of: Low, Medium, High."
   }
 }
