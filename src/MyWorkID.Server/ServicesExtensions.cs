@@ -95,6 +95,12 @@ namespace MyWorkID.Server
                 .Bind(configuration.GetSection(UserRiskStateOptions.SectionName))
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
+
+            services
+                .AddOptions<VerifiedIdRequirementOptions>()
+                .Bind(configuration.GetSection(VerifiedIdRequirementOptions.SectionName))
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
         }
     }
 }
