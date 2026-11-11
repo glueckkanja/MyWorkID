@@ -45,7 +45,7 @@ jobs:
     steps:
       - name: Generate version and draft release
         id: generate_version
-        uses: glueckkanja/action-epoch-semantic-version@f1eb38a96b44a2a9ce4378257afceed2babcc6e1 # v2.1.1
+        uses: glueckkanja/action-epoch-semantic-version@ce0dfc6cb1dd147600a93298278239024c906de4 # v2.2.1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           is_prerelease: true
