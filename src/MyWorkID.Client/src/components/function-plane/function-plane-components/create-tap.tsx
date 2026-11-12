@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { memo, useEffect, useEffectEvent, useState } from "react";
 import { Panel } from "../../panel";
 import { CreateTapPanelProps, TapState } from "../../../types";
 import {
@@ -14,18 +14,20 @@ import { CheckmarkIcon } from "@/components/ui/icons/checkmark-icon";
 import { CopyDocumentIcon } from "@/components/ui/icons/copy-document-icon";
 import { RefreshArrowIcon } from "@/components/ui/icons/refresh-arrow-icon";
 import { InformationCircleIcon } from "@/components/ui/icons/information-circle-icon";
+import { BlockedActionNotice } from "../blocked-action-notice";
 
-export const CreateTapPanel = ({
+export const CreateTapPanel = memo(function CreateTapPanel({
   open,
   onClose,
   comingFromRedirect,
-}: CreateTapPanelProps) => {
+  blockedReason,
+}: Readonly<CreateTapPanelProps>) {
   const [tap, setTap] = useState<TapState>({ status: "empty" });
   const [copiedTap, setCopiedTap] = useState(false);
   const { toastError, toastException } = useToast();
 
-  const createTap = () => {
-    setTap({ status: "loading" });
+  // Expects the caller to have set the "loading" state already.
+  const requestTemporaryAccessPass = () => {
     generateTAP()
       .then((result) => {
         const password = result.data?.temporaryAccessPassword;
@@ -46,6 +48,11 @@ export const CreateTapPanel = ({
         setTap({ status: "empty" });
         toastException(error);
       });
+  };
+
+  const createTap = () => {
+    setTap({ status: "loading" });
+    requestTemporaryAccessPass();
   };
 
   const revokeTap = () => {
@@ -84,23 +91,49 @@ export const CreateTapPanel = ({
       });
   };
 
-  // auto start TAP creation if coming from redirect
+  // auto start TAP creation if coming from redirect: the loading state is set while rendering,
+  // the request itself is sent from the effect below. The redirect is consumed once its request
+  // is dispatched, so a later toggle of comingFromRedirect (e.g. after a failed verification
+  // status poll recovers) cannot generate another TAP. Until then the request waits while blocked.
+  const [redirectConsumed, setRedirectConsumed] = useState(false);
+  if (open && comingFromRedirect && !blockedReason && !redirectConsumed) {
+    setRedirectConsumed(true);
+    setTap({ status: "loading" });
+  }
+
+  const requestTemporaryAccessPassFromRedirect = useEffectEvent(() => {
+    requestTemporaryAccessPass();
+  });
   useEffect(() => {
-    if (open && comingFromRedirect) {
-      createTap();
+    if (redirectConsumed) {
+      requestTemporaryAccessPassFromRedirect();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, comingFromRedirect]);
+  }, [redirectConsumed]);
 
   // clear TAP state when panel is closed
-  useEffect(() => {
+  const [previousOpen, setPreviousOpen] = useState(open);
+  if (open !== previousOpen) {
+    setPreviousOpen(open);
     if (!open) {
       setTap({ status: "empty" });
       setCopiedTap(false);
     }
-  }, [open]);
+  }
 
   const renderBody = () => {
+    // An existing pass stays usable (and revocable) even when generating a new one is blocked,
+    // so only replace the body while there is no pass to revoke.
+    const hasExistingTemporaryAccessPass =
+      tap.status === "ready" || tap.status === "revoking";
+    if (blockedReason && !hasExistingTemporaryAccessPass) {
+      return (
+        <BlockedActionNotice
+          reason={blockedReason}
+          actionLabel="Generate Access Pass"
+        />
+      );
+    }
+
     if (tap.status === "loading" || tap.status === "revoking") {
       return (
         <div className="panel-loading">
@@ -164,14 +197,21 @@ export const CreateTapPanel = ({
             generate a new pass.
           </span>
         </div>
-        <button
-          type="button"
-          className="panel-secondary-button"
-          onClick={createTap}
-        >
-          <RefreshArrowIcon />
-          Create New Pass
-        </button>
+        {blockedReason ? (
+          <BlockedActionNotice
+            reason={blockedReason}
+            actionLabel="Create New Pass"
+          />
+        ) : (
+          <button
+            type="button"
+            className="panel-secondary-button"
+            onClick={createTap}
+          >
+            <RefreshArrowIcon />
+            Create New Pass
+          </button>
+        )}
         <button
           type="button"
           className="panel-secondary-button panel-secondary-button--danger"
@@ -194,4 +234,4 @@ export const CreateTapPanel = ({
       {renderBody()}
     </Panel>
   );
-};
+});
