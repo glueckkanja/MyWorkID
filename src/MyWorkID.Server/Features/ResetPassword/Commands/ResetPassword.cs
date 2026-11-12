@@ -28,6 +28,7 @@ namespace MyWorkID.Server.Features.ResetPassword.Commands
                 .AddEndpointFilter<CheckResetPasswordAppConfigurationEndpointFilter>()
                 .AddEndpointFilter<ResetPasswordAuthContextEndpointFilter>()
                 .AddEndpointFilter<CheckForObjectIdEndpointFilter>()
+                .AddEndpointFilter<RequireRecentVerifiedIdEndpointFilter>()
                 .AddEndpointFilter<PasswordValidationFilter>()
                 .WithTags(Strings.RESET_PASSWORD_OPENAPI_TAG);
         }

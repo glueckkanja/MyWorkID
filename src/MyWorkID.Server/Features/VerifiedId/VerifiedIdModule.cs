@@ -1,5 +1,6 @@
 ﻿using Azure.Core;
 using Azure.Identity;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using MyWorkID.Server.Common;
 using MyWorkID.Server.Features.VerifiedId.HttpClients;
 using MyWorkID.Server.Features.VerifiedId.SignalR;
@@ -42,6 +43,8 @@ namespace MyWorkID.Server.Features.VerifiedId
                 .AddHttpClient<VerifiedIdService>()
                 .AddHttpMessageHandler<VerifiedIdAuthenticationHandler>();
             services.AddSingleton<IVerifiedIdSignalRRepository, VerifiedIdSignalRRepository>();
+            services.TryAddSingleton(TimeProvider.System);
+            services.AddScoped<IVerifiedIdRequirementService, VerifiedIdRequirementService>();
         }
     }
 }

@@ -30,6 +30,12 @@
             "Missing or invalid AppFunctions:ResetPassword auth context setting.";
         public const string ERROR_MISSING_OR_INVALID_SETTINGS_VERIFIED_ID =
             "Missing or invalid configuration for VerifiedId.";
+        public const string ERROR_MISSING_OR_INVALID_SETTINGS_VERIFIED_ID_REQUIREMENT =
+            "VerifiedIdRequirement is enabled but VerifiedId:TargetSecurityAttributeSet / VerifiedId:TargetSecurityAttribute are not configured.";
+        public const string ERROR_VERIFIED_ID_VERIFICATION_REQUIRED =
+            "This action requires a recent identity verification. Please validate your identity via Verified ID and try again.";
+        public const string ERROR_VERIFIED_ID_VERIFICATION_EXPIRED =
+            "Your identity verification has expired. Please validate your identity via Verified ID again and retry.";
         public const string ERROR_RISK_LEVEL_EXCEEDS_MAX_DISMISSIBLE =
             "The current risk level exceeds the maximum level that can be dismissed via self-service. Please contact your administrator.";
         public const string GRAPH_VERIFIED_ID_LICENSE_ERROR_MESSAGE =
