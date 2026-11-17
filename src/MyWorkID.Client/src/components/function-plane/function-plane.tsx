@@ -162,9 +162,6 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
     (profile.riskLevel === RiskLevel.High ||
       profile.riskLevel === RiskLevel.Medium);
 
-  const showRecommendedValidate = verificationBlocked && canValidateIdentity;
-  const showRecommendedSection = showRecommendedDismiss || showRecommendedValidate;
-
   const closePanel = useCallback(() => {
     setActivePanel(null);
     setRedirectAction(undefined);
@@ -172,34 +169,19 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
 
   return (
     <main className="app-main">
-      <UserDisplay profile={profile} verifiedIdStatus={verifiedIdStatus} />
+      <UserDisplay profile={profile} />
 
-      {showRecommendedSection && (
+      {showRecommendedDismiss && (
         <>
           <div className="section-label">Recommended</div>
           <div className="actions-list">
-            {showRecommendedValidate && (
-              <ActionCard
-                icon={IDENTITY_VERIFICATION_ICON}
-                title="Validate Identity"
-                description={
-                  verificationHasExpired
-                    ? "Your verification has expired. Verify again to unlock all actions"
-                    : "Verify who you are to unlock all actions"
-                }
-                highlighted
-                onClick={openValidatePanel}
-              />
-            )}
-            {showRecommendedDismiss && (
-              <ActionCard
-                icon={DISMISS_ICON}
-                title="Dismiss Risk"
-                description="Resolve your risk status and revoke all your sessions to regain full access"
-                highlighted
-                onClick={openDismissPanel}
-              />
-            )}
+            <ActionCard
+              icon={DISMISS_ICON}
+              title="Dismiss Risk"
+              description="Resolve your risk status and revoke all your sessions to regain full access"
+              highlighted
+              onClick={openDismissPanel}
+            />
           </div>
         </>
       )}
@@ -230,7 +212,7 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
             onClick={openDismissPanel}
           />
         )}
-        {canValidateIdentity && !showRecommendedValidate && (
+        {canValidateIdentity && (
           <ActionCard
             icon={IDENTITY_VERIFICATION_ICON}
             title="Validate Identity"
