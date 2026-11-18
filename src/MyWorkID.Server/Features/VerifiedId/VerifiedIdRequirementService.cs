@@ -136,6 +136,31 @@ namespace MyWorkID.Server.Features.VerifiedId
                 .PatchAsync(requestBody, cancellationToken: cancellationToken);
         }
 
+        /// <inheritdoc/>
+        public async Task<bool> DiscardVerificationAsync(
+            string userId,
+            VerifiedIdAction action,
+            CancellationToken cancellationToken
+        )
+        {
+            if (!IsEnabled || !RequiresVerificationPerAction)
+            {
+                return false;
+            }
+
+            VerifiedIdVerificationState verificationState = await GetVerificationStateAsync(
+                userId,
+                cancellationToken
+            );
+            if (verificationState.VerifiedForAction != action)
+            {
+                return false;
+            }
+
+            await MarkVerificationAsUsedAsync(userId, cancellationToken);
+            return true;
+        }
+
         private (string AttributeSetName, string AttributeName) GetTargetSecurityAttribute()
         {
             string attributeSetName = RequireSetting(

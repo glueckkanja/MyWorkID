@@ -154,6 +154,19 @@ export const getUserRiskState = async (): Promise<TGetRiskStateResponse> => {
   );
 };
 
+/**
+ * Discards a verification that was started for `action` without being used, so it cannot be used
+ * later. The server ignores the request unless the current verification is bound to `action`.
+ */
+export const discardVerification = async (
+  action: VerifiedIdAction,
+): Promise<void> => {
+  await authenticateRequest(
+    `${backendApiUrl}/me/verifiedId/discard?action=${encodeURIComponent(action)}`,
+    REQUEST_TYPE.POST
+  );
+};
+
 export const getVerifiedIdStatus =
   async (): Promise<TVerifiedIdStatusResponse> => {
     return await authenticateRequest(

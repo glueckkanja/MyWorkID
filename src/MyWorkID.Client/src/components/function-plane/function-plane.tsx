@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 // Import services
 import {
   getPendingAction,
   handleRedirectPromise,
 } from "../../services/msal-service";
+import { discardVerification } from "../../services/api-service";
 import { useSignedInUser } from "../../contexts/signed-in-user-provider";
 import { Role } from "../../services/roles-service";
 import {
@@ -74,6 +75,43 @@ const VERIFIED_ID_ACTION_BY_PANEL: Partial<
   dismiss: "DismissUserRisk",
 };
 
+// Remembers the panel whose verification belongs to the current visit while the page redirects for a
+// Conditional Access step-up, so the action can continue after the redirect without a new face check.
+const VERIFIED_PANEL_STORAGE_KEY = "myWorkId.verifiedPanel";
+
+const readStoredVerifiedPanel = (): PanelKey => {
+  try {
+    const storedPanel = sessionStorage.getItem(VERIFIED_PANEL_STORAGE_KEY);
+    return storedPanel && storedPanel in VERIFIED_ID_ACTION_BY_PANEL
+      ? (storedPanel as PanelKey)
+      : null;
+  } catch {
+    return null;
+  }
+};
+
+const storeVerifiedPanel = (panel: PanelKey) => {
+  try {
+    if (panel) {
+      sessionStorage.setItem(VERIFIED_PANEL_STORAGE_KEY, panel);
+    } else {
+      sessionStorage.removeItem(VERIFIED_PANEL_STORAGE_KEY);
+    }
+  } catch {
+    // The verification then only lasts until the next page load.
+  }
+};
+
+const discardVerificationForPanel = (panel: PanelKey) => {
+  const action = panel ? VERIFIED_ID_ACTION_BY_PANEL[panel] : undefined;
+  if (!action) {
+    return;
+  }
+  discardVerification(action).catch((error) => {
+    console.error("Could not discard the identity verification", error);
+  });
+};
+
 type ActionVerificationState = {
   /** True while the action must not run, because the verification state is unknown or insufficient. */
   blocked: boolean;
@@ -86,7 +124,8 @@ type ActionVerificationState = {
 /**
  * When the optional "require recent Verified ID" feature is enabled, sensitive actions are blocked
  * until the user completed a face check within the configured validity window. Without a validity
- * window, every action requires its own face check, bound to that action.
+ * window, every action requires its own face check, bound to that action, and it only counts while
+ * the user stays in the panel it was started from (`verifiedInCurrentVisit`).
  * Until the status is known, actions stay blocked so that neither a click nor an automatic resume
  * after an authentication redirect can run against an unknown requirement.
  */
@@ -94,6 +133,7 @@ const getActionVerificationState = (
   action: VerifiedIdAction,
   verifiedIdStatus: VerifiedIdStatus,
   canValidateIdentity: boolean,
+  verifiedInCurrentVisit: boolean,
 ): ActionVerificationState => {
   if (verifiedIdStatus.loading) {
     return {
@@ -113,7 +153,7 @@ const getActionVerificationState = (
   const isVerifiedForAction =
     verifiedIdStatus.isVerified &&
     (!verifiedIdStatus.requiresVerificationPerAction ||
-      verifiedIdStatus.verifiedForAction === action);
+      (verifiedIdStatus.verifiedForAction === action && verifiedInCurrentVisit));
   if (!verifiedIdStatus.required || isVerifiedForAction) {
     return {
       blocked: false,
@@ -155,11 +195,26 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
   const signedInUserInfo = useSignedInUser();
   const profile = useUserProfile();
   const verifiedIdStatus = useVerifiedIdStatus();
-  const { refreshAfterVerification, markVerificationAsUsed } = verifiedIdStatus;
+  const {
+    refresh: refreshVerifiedIdStatus,
+    refreshAfterVerification,
+    markVerificationAsUsed,
+    requiresVerificationPerAction,
+  } = verifiedIdStatus;
   const { refreshRiskState } = profile;
   // Action panel to reopen once the identity verification that was started from it succeeded.
   const [panelAwaitingVerification, setPanelAwaitingVerification] =
     useState<PanelKey>(null);
+  // Action panel whose verification belongs to the current visit, when every action requires its own
+  // verification. Leaving that panel discards the verification. The ref lets closePanel read the
+  // latest value even when it runs right after an update in the same event.
+  const [verifiedPanel, setVerifiedPanelState] = useState<PanelKey>(null);
+  const verifiedPanelRef = useRef<PanelKey>(null);
+  const setVerifiedPanel = useCallback((panel: PanelKey) => {
+    verifiedPanelRef.current = panel;
+    setVerifiedPanelState(panel);
+    storeVerifiedPanel(panel);
+  }, []);
 
   const openPasswordPanel = useCallback(() => setActivePanel("password"), []);
   const openTemporaryAccessPassPanel = useCallback(
@@ -189,31 +244,85 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
     [verifyIdentityForPanel],
   );
 
-  const handleVerified = useCallback(() => {
-    refreshAfterVerification();
-    if (panelAwaitingVerification) {
-      setActivePanel(panelAwaitingVerification);
-      setPanelAwaitingVerification(null);
-    }
-  }, [refreshAfterVerification, panelAwaitingVerification]);
+  const handleVerified = useCallback(
+    (verificationAction?: VerifiedIdAction) => {
+      const awaitedAction = panelAwaitingVerification
+        ? VERIFIED_ID_ACTION_BY_PANEL[panelAwaitingVerification]
+        : undefined;
+      const wasAbandoned =
+        verificationAction !== undefined && verificationAction !== awaitedAction;
+      // The user left the verification before it completed. With a validity window it still counts,
+      // but when every action requires its own verification it must not unlock the action later.
+      if (wasAbandoned && requiresVerificationPerAction) {
+        discardVerification(verificationAction)
+          .catch((error) => {
+            console.error("Could not discard the identity verification", error);
+          })
+          .finally(refreshVerifiedIdStatus);
+        return;
+      }
+      refreshAfterVerification();
+      if (panelAwaitingVerification && !wasAbandoned) {
+        if (requiresVerificationPerAction) {
+          setVerifiedPanel(panelAwaitingVerification);
+        }
+        setActivePanel(panelAwaitingVerification);
+        setPanelAwaitingVerification(null);
+      }
+    },
+    [
+      refreshAfterVerification,
+      refreshVerifiedIdStatus,
+      requiresVerificationPerAction,
+      panelAwaitingVerification,
+      setVerifiedPanel,
+    ],
+  );
+
+  // The gated endpoint marks the verification as used once the action succeeded, so there is nothing
+  // left to discard when the panel closes afterwards.
+  const handleActionCompleted = useCallback(() => {
+    setVerifiedPanel(null);
+    markVerificationAsUsed();
+  }, [setVerifiedPanel, markVerificationAsUsed]);
 
   const handleRiskDismissed = useCallback(() => {
     refreshRiskState();
-    markVerificationAsUsed();
-  }, [refreshRiskState, markVerificationAsUsed]);
+    handleActionCompleted();
+  }, [refreshRiskState, handleActionCompleted]);
 
   useEffect(() => {
+    // Read before the redirect promise resolves, so the stored panel is only kept for the redirect that
+    // returns to it.
+    const storedVerifiedPanel = readStoredVerifiedPanel();
+    const restoreOrDiscardStoredVerification = (resumedPanel: PanelKey) => {
+      if (!storedVerifiedPanel) {
+        return;
+      }
+      if (storedVerifiedPanel === resumedPanel) {
+        verifiedPanelRef.current = storedVerifiedPanel;
+        setVerifiedPanelState(storedVerifiedPanel);
+        return;
+      }
+      // The page was reloaded or left while a verification was unlocked: the visit is over.
+      storeVerifiedPanel(null);
+      discardVerificationForPanel(storedVerifiedPanel);
+    };
+
     handleRedirectPromise()
       .then((authenticationResult) => {
         if (!authenticationResult) {
+          restoreOrDiscardStoredVerification(null);
           return;
         }
+        let resumedPanel: PanelKey = null;
         try {
           const action = getPendingAction(authenticationResult);
           setRedirectAction(action);
           const panel = PANEL_BY_ACTION[action];
           if (panel) {
             setActivePanel(panel);
+            resumedPanel = panel;
           }
         } catch (error) {
           // ignore - no valid pending action
@@ -225,11 +334,13 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
             );
           }
         }
+        restoreOrDiscardStoredVerification(resumedPanel);
       })
       .catch((error) => {
         if (import.meta.env.DEV) {
           console.debug("handleRedirectPromise failed", error);
         }
+        restoreOrDiscardStoredVerification(null);
       });
   }, []);
 
@@ -244,16 +355,19 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
     "ResetPassword",
     verifiedIdStatus,
     canValidateIdentity,
+    verifiedPanel === "password",
   );
   const temporaryAccessPassVerification = getActionVerificationState(
     "GenerateTemporaryAccessPass",
     verifiedIdStatus,
     canValidateIdentity,
+    verifiedPanel === "tap",
   );
   const dismissRiskVerification = getActionVerificationState(
     "DismissUserRisk",
     verifiedIdStatus,
     canValidateIdentity,
+    verifiedPanel === "dismiss",
   );
 
   const dismissAllowedForCurrentLevel =
@@ -272,9 +386,20 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
       profile.riskLevel === RiskLevel.Medium);
 
   const closePanel = useCallback(() => {
+    if (verifiedPanelRef.current) {
+      discardVerificationForPanel(verifiedPanelRef.current);
+      setVerifiedPanel(null);
+      markVerificationAsUsed();
+    }
     setActivePanel(null);
     setRedirectAction(undefined);
-  }, []);
+  }, [setVerifiedPanel, markVerificationAsUsed]);
+
+  // Closing the identity validation abandons a verification started from an action panel.
+  const closeValidatePanel = useCallback(() => {
+    setPanelAwaitingVerification(null);
+    closePanel();
+  }, [closePanel]);
 
   return (
     <main className="app-main">
@@ -345,7 +470,7 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
               ? verifyIdentityForPasswordReset
               : undefined
           }
-          onCompleted={markVerificationAsUsed}
+          onCompleted={handleActionCompleted}
         />
       )}
       {canCreateTap && (
@@ -362,7 +487,7 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
               ? verifyIdentityForTemporaryAccessPass
               : undefined
           }
-          onCompleted={markVerificationAsUsed}
+          onCompleted={handleActionCompleted}
         />
       )}
       {canDismissRisk && (
@@ -388,7 +513,7 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
       {canValidateIdentity && (
         <ValidateIdentityPanel
           open={activePanel === "validate"}
-          onClose={closePanel}
+          onClose={closeValidatePanel}
           onVerified={handleVerified}
           verificationAction={
             panelAwaitingVerification

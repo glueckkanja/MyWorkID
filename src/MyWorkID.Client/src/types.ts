@@ -70,8 +70,8 @@ export type PasswordResetPanelProps = {
 export type ValidateIdentityPanelProps = {
   open: boolean;
   onClose: () => void;
-  /** Called after the server confirmed a successful verification. */
-  onVerified?: () => void;
+  /** Called after the server confirmed a successful verification, with the action it was started for. */
+  onVerified?: (verificationAction?: VerifiedIdAction) => void;
   /** The action the verification is started for, if it was started from an action panel. */
   verificationAction?: VerifiedIdAction;
   /** Current verification requirement/state, used to explain the validity window to the user. */
@@ -81,7 +81,9 @@ export type ValidateIdentityPanelProps = {
 export type VerifyState =
   | { status: "idle" }
   | { status: "loading" }
-  | { status: "ready"; qrCodeBase64: string };
+  | { status: "ready"; qrCodeBase64: string }
+  // The QR code was scanned; the face check continues on the mobile device.
+  | { status: "scanned" };
 
 export type ActionCardProps = {
   icon: ReactNode;

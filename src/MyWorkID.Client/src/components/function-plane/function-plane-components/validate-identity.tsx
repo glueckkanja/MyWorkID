@@ -3,7 +3,11 @@ import { Panel } from "../../panel";
 import { verifyIdentity } from "../../../services/api-service";
 import { HubConnectionState, type HubConnection } from "@microsoft/signalr";
 import { getVerifiedIdConnection } from "../../../services/signal-r-service";
-import { ValidateIdentityPanelProps, VerifyState } from "../../../types";
+import {
+  ValidateIdentityPanelProps,
+  VerifiedIdAction,
+  VerifyState,
+} from "../../../types";
 import { useToast } from "@/hooks/use-toast";
 import { Spinner } from "@/components/ui/spinner";
 import { formatValidityDuration } from "@/lib/verified-id-status";
@@ -31,6 +35,25 @@ export const ValidateIdentityPanel = memo(function ValidateIdentityPanel({
     onVerifiedRef.current = onVerified;
   }, [onVerified]);
 
+  const openRef = useRef(open);
+  useEffect(() => {
+    openRef.current = open;
+  }, [open]);
+
+  const requiresVerificationPerAction =
+    verifiedIdStatus?.requiresVerificationPerAction ?? false;
+  const requiresVerificationPerActionRef = useRef(
+    requiresVerificationPerAction,
+  );
+  useEffect(() => {
+    requiresVerificationPerActionRef.current = requiresVerificationPerAction;
+  }, [requiresVerificationPerAction]);
+
+  // Action the running verification was started for; undefined for the standalone verification.
+  const runningVerificationActionRef = useRef<VerifiedIdAction | undefined>(
+    undefined,
+  );
+
   useEffect(() => {
     const connectToVerifiedId = async () => {
       let connection: HubConnection;
@@ -46,23 +69,47 @@ export const ValidateIdentityPanel = memo(function ValidateIdentityPanel({
       }
 
       connection.on("HideQrCode", () => {
+        // A verification started from an action keeps the panel open until it completes, so the
+        // action can continue right away.
+        if (runningVerificationActionRef.current) {
+          if (openRef.current) {
+            setVerifyState({ status: "scanned" });
+          }
+          return;
+        }
         setVerifyState({ status: "idle" });
         toastInfo("QR code scanned", "Please continue on your mobile device.");
         onClose();
       });
 
       connection.on("VerificationSuccess", () => {
+        const verificationAction = runningVerificationActionRef.current;
+        runningVerificationActionRef.current = undefined;
         setVerifyState({ status: "idle" });
-        toastSuccess(
-          "Identity Verified",
-          "Your identity has been successfully verified.",
-        );
-        // Close first, so onVerified can open the action the verification was started from.
-        onClose();
-        onVerifiedRef.current?.();
+        if (!verificationAction) {
+          toastSuccess(
+            "Identity Verified",
+            "Your identity has been successfully verified.",
+          );
+          onClose();
+        } else if (
+          openRef.current ||
+          !requiresVerificationPerActionRef.current
+        ) {
+          // An abandoned verification only counts when a validity window is configured.
+          toastSuccess(
+            "Identity Verified",
+            openRef.current
+              ? "You can continue with the action now."
+              : "Your identity has been successfully verified.",
+          );
+        }
+        // For an action, onVerified opens that action's panel, which replaces this one.
+        onVerifiedRef.current?.(verificationAction);
       });
 
       connection.on("VerificationFailed", (errorMessage: string) => {
+        runningVerificationActionRef.current = undefined;
         setVerifyState({ status: "idle" });
         toastError(
           errorMessage || "Identity verification failed. Please try again.",
@@ -89,6 +136,7 @@ export const ValidateIdentityPanel = memo(function ValidateIdentityPanel({
 
   const startVerification = () => {
     setVerifyState({ status: "loading" });
+    runningVerificationActionRef.current = verificationAction;
     verifyIdentity(verificationAction)
       .then((result) => {
         const qrCode = result.data?.qrCode;
@@ -156,6 +204,23 @@ export const ValidateIdentityPanel = memo(function ValidateIdentityPanel({
         <div className="panel-loading">
           <Spinner />
         </div>
+      );
+    }
+
+    if (verifyState.status === "scanned") {
+      return (
+        <>
+          <div className="panel-loading">
+            <Spinner />
+          </div>
+          <div className="form-hint">
+            <InformationCircleIcon />
+            <span>
+              QR code scanned. Complete the face check on your mobile device.
+              The action continues here automatically afterwards.
+            </span>
+          </div>
+        </>
       );
     }
 
