@@ -87,8 +87,7 @@ namespace MyWorkID.Server.UnitTests.Features.VerifiedId
             using JsonDocument body = JsonDocument.Parse(await reader.ReadToEndAsync(TestContext.Current.CancellationToken));
             JsonElement attributeSet = body.RootElement.GetProperty("customSecurityAttributes").GetProperty(AttributeSetName);
             attributeSet.GetProperty("@odata.type").GetString().Should().Be("#Microsoft.DirectoryServices.CustomSecurityAttributeValue");
-            attributeSet.GetProperty(AttributeName).GetString().Should().Be(
-                Strings.VERIFIED_ID_USED_TIMESTAMP_PREFIX + _now.UtcDateTime.ToString("O", CultureInfo.InvariantCulture));
+            attributeSet.GetProperty(AttributeName).GetString().Should().Be("used-v1:2026-10-20T12:00:00Z");
         }
 
         [Fact]

@@ -231,9 +231,49 @@ namespace MyWorkID.Server.UnitTests.Features.VerifiedId
         [Fact]
         public void VerificationAttributeValue_Create_AppendsActionOnlyWhenGiven()
         {
-            VerificationAttributeValue.Create(_timestamp, null).Should().Be(BoundValue(_timestamp));
+            VerificationAttributeValue.Create(_timestamp, null).Should().Be("bound-v1:2026-10-20T08:30:15Z");
             VerificationAttributeValue.Create(_timestamp, VerifiedIdAction.ResetPassword)
-                .Should().Be(BoundValue(_timestamp) + ";ResetPassword");
+                .Should().Be("bound-v1:2026-10-20T08:30:15Z;ResetPassword");
+        }
+
+        [Fact]
+        public void VerificationAttributeValue_CreateUsed_StoresTimestampWithUsedPrefix()
+        {
+            VerificationAttributeValue.CreateUsed(_timestamp).Should().Be("used-v1:2026-10-20T08:30:15Z");
+        }
+
+        [Fact]
+        public void VerificationAttributeValue_Create_DropsFractionalSeconds()
+        {
+            DateTimeOffset timestampWithFraction = _timestamp.AddTicks(6428478);
+
+            VerificationAttributeValue.Create(timestampWithFraction, null).Should().Be("bound-v1:2026-10-20T08:30:15Z");
+        }
+
+        [Fact]
+        public void VerificationAttributeValue_Create_FitsEntraIdLimitForEveryAction()
+        {
+            DateTimeOffset latestTimestamp = new(9999, 12, 31, 23, 59, 59, TimeSpan.Zero);
+
+            foreach (VerifiedIdAction action in Enum.GetValues<VerifiedIdAction>())
+            {
+                VerificationAttributeValue.Create(latestTimestamp, action).Length
+                    .Should().BeLessThanOrEqualTo(VerificationAttributeValue.MAXIMUM_LENGTH, "Entra ID rejects longer values for {0}", action);
+            }
+            VerificationAttributeValue.CreateUsed(latestTimestamp).Length
+                .Should().BeLessThanOrEqualTo(VerificationAttributeValue.MAXIMUM_LENGTH);
+        }
+
+        [Fact]
+        public void TryGetLastVerification_WithValueWrittenByCreate_RoundTrips()
+        {
+            User user = CreateUserWithUntypedAttribute(VerificationAttributeValue.Create(_timestamp.AddTicks(6428478), VerifiedIdAction.GenerateTemporaryAccessPass));
+
+            bool found = LastVerificationTimestampParser.TryGetLastVerification(user, AttributeSetName, AttributeName, out DateTimeOffset lastVerifiedAt, out VerifiedIdAction? verifiedForAction);
+
+            found.Should().BeTrue();
+            lastVerifiedAt.Should().Be(_timestamp);
+            verifiedForAction.Should().Be(VerifiedIdAction.GenerateTemporaryAccessPass);
         }
 
         private static string BoundValue(DateTimeOffset timestamp)

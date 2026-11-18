@@ -11,6 +11,14 @@ namespace MyWorkID.Server.Features.VerifiedId
     public static class VerificationAttributeValue
     {
         /// <summary>
+        /// Entra ID rejects custom security attribute string values that are longer than this.
+        /// </summary>
+        public const int MAXIMUM_LENGTH = 64;
+
+        // Second precision keeps the longest value (bound to GenerateTemporaryAccessPass) within MAXIMUM_LENGTH.
+        private const string TIMESTAMP_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+
+        /// <summary>
         /// Creates the attribute value for a verification completed at <paramref name="verifiedAt"/>.
         /// </summary>
         /// <param name="verifiedAt">When the verification was completed.</param>
@@ -18,12 +26,20 @@ namespace MyWorkID.Server.Features.VerifiedId
         /// <returns>The value to store in the custom security attribute.</returns>
         public static string Create(DateTimeOffset verifiedAt, VerifiedIdAction? action)
         {
-            string value =
-                Strings.VERIFIED_ID_BOUND_TIMESTAMP_PREFIX
-                + verifiedAt.UtcDateTime.ToString("O", CultureInfo.InvariantCulture);
+            string value = Strings.VERIFIED_ID_BOUND_TIMESTAMP_PREFIX + FormatTimestamp(verifiedAt);
             return action.HasValue
                 ? value + Strings.VERIFIED_ID_ACTION_SEPARATOR + action.Value
                 : value;
+        }
+
+        /// <summary>
+        /// Creates the attribute value that marks a verification as used at <paramref name="usedAt"/>.
+        /// </summary>
+        /// <param name="usedAt">When the verification was used.</param>
+        /// <returns>The value to store in the custom security attribute.</returns>
+        public static string CreateUsed(DateTimeOffset usedAt)
+        {
+            return Strings.VERIFIED_ID_USED_TIMESTAMP_PREFIX + FormatTimestamp(usedAt);
         }
 
         /// <summary>
@@ -51,6 +67,11 @@ namespace MyWorkID.Server.Features.VerifiedId
             }
 
             return false;
+        }
+
+        private static string FormatTimestamp(DateTimeOffset timestamp)
+        {
+            return timestamp.UtcDateTime.ToString(TIMESTAMP_FORMAT, CultureInfo.InvariantCulture);
         }
     }
 }

@@ -1,4 +1,3 @@
-using System.Globalization;
 using Microsoft.Extensions.Options;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
@@ -129,10 +128,7 @@ namespace MyWorkID.Server.Features.VerifiedId
             User requestBody = TargetSecurityAttributeRequestBody.Create(
                 attributeSetName,
                 attributeName,
-                Strings.VERIFIED_ID_USED_TIMESTAMP_PREFIX
-                    + _timeProvider
-                        .GetUtcNow()
-                        .UtcDateTime.ToString("O", CultureInfo.InvariantCulture)
+                VerificationAttributeValue.CreateUsed(_timeProvider.GetUtcNow())
             );
 
             await _graphClient
