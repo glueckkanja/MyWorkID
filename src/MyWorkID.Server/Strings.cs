@@ -36,6 +36,8 @@
             "This action requires a recent identity verification. Please validate your identity via Verified ID and try again.";
         public const string ERROR_VERIFIED_ID_VERIFICATION_EXPIRED =
             "Your identity verification has expired. Please validate your identity via Verified ID again and retry.";
+        public const string ERROR_VERIFIED_ID_VERIFICATION_REQUIRED_PER_ACTION =
+            "This action requires a new identity verification every time. Please validate your identity via Verified ID and try again.";
         public const string ERROR_RISK_LEVEL_EXCEEDS_MAX_DISMISSIBLE =
             "The current risk level exceeds the maximum level that can be dismissed via self-service. Please contact your administrator.";
         public const string GRAPH_VERIFIED_ID_LICENSE_ERROR_MESSAGE =
@@ -56,6 +58,27 @@
         /// version that did not check the credential's identity and must not be trusted.
         /// </summary>
         public const string VERIFIED_ID_BOUND_TIMESTAMP_PREFIX = "bound-v1:";
+
+        /// <summary>
+        /// Prefix of the value written once a verification was used for an action while every action
+        /// requires its own verification. The value is followed by the time the verification was used.
+        /// It deliberately differs from <see cref="VERIFIED_ID_BOUND_TIMESTAMP_PREFIX"/>, so a used
+        /// verification is no longer recognized as a verification.
+        /// </summary>
+        public const string VERIFIED_ID_USED_TIMESTAMP_PREFIX = "used-v1:";
+
+        /// <summary>
+        /// Separates the verification timestamp from the action the verification is bound to,
+        /// e.g. <c>bound-v1:2026-11-18T09:00:00.0000000Z;DismissUserRisk</c>.
+        /// </summary>
+        public const char VERIFIED_ID_ACTION_SEPARATOR = ';';
+
+        /// <summary>
+        /// Claim of the Verified ID callback token that carries the action the verification was started for.
+        /// </summary>
+        public const string VERIFIED_ID_ACTION_CLAIM = "verifiedIdAction";
+        public const string ERROR_VERIFIED_ID_UNKNOWN_ACTION =
+            "The requested action is not a known Verified ID action.";
         public const string ERROR_VERIFIED_ID_CREDENTIAL_NOT_BOUND_TO_USER =
             "The presented credential does not belong to the signed-in user.";
     }

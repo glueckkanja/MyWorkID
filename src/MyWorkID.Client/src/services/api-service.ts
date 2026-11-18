@@ -13,6 +13,7 @@ import {
   TVerifiedIdStatusResponse,
   TVerifyIdentityReponse,
   User,
+  VerifiedIdAction,
 } from "../types";
 import axios from "axios";
 
@@ -99,12 +100,17 @@ export const revokeTemporaryAccessPass = async (
   );
 };
 
-export const verifyIdentity = async (): Promise<
-  TFunctionResult<TVerifyIdentityReponse>
-> => {
+/**
+ * Starts an identity verification. When `action` is given, the verification is bound to it: if every
+ * action requires its own verification, it only unlocks that action.
+ */
+export const verifyIdentity = async (
+  action?: VerifiedIdAction,
+): Promise<TFunctionResult<TVerifyIdentityReponse>> => {
+  const query = action ? `?action=${encodeURIComponent(action)}` : "";
   return convertTFunctionResult(
     authenticateRequest<TVerifyIdentityReponse>(
-      `${backendApiUrl}/me/verifiedId/verify`,
+      `${backendApiUrl}/me/verifiedId/verify${query}`,
       REQUEST_TYPE.POST,
       EApiFunctionTypes.VALIDATE_IDENTITY
     ),

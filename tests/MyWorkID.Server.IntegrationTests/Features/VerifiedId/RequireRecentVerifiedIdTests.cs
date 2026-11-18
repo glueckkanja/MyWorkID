@@ -1,12 +1,17 @@
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Graph.Models;
+using Microsoft.Graph.Models.ODataErrors;
 using Microsoft.Kiota.Abstractions;
 using Microsoft.Kiota.Abstractions.Serialization;
 using MyWorkID.Server.Common;
 using MyWorkID.Server.Features.ResetPassword.Entities;
+using MyWorkID.Server.Features.VerifiedId.Entities;
 using MyWorkID.Server.IntegrationTests.Authentication;
+using MyWorkID.Server.Options;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -175,6 +180,145 @@ namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
             VerifiedIdRequirementTestHelper.GetSentGraphRequests(requestAdapter).Should().BeEmpty();
         }
 
+        [Theory]
+        [MemberData(nameof(GatedActions))]
+        public async Task GatedEndpoint_WhenValidityWindowIsConfigured_DoesNotMarkVerificationAsUsed(GatedAction gatedAction)
+        {
+            IRequestAdapter requestAdapter = CreateRequestAdapter(VerifiedIdRequirementTestHelper.CreateUserWithVerification(_now.AddMinutes(-1)));
+            var client = CreateClient(gatedAction, requestAdapter, requirementEnabled: true);
+
+            var response = await SendAsync(client, gatedAction);
+
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            VerifiedIdRequirementTestHelper.GetSentGraphRequests(requestAdapter)
+                .Should().NotContain(request => VerifiedIdRequirementTestHelper.IsVerificationMarkedAsUsed(request));
+        }
+
+        [Theory]
+        [MemberData(nameof(GatedActions))]
+        public async Task GatedEndpoint_WhenVerificationIsRequiredPerActionAndFresh_InvokesActionAndMarksVerificationAsUsed(GatedAction gatedAction)
+        {
+            IRequestAdapter requestAdapter = CreateRequestAdapter(VerifiedIdRequirementTestHelper.CreateUserWithVerification(_now.AddMinutes(-1), ToVerifiedIdAction(gatedAction)));
+            var client = CreateClient(gatedAction, requestAdapter, requirementEnabled: true, validityInMinutes: 0);
+
+            var response = await SendAsync(client, gatedAction);
+
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            List<RequestInformation> sentGraphRequests = VerifiedIdRequirementTestHelper.GetSentGraphRequests(requestAdapter);
+            int actionRequestIndex = sentGraphRequests.FindIndex(request => IsActionRequest(gatedAction, request));
+            int markedAsUsedRequestIndex = sentGraphRequests.FindIndex(request => VerifiedIdRequirementTestHelper.IsVerificationMarkedAsUsed(request));
+            actionRequestIndex.Should().BeGreaterThanOrEqualTo(0);
+            markedAsUsedRequestIndex.Should().BeGreaterThan(actionRequestIndex, "the verification is only used up once the action succeeded");
+            sentGraphRequests.Where(request => VerifiedIdRequirementTestHelper.IsVerificationMarkedAsUsed(request)).Should().ContainSingle();
+        }
+
+        [Theory]
+        [MemberData(nameof(GatedActions))]
+        public async Task GatedEndpoint_WhenVerificationIsRequiredPerActionAndBoundToOtherAction_Returns403WithoutInvokingAction(GatedAction gatedAction)
+        {
+            VerifiedIdAction otherAction = Enum.GetValues<VerifiedIdAction>().First(action => action != ToVerifiedIdAction(gatedAction));
+            IRequestAdapter requestAdapter = CreateRequestAdapter(VerifiedIdRequirementTestHelper.CreateUserWithVerification(_now.AddMinutes(-1), otherAction));
+            var client = CreateClient(gatedAction, requestAdapter, requirementEnabled: true, validityInMinutes: 0);
+
+            var response = await SendAsync(client, gatedAction);
+
+            ProblemDetails problemDetails = await AssertBlockedByVerifiedIdGateAsync(response, requestAdapter);
+            problemDetails.Detail.Should().Be(Strings.ERROR_VERIFIED_ID_VERIFICATION_REQUIRED_PER_ACTION);
+        }
+
+        [Theory]
+        [MemberData(nameof(GatedActions))]
+        public async Task GatedEndpoint_WhenVerificationIsRequiredPerActionAndNotBoundToAnyAction_Returns403WithoutInvokingAction(GatedAction gatedAction)
+        {
+            IRequestAdapter requestAdapter = CreateRequestAdapter(VerifiedIdRequirementTestHelper.CreateUserWithVerification(_now.AddMinutes(-1)));
+            var client = CreateClient(gatedAction, requestAdapter, requirementEnabled: true, validityInMinutes: 0);
+
+            var response = await SendAsync(client, gatedAction);
+
+            ProblemDetails problemDetails = await AssertBlockedByVerifiedIdGateAsync(response, requestAdapter);
+            problemDetails.Detail.Should().Be(Strings.ERROR_VERIFIED_ID_VERIFICATION_REQUIRED_PER_ACTION);
+        }
+
+        [Theory]
+        [MemberData(nameof(GatedActions))]
+        public async Task GatedEndpoint_WhenValidityWindowIsConfigured_AcceptsVerificationBoundToOtherAction(GatedAction gatedAction)
+        {
+            VerifiedIdAction otherAction = Enum.GetValues<VerifiedIdAction>().First(action => action != ToVerifiedIdAction(gatedAction));
+            IRequestAdapter requestAdapter = CreateRequestAdapter(VerifiedIdRequirementTestHelper.CreateUserWithVerification(_now.AddMinutes(-1), otherAction));
+            var client = CreateClient(gatedAction, requestAdapter, requirementEnabled: true);
+
+            var response = await SendAsync(client, gatedAction);
+
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            VerifiedIdRequirementTestHelper.GetSentGraphRequests(requestAdapter)
+                .Where(request => IsActionRequest(gatedAction, request)).Should().ContainSingle();
+        }
+
+        [Theory]
+        [MemberData(nameof(GatedActions))]
+        public async Task GatedEndpoint_WhenVerificationIsRequiredPerActionAndOlderThanWindow_Returns403WithPerActionMessage(GatedAction gatedAction)
+        {
+            DateTimeOffset lastVerifiedAt = _now.AddMinutes(-VerifiedIdRequirementOptions.PER_ACTION_VERIFICATION_WINDOW_IN_MINUTES);
+            IRequestAdapter requestAdapter = CreateRequestAdapter(VerifiedIdRequirementTestHelper.CreateUserWithVerification(lastVerifiedAt, ToVerifiedIdAction(gatedAction)));
+            var client = CreateClient(gatedAction, requestAdapter, requirementEnabled: true, validityInMinutes: 0);
+
+            var response = await SendAsync(client, gatedAction);
+
+            ProblemDetails problemDetails = await AssertBlockedByVerifiedIdGateAsync(response, requestAdapter);
+            problemDetails.Detail.Should().Be(Strings.ERROR_VERIFIED_ID_VERIFICATION_REQUIRED_PER_ACTION);
+        }
+
+        [Theory]
+        [MemberData(nameof(GatedActions))]
+        public async Task GatedEndpoint_WhenVerificationIsRequiredPerActionAndAlreadyUsed_Returns403WithPerActionMessage(GatedAction gatedAction)
+        {
+            IRequestAdapter requestAdapter = CreateRequestAdapter(VerifiedIdRequirementTestHelper.CreateUserWithUsedVerification(_now.AddMinutes(-1)));
+            var client = CreateClient(gatedAction, requestAdapter, requirementEnabled: true, validityInMinutes: 0);
+
+            var response = await SendAsync(client, gatedAction);
+
+            ProblemDetails problemDetails = await AssertBlockedByVerifiedIdGateAsync(response, requestAdapter);
+            problemDetails.Detail.Should().Be(Strings.ERROR_VERIFIED_ID_VERIFICATION_REQUIRED_PER_ACTION);
+        }
+
+        [Fact]
+        public async Task GatedEndpoint_WhenVerificationIsRequiredPerActionAndActionFails_DoesNotMarkVerificationAsUsed()
+        {
+            IRequestAdapter requestAdapter = CreateRequestAdapter(VerifiedIdRequirementTestHelper.CreateUserWithVerification(_now.AddMinutes(-1), VerifiedIdAction.DismissUserRisk));
+            requestAdapter.SendAsync(
+                Arg.Any<RequestInformation>(),
+                Arg.Any<ParsableFactory<RiskyUser>>(),
+                Arg.Any<Dictionary<string, ParsableFactory<IParsable>>>(),
+                Arg.Any<CancellationToken>())
+                .ThrowsAsyncForAnyArgs(new ODataError { ResponseStatusCode = StatusCodes.Status404NotFound });
+            var client = CreateClient(GatedAction.DismissUserRisk, requestAdapter, requirementEnabled: true, validityInMinutes: 0);
+
+            var response = await SendAsync(client, GatedAction.DismissUserRisk);
+
+            response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            VerifiedIdRequirementTestHelper.GetSentGraphRequests(requestAdapter)
+                .Should().NotContain(request => VerifiedIdRequirementTestHelper.IsVerificationMarkedAsUsed(request));
+        }
+
+        [Fact]
+        public async Task GatedEndpoint_WhenVerificationIsRequiredPerActionAndMarkingAsUsedFails_StillReturnsActionResult()
+        {
+            IRequestAdapter requestAdapter = CreateRequestAdapter(VerifiedIdRequirementTestHelper.CreateUserWithVerification(_now.AddMinutes(-1), VerifiedIdAction.GenerateTemporaryAccessPass));
+            requestAdapter.SendAsync(
+                Arg.Is<RequestInformation>(request => request.HttpMethod == Method.PATCH),
+                Arg.Any<ParsableFactory<User>>(),
+                Arg.Any<Dictionary<string, ParsableFactory<IParsable>>>(),
+                Arg.Any<CancellationToken>())
+                .ThrowsAsync(new ODataError { ResponseStatusCode = StatusCodes.Status403Forbidden });
+            var client = CreateClient(GatedAction.GenerateTemporaryAccessPass, requestAdapter, requirementEnabled: true, validityInMinutes: 0);
+
+            var response = await SendAsync(client, GatedAction.GenerateTemporaryAccessPass);
+
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            VerifiedIdRequirementTestHelper.GetSentGraphRequests(requestAdapter)
+                .Should().Contain(request => VerifiedIdRequirementTestHelper.IsVerificationMarkedAsUsed(request));
+        }
+
         [Fact]
         public async Task RevokeTemporaryAccessPass_IsNotGated_WhenRequirementEnabled()
         {
@@ -219,7 +363,8 @@ namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
                 GatedAction.GenerateTemporaryAccessPass => requestInformation.HttpMethod == Method.POST
                     && path.EndsWith("/authentication/temporaryAccessPassMethods", StringComparison.OrdinalIgnoreCase),
                 GatedAction.ResetPassword => requestInformation.HttpMethod == Method.PATCH
-                    && path.Contains("/users/", StringComparison.OrdinalIgnoreCase),
+                    && path.Contains("/users/", StringComparison.OrdinalIgnoreCase)
+                    && !VerifiedIdRequirementTestHelper.IsVerificationMarkedAsUsed(requestInformation),
                 GatedAction.DismissUserRisk => requestInformation.HttpMethod == Method.POST
                     && path.EndsWith("/identityProtection/riskyUsers/dismiss", StringComparison.OrdinalIgnoreCase),
                 _ => throw new ArgumentOutOfRangeException(nameof(gatedAction), gatedAction, null),
@@ -229,6 +374,17 @@ namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
         private static Task<HttpResponseMessage> SendAsync(HttpClient client, GatedAction gatedAction)
         {
             return client.PutAsJsonAsync(GetUrl(gatedAction), _validPasswordResetRequest, TestContext.Current.CancellationToken);
+        }
+
+        private static VerifiedIdAction ToVerifiedIdAction(GatedAction gatedAction)
+        {
+            return gatedAction switch
+            {
+                GatedAction.GenerateTemporaryAccessPass => VerifiedIdAction.GenerateTemporaryAccessPass,
+                GatedAction.ResetPassword => VerifiedIdAction.ResetPassword,
+                GatedAction.DismissUserRisk => VerifiedIdAction.DismissUserRisk,
+                _ => throw new ArgumentOutOfRangeException(nameof(gatedAction), gatedAction, null),
+            };
         }
 
         private static string GetUrl(GatedAction gatedAction)
@@ -257,12 +413,13 @@ namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
             GatedAction gatedAction,
             IRequestAdapter requestAdapter,
             bool requirementEnabled,
-            bool configureTargetSecurityAttribute = true)
+            bool configureTargetSecurityAttribute = true,
+            int validityInMinutes = _validityInMinutes)
         {
             (AppFunctions appFunction, string role) = GetAppFunctionAndRole(gatedAction);
             var testApplicationFactory = new TestApplicationFactory();
             testApplicationFactory.AddAuthContextConfig(appFunction.ToString(), _validAuthContextId);
-            testApplicationFactory.AddVerifiedIdRequirementConfig(requirementEnabled, _validityInMinutes, configureTargetSecurityAttribute);
+            testApplicationFactory.AddVerifiedIdRequirementConfig(requirementEnabled, validityInMinutes, configureTargetSecurityAttribute);
 
             var claimsProvider = new TestClaimsProvider()
                 .AddRole(role)
@@ -281,7 +438,7 @@ namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
         /// </summary>
         private static IRequestAdapter CreateRequestAdapter(User? user)
         {
-            IRequestAdapter requestAdapter = VerifiedIdRequirementTestHelper.CreateRequestAdapterReturningUser(user);
+            IRequestAdapter requestAdapter = VerifiedIdRequirementTestHelper.CreateRequestAdapterReturningUser(user).WithJsonSerialization();
             requestAdapter.SendAsync(
                 Arg.Any<RequestInformation>(),
                 Arg.Any<ParsableFactory<TemporaryAccessPassAuthenticationMethod>>(),

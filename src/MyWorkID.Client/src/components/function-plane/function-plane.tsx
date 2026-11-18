@@ -7,7 +7,12 @@ import {
 } from "../../services/msal-service";
 import { useSignedInUser } from "../../contexts/signed-in-user-provider";
 import { Role } from "../../services/roles-service";
-import { EApiFunctionTypes, PanelKey } from "../../types";
+import {
+  EApiFunctionTypes,
+  PanelKey,
+  VerifiedIdAction,
+  VerifiedIdStatus,
+} from "../../types";
 import type { AppProps } from "../../types";
 
 // Import app state and utilities
@@ -49,12 +54,93 @@ const VERIFICATION_REQUIRED_REASON =
   "Validate your identity first to unlock this action.";
 const VERIFICATION_EXPIRED_REASON =
   "Your identity verification has expired. Validate your identity again to unlock this action.";
+const VERIFICATION_REQUIRED_PER_ACTION_REASON =
+  "For your security, this action requires a new identity verification every time. Verify your identity to continue.";
+const VERIFICATION_CONFIRMING_REASON =
+  "Confirming your identity verification. This action becomes available in a moment.";
 const VERIFICATION_STATUS_LOADING_REASON =
   "Loading your account status. This action becomes available once loading has finished.";
 const VERIFICATION_STATUS_ERROR_REASON =
   "Your identity verification status could not be loaded. Please try again later.";
 const VERIFICATION_NOT_POSSIBLE_REASON =
   "Identity verification is required for this action, but you don't have permission to validate your identity. Please contact your administrator.";
+
+// Action a verification started from a panel is bound to.
+const VERIFIED_ID_ACTION_BY_PANEL: Partial<
+  Record<Exclude<PanelKey, null>, VerifiedIdAction>
+> = {
+  password: "ResetPassword",
+  tap: "GenerateTemporaryAccessPass",
+  dismiss: "DismissUserRisk",
+};
+
+type ActionVerificationState = {
+  /** True while the action must not run, because the verification state is unknown or insufficient. */
+  blocked: boolean;
+  /** Explains why the action is blocked. */
+  blockedReason: string | undefined;
+  /** True if the user can start a verification for this action from its panel. */
+  canVerifyIdentity: boolean;
+};
+
+/**
+ * When the optional "require recent Verified ID" feature is enabled, sensitive actions are blocked
+ * until the user completed a face check within the configured validity window. Without a validity
+ * window, every action requires its own face check, bound to that action.
+ * Until the status is known, actions stay blocked so that neither a click nor an automatic resume
+ * after an authentication redirect can run against an unknown requirement.
+ */
+const getActionVerificationState = (
+  action: VerifiedIdAction,
+  verifiedIdStatus: VerifiedIdStatus,
+  canValidateIdentity: boolean,
+): ActionVerificationState => {
+  if (verifiedIdStatus.loading) {
+    return {
+      blocked: true,
+      blockedReason: VERIFICATION_STATUS_LOADING_REASON,
+      canVerifyIdentity: false,
+    };
+  }
+  if (verifiedIdStatus.error) {
+    return {
+      blocked: true,
+      blockedReason: VERIFICATION_STATUS_ERROR_REASON,
+      canVerifyIdentity: false,
+    };
+  }
+
+  const isVerifiedForAction =
+    verifiedIdStatus.isVerified &&
+    (!verifiedIdStatus.requiresVerificationPerAction ||
+      verifiedIdStatus.verifiedForAction === action);
+  if (!verifiedIdStatus.required || isVerifiedForAction) {
+    return {
+      blocked: false,
+      blockedReason: undefined,
+      canVerifyIdentity: false,
+    };
+  }
+
+  let blockedReason: string;
+  if (!canValidateIdentity) {
+    blockedReason = VERIFICATION_NOT_POSSIBLE_REASON;
+  } else if (verifiedIdStatus.confirmingVerification) {
+    blockedReason = VERIFICATION_CONFIRMING_REASON;
+  } else if (verifiedIdStatus.requiresVerificationPerAction) {
+    blockedReason = VERIFICATION_REQUIRED_PER_ACTION_REASON;
+  } else if (verifiedIdStatus.lastVerifiedAt !== undefined) {
+    blockedReason = VERIFICATION_EXPIRED_REASON;
+  } else {
+    blockedReason = VERIFICATION_REQUIRED_REASON;
+  }
+  return {
+    blocked: true,
+    blockedReason,
+    canVerifyIdentity:
+      canValidateIdentity && !verifiedIdStatus.confirmingVerification,
+  };
+};
 
 const DISMISS_ICON = (
   <CircleCheckIcon width={20} height={20} strokeWidth={1.8} />
@@ -69,6 +155,11 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
   const signedInUserInfo = useSignedInUser();
   const profile = useUserProfile();
   const verifiedIdStatus = useVerifiedIdStatus();
+  const { refreshAfterVerification, markVerificationAsUsed } = verifiedIdStatus;
+  const { refreshRiskState } = profile;
+  // Action panel to reopen once the identity verification that was started from it succeeded.
+  const [panelAwaitingVerification, setPanelAwaitingVerification] =
+    useState<PanelKey>(null);
 
   const openPasswordPanel = useCallback(() => setActivePanel("password"), []);
   const openTemporaryAccessPassPanel = useCallback(
@@ -76,7 +167,40 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
     [],
   );
   const openDismissPanel = useCallback(() => setActivePanel("dismiss"), []);
-  const openValidatePanel = useCallback(() => setActivePanel("validate"), []);
+  const openValidatePanel = useCallback(() => {
+    setPanelAwaitingVerification(null);
+    setActivePanel("validate");
+  }, []);
+
+  const verifyIdentityForPanel = useCallback((panel: PanelKey) => {
+    setPanelAwaitingVerification(panel);
+    setActivePanel("validate");
+  }, []);
+  const verifyIdentityForPasswordReset = useCallback(
+    () => verifyIdentityForPanel("password"),
+    [verifyIdentityForPanel],
+  );
+  const verifyIdentityForTemporaryAccessPass = useCallback(
+    () => verifyIdentityForPanel("tap"),
+    [verifyIdentityForPanel],
+  );
+  const verifyIdentityForDismissRisk = useCallback(
+    () => verifyIdentityForPanel("dismiss"),
+    [verifyIdentityForPanel],
+  );
+
+  const handleVerified = useCallback(() => {
+    refreshAfterVerification();
+    if (panelAwaitingVerification) {
+      setActivePanel(panelAwaitingVerification);
+      setPanelAwaitingVerification(null);
+    }
+  }, [refreshAfterVerification, panelAwaitingVerification]);
+
+  const handleRiskDismissed = useCallback(() => {
+    refreshRiskState();
+    markVerificationAsUsed();
+  }, [refreshRiskState, markVerificationAsUsed]);
 
   useEffect(() => {
     handleRedirectPromise()
@@ -116,47 +240,32 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
   const canDismissRisk = hasRole(Role.ALLOW_DISMISS_USER_RISK);
   const canValidateIdentity = hasRole(Role.ALLOW_VALIDATE_IDENTITY);
 
-  // When the optional "require recent Verified ID" feature is enabled, sensitive actions are
-  // blocked until the user completed a face check within the configured validity window.
-  // Until the status is known, actions stay blocked so that neither a click nor an automatic
-  // resume after an authentication redirect can run against an unknown requirement.
-  const verificationStatusLoading = verifiedIdStatus.loading;
-  const verificationStatusFailed =
-    !verifiedIdStatus.loading && verifiedIdStatus.error;
-  const verificationStatusUnknown =
-    verificationStatusLoading || verificationStatusFailed;
-  const verificationBlocked =
-    !verificationStatusUnknown &&
-    verifiedIdStatus.required &&
-    !verifiedIdStatus.isVerified;
-  const verificationHasExpired =
-    verificationBlocked && verifiedIdStatus.lastVerifiedAt !== undefined;
-  const actionsBlocked = verificationStatusUnknown || verificationBlocked;
-  let verificationBlockedReason: string | undefined;
-  if (verificationStatusLoading) {
-    verificationBlockedReason = VERIFICATION_STATUS_LOADING_REASON;
-  } else if (verificationStatusFailed) {
-    verificationBlockedReason = VERIFICATION_STATUS_ERROR_REASON;
-  } else if (verificationBlocked) {
-    if (!canValidateIdentity) {
-      verificationBlockedReason = VERIFICATION_NOT_POSSIBLE_REASON;
-    } else if (verificationHasExpired) {
-      verificationBlockedReason = VERIFICATION_EXPIRED_REASON;
-    } else {
-      verificationBlockedReason = VERIFICATION_REQUIRED_REASON;
-    }
-  }
+  const passwordResetVerification = getActionVerificationState(
+    "ResetPassword",
+    verifiedIdStatus,
+    canValidateIdentity,
+  );
+  const temporaryAccessPassVerification = getActionVerificationState(
+    "GenerateTemporaryAccessPass",
+    verifiedIdStatus,
+    canValidateIdentity,
+  );
+  const dismissRiskVerification = getActionVerificationState(
+    "DismissUserRisk",
+    verifiedIdStatus,
+    canValidateIdentity,
+  );
 
   const dismissAllowedForCurrentLevel =
     profile.riskLoading ||
     canDismissRiskLevel(profile.riskLevel, maxDismissibleRiskLevel);
   const dismissDisabledReason = dismissAllowedForCurrentLevel
-    ? verificationBlockedReason
+    ? dismissRiskVerification.blockedReason
     : `Your ${getRiskLabelFromLevel(profile.riskLevel)} risk level cannot be dismissed via self-service. Please contact your administrator.`;
 
   const showRecommendedDismiss =
     canDismissRisk &&
-    !actionsBlocked &&
+    !dismissRiskVerification.blocked &&
     !profile.riskLoading &&
     dismissAllowedForCurrentLevel &&
     (profile.riskLevel === RiskLevel.High ||
@@ -227,10 +336,16 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
           open={activePanel === "password"}
           onClose={closePanel}
           comingFromRedirect={
-            !actionsBlocked &&
+            !passwordResetVerification.blocked &&
             redirectAction === EApiFunctionTypes.PASSWORD_RESET
           }
-          blockedReason={verificationBlockedReason}
+          blockedReason={passwordResetVerification.blockedReason}
+          onVerifyIdentity={
+            passwordResetVerification.canVerifyIdentity
+              ? verifyIdentityForPasswordReset
+              : undefined
+          }
+          onCompleted={markVerificationAsUsed}
         />
       )}
       {canCreateTap && (
@@ -238,10 +353,16 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
           open={activePanel === "tap" || activePanel === "revokeTap"}
           onClose={closePanel}
           comingFromRedirect={
-            !actionsBlocked &&
+            !temporaryAccessPassVerification.blocked &&
             redirectAction === EApiFunctionTypes.CREATE_TAP
           }
-          blockedReason={verificationBlockedReason}
+          blockedReason={temporaryAccessPassVerification.blockedReason}
+          onVerifyIdentity={
+            temporaryAccessPassVerification.canVerifyIdentity
+              ? verifyIdentityForTemporaryAccessPass
+              : undefined
+          }
+          onCompleted={markVerificationAsUsed}
         />
       )}
       {canDismissRisk && (
@@ -249,21 +370,31 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
           open={activePanel === "dismiss"}
           onClose={closePanel}
           comingFromRedirect={
-            !actionsBlocked &&
+            !dismissRiskVerification.blocked &&
             redirectAction === EApiFunctionTypes.DISMISS_USER_RISK
           }
-          onDismissed={profile.refreshRiskState}
+          onDismissed={handleRiskDismissed}
           riskLevel={profile.riskLevel}
           riskLabel={profile.riskLabel}
-          canDismiss={dismissAllowedForCurrentLevel && !actionsBlocked}
+          canDismiss={dismissAllowedForCurrentLevel && !dismissRiskVerification.blocked}
           dismissDisabledReason={dismissDisabledReason}
+          onVerifyIdentity={
+            dismissAllowedForCurrentLevel && dismissRiskVerification.canVerifyIdentity
+              ? verifyIdentityForDismissRisk
+              : undefined
+          }
         />
       )}
       {canValidateIdentity && (
         <ValidateIdentityPanel
           open={activePanel === "validate"}
           onClose={closePanel}
-          onVerified={verifiedIdStatus.refreshAfterVerification}
+          onVerified={handleVerified}
+          verificationAction={
+            panelAwaitingVerification
+              ? VERIFIED_ID_ACTION_BY_PANEL[panelAwaitingVerification]
+              : undefined
+          }
           verifiedIdStatus={verifiedIdStatus}
         />
       )}

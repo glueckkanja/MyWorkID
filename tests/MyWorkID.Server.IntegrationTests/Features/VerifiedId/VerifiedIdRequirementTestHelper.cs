@@ -6,6 +6,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Graph.Models;
 using Microsoft.Kiota.Abstractions;
 using Microsoft.Kiota.Abstractions.Serialization;
+using Microsoft.Kiota.Serialization.Json;
+using MyWorkID.Server.Features.VerifiedId;
+using MyWorkID.Server.Features.VerifiedId.Entities;
 using NSubstitute;
 
 namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
@@ -47,7 +50,20 @@ namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
         /// Creates a Graph <see cref="User"/> whose custom security attribute holds the given verification timestamp,
         /// shaped like the Kiota deserializer returns it.
         /// </summary>
-        internal static User CreateUserWithVerification(DateTimeOffset lastVerifiedAt)
+        internal static User CreateUserWithVerification(DateTimeOffset lastVerifiedAt, VerifiedIdAction? verifiedForAction = null)
+        {
+            return CreateUserWithAttributeValue(VerificationAttributeValue.Create(lastVerifiedAt, verifiedForAction));
+        }
+
+        /// <summary>
+        /// Creates a Graph <see cref="User"/> whose verification was already used for an action at the given time.
+        /// </summary>
+        internal static User CreateUserWithUsedVerification(DateTimeOffset usedAt)
+        {
+            return CreateUserWithAttributeValue(Strings.VERIFIED_ID_USED_TIMESTAMP_PREFIX + usedAt.UtcDateTime.ToString("O", CultureInfo.InvariantCulture));
+        }
+
+        private static User CreateUserWithAttributeValue(string attributeValue)
         {
             return new User
             {
@@ -58,7 +74,7 @@ namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
                         [AttributeSetName] = new UntypedObject(new Dictionary<string, UntypedNode>
                         {
                             ["@odata.type"] = new UntypedString("#microsoft.graph.customSecurityAttributeValue"),
-                            [AttributeName] = new UntypedString(Strings.VERIFIED_ID_BOUND_TIMESTAMP_PREFIX + lastVerifiedAt.UtcDateTime.ToString("O", CultureInfo.InvariantCulture)),
+                            [AttributeName] = new UntypedString(attributeValue),
                         }),
                     },
                 },
@@ -121,6 +137,41 @@ namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
             return requestInformation.HttpMethod == Method.GET
                 && requestInformation.URI.AbsolutePath.Contains("/users/", StringComparison.OrdinalIgnoreCase)
                 && requestInformation.URI.Query.Contains("customSecurityAttributes", StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Serializes request bodies with the real Kiota JSON serializer, so tests can inspect what was sent to Graph.
+        /// Without it, the substituted request adapter leaves every request body empty.
+        /// </summary>
+        internal static IRequestAdapter WithJsonSerialization(this IRequestAdapter requestAdapter)
+        {
+            requestAdapter.SerializationWriterFactory.Returns(new JsonSerializationWriterFactory());
+            return requestAdapter;
+        }
+
+        /// <summary>
+        /// <c>true</c> if the request overwrites the user's verification with the "used" marker. Requires
+        /// <see cref="WithJsonSerialization"/>, because the marker is only visible in the request body.
+        /// </summary>
+        internal static bool IsVerificationMarkedAsUsed(RequestInformation requestInformation)
+        {
+            return requestInformation.HttpMethod == Method.PATCH
+                && requestInformation.URI.AbsolutePath.Contains("/users/", StringComparison.OrdinalIgnoreCase)
+                && ReadContent(requestInformation).Contains(Strings.VERIFIED_ID_USED_TIMESTAMP_PREFIX, StringComparison.Ordinal);
+        }
+
+        internal static string ReadContent(RequestInformation requestInformation)
+        {
+            if (requestInformation.Content is null)
+            {
+                return string.Empty;
+            }
+
+            requestInformation.Content.Position = 0;
+            using var reader = new StreamReader(requestInformation.Content, leaveOpen: true);
+            string content = reader.ReadToEnd();
+            requestInformation.Content.Position = 0;
+            return content;
         }
     }
 }

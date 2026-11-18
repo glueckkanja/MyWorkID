@@ -11,6 +11,7 @@ using Microsoft.Kiota.Abstractions.Serialization;
 using NSubstitute;
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.RegularExpressions;
 
 namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
 {
@@ -233,6 +234,42 @@ namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
             Arg.Any<ParsableFactory<User>>(),
             Arg.Any<Dictionary<string, ParsableFactory<IParsable>>>(),
             Arg.Any<CancellationToken>());
+        }
+
+        [Theory]
+        [InlineData(nameof(VerifiedIdAction.DismissUserRisk), ";DismissUserRisk")]
+        [InlineData(null, null)] // started without an action, e.g. from the Validate Identity card
+        [InlineData("Unknown", null)] // an unknown action in the token is not recorded
+        public async Task RequestPresentation_WithActionInCallbackToken_RecordsVerificationBoundToAction(string? action, string? expectedSuffix)
+        {
+            string userId = Guid.NewGuid().ToString();
+            var provider = new TestClaimsProvider().WithUserId(userId);
+            if (action is not null)
+            {
+                provider.WithVerifiedIdAction(action);
+            }
+            IRequestAdapter requestAdapter = CreateRequestAdapterReturningUserPrincipalName(UserPrincipalName).WithJsonSerialization();
+            var client = _testApplicationFactory.WithAuthenticationVerifiedId(
+                provider,
+                GetVerifiedSignalRRepositoryWithConnections(),
+                Substitute.For<IHubContext<VerifiedIdHub, IVerifiedIdHub>>(),
+                requestAdapter).CreateClient();
+
+            var response = await client.PostAsJsonAsync(_baseUrl, GetValidPresentationRequestCallback(userId), TestContext.Current.CancellationToken);
+
+            response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+            RequestInformation patchRequest = VerifiedIdRequirementTestHelper.GetSentGraphRequests(requestAdapter)
+                .Should().ContainSingle(request => request.HttpMethod == Method.PATCH).Subject;
+            string body = VerifiedIdRequirementTestHelper.ReadContent(patchRequest);
+            body.Should().Contain(Strings.VERIFIED_ID_BOUND_TIMESTAMP_PREFIX);
+            if (expectedSuffix is null)
+            {
+                body.Should().NotContain(Strings.VERIFIED_ID_ACTION_SEPARATOR.ToString());
+            }
+            else
+            {
+                body.Should().MatchRegex($"{Regex.Escape(Strings.VERIFIED_ID_BOUND_TIMESTAMP_PREFIX)}[^\"]+{Regex.Escape(expectedSuffix)}\"");
+            }
         }
 
         [Fact]

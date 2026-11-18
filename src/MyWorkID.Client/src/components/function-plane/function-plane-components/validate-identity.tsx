@@ -18,6 +18,7 @@ export const ValidateIdentityPanel = memo(function ValidateIdentityPanel({
   open,
   onClose,
   onVerified,
+  verificationAction,
   verifiedIdStatus,
 }: Readonly<ValidateIdentityPanelProps>) {
   const [verifyState, setVerifyState] = useState<VerifyState>({
@@ -56,8 +57,9 @@ export const ValidateIdentityPanel = memo(function ValidateIdentityPanel({
           "Identity Verified",
           "Your identity has been successfully verified.",
         );
-        onVerifiedRef.current?.();
+        // Close first, so onVerified can open the action the verification was started from.
         onClose();
+        onVerifiedRef.current?.();
       });
 
       connection.on("VerificationFailed", (errorMessage: string) => {
@@ -87,7 +89,7 @@ export const ValidateIdentityPanel = memo(function ValidateIdentityPanel({
 
   const startVerification = () => {
     setVerifyState({ status: "loading" });
-    verifyIdentity()
+    verifyIdentity(verificationAction)
       .then((result) => {
         const qrCode = result.data?.qrCode;
         if (qrCode) {
@@ -104,11 +106,27 @@ export const ValidateIdentityPanel = memo(function ValidateIdentityPanel({
   };
 
   const renderRequirementHint = () => {
-    if (
-      !verifiedIdStatus?.required ||
-      verifiedIdStatus.loading ||
-      verifiedIdStatus.isVerified
-    ) {
+    if (!verifiedIdStatus?.required || verifiedIdStatus.loading) {
+      return null;
+    }
+    // Started from an action panel: the verification unlocks exactly that action, nothing to explain.
+    if (verifiedIdStatus.requiresVerificationPerAction && verificationAction) {
+      return null;
+    }
+    if (verifiedIdStatus.requiresVerificationPerAction) {
+      return (
+        <div className="confirm-box confirm-box--warning">
+          <AlertWarningIcon aria-hidden="true" />
+          <span>
+            Resetting your password, creating an access pass and dismissing
+            your risk each require <strong>their own verification</strong>. A
+            verification started here does not unlock them. Open the action
+            you want to perform and verify your identity from there.
+          </span>
+        </div>
+      );
+    }
+    if (verifiedIdStatus.isVerified) {
       return null;
     }
     const validity = formatValidityDuration(verifiedIdStatus.validityInMinutes);

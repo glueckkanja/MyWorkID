@@ -1,10 +1,12 @@
 using System.Globalization;
+using System.Text.Json;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
 using Microsoft.Kiota.Abstractions;
 using Microsoft.Kiota.Abstractions.Serialization;
+using Microsoft.Kiota.Serialization.Json;
 using MyWorkID.Server.Exceptions;
 using MyWorkID.Server.Features.VerifiedId;
 using MyWorkID.Server.Features.VerifiedId.Entities;
@@ -27,6 +29,81 @@ namespace MyWorkID.Server.UnitTests.Features.VerifiedId
 
             sut.IsEnabled.Should().BeTrue();
             sut.Validity.Should().Be(TimeSpan.FromMinutes(120));
+            sut.RequiresVerificationPerAction.Should().BeFalse();
+        }
+
+        [Fact]
+        public void WithoutValidity_RequiresVerificationPerActionWithinPerActionWindow()
+        {
+            var sut = CreateService(enabled: true, validityInMinutes: 0, requestAdapter: Substitute.For<IRequestAdapter>());
+
+            sut.RequiresVerificationPerAction.Should().BeTrue();
+            sut.ValidityInMinutes.Should().Be(0);
+            sut.Validity.Should().Be(TimeSpan.FromMinutes(VerifiedIdRequirementOptions.PER_ACTION_VERIFICATION_WINDOW_IN_MINUTES));
+        }
+
+        [Theory]
+        [InlineData(0, true)] // verified right now
+        [InlineData(VerifiedIdRequirementOptions.PER_ACTION_VERIFICATION_WINDOW_IN_MINUTES - 1, true)]
+        [InlineData(VerifiedIdRequirementOptions.PER_ACTION_VERIFICATION_WINDOW_IN_MINUTES, false)] // the window is exclusive at its end
+        public void Evaluate_WhenVerificationIsRequiredPerAction_UsesPerActionWindow(int minutesAgo, bool expectedIsValid)
+        {
+            var sut = CreateService(enabled: true, validityInMinutes: 0, requestAdapter: Substitute.For<IRequestAdapter>());
+
+            VerifiedIdVerificationState state = sut.Evaluate(_now.AddMinutes(-minutesAgo));
+
+            state.IsValid.Should().Be(expectedIsValid);
+            state.ValidUntil.Should().Be(_now.AddMinutes(VerifiedIdRequirementOptions.PER_ACTION_VERIFICATION_WINDOW_IN_MINUTES - minutesAgo));
+        }
+
+        [Fact]
+        public async Task GetVerificationStateAsync_WithUsedVerificationInGraph_ReturnsNeverVerified()
+        {
+            IRequestAdapter requestAdapter = CreateRequestAdapterReturning(CreateUser(Strings.VERIFIED_ID_USED_TIMESTAMP_PREFIX + _now.UtcDateTime.ToString("O", CultureInfo.InvariantCulture)));
+            var sut = CreateService(enabled: true, validityInMinutes: 0, requestAdapter);
+
+            VerifiedIdVerificationState state = await sut.GetVerificationStateAsync("user-id", TestContext.Current.CancellationToken);
+
+            state.Should().Be(VerifiedIdVerificationState.NeverVerified);
+        }
+
+        [Fact]
+        public async Task MarkVerificationAsUsedAsync_PatchesTargetSecurityAttributeWithUsedTimestamp()
+        {
+            IRequestAdapter requestAdapter = Substitute.For<IRequestAdapter>();
+            requestAdapter.SerializationWriterFactory.Returns(new JsonSerializationWriterFactory());
+            var sut = CreateService(enabled: true, validityInMinutes: 0, requestAdapter);
+
+            await sut.MarkVerificationAsUsedAsync("user-id", TestContext.Current.CancellationToken);
+
+            RequestInformation sentRequest = requestAdapter
+                .ReceivedCalls()
+                .SelectMany(call => call.GetArguments())
+                .OfType<RequestInformation>()
+                .Should().ContainSingle().Subject;
+            sentRequest.HttpMethod.Should().Be(Method.PATCH);
+            sentRequest.URI.AbsolutePath.Should().EndWith("/users/user-id");
+            using var reader = new StreamReader(sentRequest.Content);
+            using JsonDocument body = JsonDocument.Parse(await reader.ReadToEndAsync(TestContext.Current.CancellationToken));
+            JsonElement attributeSet = body.RootElement.GetProperty("customSecurityAttributes").GetProperty(AttributeSetName);
+            attributeSet.GetProperty("@odata.type").GetString().Should().Be("#Microsoft.DirectoryServices.CustomSecurityAttributeValue");
+            attributeSet.GetProperty(AttributeName).GetString().Should().Be(
+                Strings.VERIFIED_ID_USED_TIMESTAMP_PREFIX + _now.UtcDateTime.ToString("O", CultureInfo.InvariantCulture));
+        }
+
+        [Fact]
+        public async Task MarkVerificationAsUsedAsync_WithoutTargetAttributeConfiguration_ThrowsWithoutCallingGraph()
+        {
+            IRequestAdapter requestAdapter = Substitute.For<IRequestAdapter>();
+            var sut = CreateService(enabled: true, validityInMinutes: 0, requestAdapter, attributeName: null);
+
+            Func<Task> act = () => sut.MarkVerificationAsUsedAsync("user-id", TestContext.Current.CancellationToken);
+
+            await act.Should().ThrowAsync<ConfigurationMissingException>();
+            requestAdapter.ReceivedCalls()
+                .SelectMany(call => call.GetArguments())
+                .OfType<RequestInformation>()
+                .Should().BeEmpty();
         }
 
         [Fact]

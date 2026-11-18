@@ -50,6 +50,8 @@ export const PasswordResetPanel = memo(function PasswordResetPanel({
   onClose,
   comingFromRedirect,
   blockedReason,
+  onVerifyIdentity,
+  onCompleted,
 }: Readonly<PasswordResetPanelProps>) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -103,6 +105,7 @@ export const PasswordResetPanel = memo(function PasswordResetPanel({
           PASSWORD_CHANGED_SUCCESS_TITLE,
           PASSWORD_CHANGED_SUCCESS_MESSAGE,
         );
+        onCompleted?.();
         onClose();
       })
       .catch((error) => {
@@ -122,6 +125,7 @@ export const PasswordResetPanel = memo(function PasswordResetPanel({
         <BlockedActionNotice
           reason={blockedReason}
           actionLabel="Change Password"
+          onVerifyIdentity={onVerifyIdentity}
         />
       );
     }

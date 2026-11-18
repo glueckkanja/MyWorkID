@@ -9,6 +9,9 @@ namespace MyWorkID.Server.Filters
     /// Endpoint filter that blocks sensitive actions unless the user completed a Verified ID
     /// verification within the configured validity window. The filter is a no-op when the
     /// <c>VerifiedIdRequirement</c> feature is disabled, which keeps existing deployments unaffected.
+    /// When every action requires its own verification, the verification must be bound to the action of the
+    /// endpoint (see <see cref="RequireRecentVerifiedIdExtensions.RequireRecentVerifiedId"/>) and is marked as
+    /// used after the action succeeded.
     /// </summary>
     public class RequireRecentVerifiedIdEndpointFilter : IEndpointFilter
     {
@@ -72,13 +75,10 @@ namespace MyWorkID.Server.Filters
                 );
             }
 
-            if (!verificationState.IsValid)
+            if (!IsVerificationAcceptedForEndpoint(verificationState, context.HttpContext))
             {
-                string detail = verificationState.LastVerifiedAt.HasValue
-                    ? Strings.ERROR_VERIFIED_ID_VERIFICATION_EXPIRED
-                    : Strings.ERROR_VERIFIED_ID_VERIFICATION_REQUIRED;
                 return Results.Problem(
-                    detail,
+                    GetVerificationMissingDetail(verificationState),
                     statusCode: StatusCodes.Status403Forbidden,
                     extensions: new Dictionary<string, object?>
                     {
@@ -89,7 +89,99 @@ namespace MyWorkID.Server.Filters
                 );
             }
 
-            return await next(context);
+            object? result = await next(context);
+
+            if (
+                _verifiedIdRequirementService.RequiresVerificationPerAction
+                && IsSuccessfulResult(result)
+            )
+            {
+                await MarkVerificationAsUsedAsync(userId);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// A verification is accepted while it is within its validity window. When every action requires its own
+        /// verification, it must additionally be bound to the action of this endpoint, so a verification started
+        /// for one action cannot be used for another.
+        /// </summary>
+        private bool IsVerificationAcceptedForEndpoint(
+            VerifiedIdVerificationState verificationState,
+            HttpContext httpContext
+        )
+        {
+            if (!verificationState.IsValid)
+            {
+                return false;
+            }
+
+            if (!_verifiedIdRequirementService.RequiresVerificationPerAction)
+            {
+                return true;
+            }
+
+            VerifiedIdActionMetadata actionMetadata =
+                httpContext.GetEndpoint()?.Metadata.GetMetadata<VerifiedIdActionMetadata>()
+                ?? throw new InvalidOperationException(
+                    $"Endpoints gated by {nameof(RequireRecentVerifiedIdEndpointFilter)} must be registered with {nameof(RequireRecentVerifiedIdExtensions.RequireRecentVerifiedId)}."
+                );
+            return verificationState.VerifiedForAction == actionMetadata.Action;
+        }
+
+        private string GetVerificationMissingDetail(VerifiedIdVerificationState verificationState)
+        {
+            if (_verifiedIdRequirementService.RequiresVerificationPerAction)
+            {
+                return Strings.ERROR_VERIFIED_ID_VERIFICATION_REQUIRED_PER_ACTION;
+            }
+
+            return verificationState.LastVerifiedAt.HasValue
+                ? Strings.ERROR_VERIFIED_ID_VERIFICATION_EXPIRED
+                : Strings.ERROR_VERIFIED_ID_VERIFICATION_REQUIRED;
+        }
+
+        /// <summary>
+        /// Marks the verification as used once the action succeeded. The action has already been performed at this
+        /// point, so a failure is logged instead of turning the successful response into an error. The verification
+        /// then stays usable until the per-action window ends.
+        /// </summary>
+        private async Task MarkVerificationAsUsedAsync(string userId)
+        {
+            try
+            {
+                // Not bound to the request: the verification must be marked as used even if the client disconnects
+                // after the action was performed.
+                await _verifiedIdRequirementService.MarkVerificationAsUsedAsync(
+                    userId,
+                    CancellationToken.None
+                );
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(
+                    exception,
+                    "Could not mark the Verified ID verification of user {UserId} as used.",
+                    userId
+                );
+            }
+        }
+
+        /// <summary>
+        /// <c>true</c> unless the endpoint reported a non-success status code. Results without a status code are
+        /// treated as successful, so the verification is rather used up once too often than left reusable.
+        /// </summary>
+        private static bool IsSuccessfulResult(object? result)
+        {
+            return result switch
+            {
+                INestedHttpResult nestedResult => IsSuccessfulResult(nestedResult.Result),
+                IStatusCodeHttpResult { StatusCode: int statusCode } => statusCode
+                    is >= StatusCodes.Status200OK
+                        and < StatusCodes.Status300MultipleChoices,
+                _ => true,
+            };
         }
     }
 }

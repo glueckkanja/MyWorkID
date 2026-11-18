@@ -7,10 +7,12 @@ namespace MyWorkID.Server.Features.VerifiedId.Entities
     /// <param name="LastVerifiedAt">Timestamp of the last successful verification, or <c>null</c> if the user was never verified.</param>
     /// <param name="ValidUntil">Point in time until which the last verification counts as recent, or <c>null</c> if the user was never verified.</param>
     /// <param name="IsValid"><c>true</c> if a verification exists and has not expired yet.</param>
+    /// <param name="VerifiedForAction">The action the verification is bound to, or <c>null</c> if it is not bound to an action.</param>
     public record VerifiedIdVerificationState(
         DateTimeOffset? LastVerifiedAt,
         DateTimeOffset? ValidUntil,
-        bool IsValid
+        bool IsValid,
+        VerifiedIdAction? VerifiedForAction = null
     )
     {
         /// <summary>

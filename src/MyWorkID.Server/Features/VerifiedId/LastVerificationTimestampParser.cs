@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text.Json;
 using Microsoft.Graph.Models;
 using Microsoft.Kiota.Abstractions.Serialization;
+using MyWorkID.Server.Features.VerifiedId.Entities;
 
 namespace MyWorkID.Server.Features.VerifiedId
 {
@@ -27,7 +28,36 @@ namespace MyWorkID.Server.Features.VerifiedId
             out DateTimeOffset lastVerifiedAt
         )
         {
+            return TryGetLastVerification(
+                user,
+                attributeSetName,
+                attributeName,
+                out lastVerifiedAt,
+                out _
+            );
+        }
+
+        /// <summary>
+        /// Tries to read the last verification stored in the configured custom security attribute, including the
+        /// action the verification was started for.
+        /// </summary>
+        /// <param name="user">The Graph user including its <c>customSecurityAttributes</c>.</param>
+        /// <param name="attributeSetName">Name of the custom security attribute set.</param>
+        /// <param name="attributeName">Name of the custom security attribute inside the set.</param>
+        /// <param name="lastVerifiedAt">The parsed timestamp (UTC) when the method returns <c>true</c>.</param>
+        /// <param name="verifiedForAction">The action the verification is bound to, or <c>null</c> if it is not bound to an action.</param>
+        /// <returns><c>true</c> if the attribute exists and contains a parsable timestamp carrying the
+        /// <see cref="Strings.VERIFIED_ID_BOUND_TIMESTAMP_PREFIX"/> prefix, optionally followed by a known action.</returns>
+        public static bool TryGetLastVerification(
+            User? user,
+            string attributeSetName,
+            string attributeName,
+            out DateTimeOffset lastVerifiedAt,
+            out VerifiedIdAction? verifiedForAction
+        )
+        {
             lastVerifiedAt = default;
+            verifiedForAction = null;
 
             IDictionary<string, object>? attributeSets = user
                 ?.CustomSecurityAttributes
@@ -53,8 +83,27 @@ namespace MyWorkID.Server.Features.VerifiedId
                 return false;
             }
 
+            string value = rawValue[Strings.VERIFIED_ID_BOUND_TIMESTAMP_PREFIX.Length..];
+            string timestamp = value;
+            int separatorIndex = value.IndexOf(Strings.VERIFIED_ID_ACTION_SEPARATOR);
+            if (separatorIndex >= 0)
+            {
+                timestamp = value[..separatorIndex];
+                // An unknown action must not turn into an unbound verification that unlocks any action.
+                if (
+                    !VerificationAttributeValue.TryParseAction(
+                        value[(separatorIndex + 1)..],
+                        out VerifiedIdAction action
+                    )
+                )
+                {
+                    return false;
+                }
+                verifiedForAction = action;
+            }
+
             return DateTimeOffset.TryParse(
-                rawValue[Strings.VERIFIED_ID_BOUND_TIMESTAMP_PREFIX.Length..],
+                timestamp,
                 CultureInfo.InvariantCulture,
                 DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
                 out lastVerifiedAt

@@ -16,6 +16,7 @@ import { InformationCircleIcon } from "@/components/ui/icons/information-circle-
 import { useToast } from "@/hooks/use-toast";
 import { Spinner } from "@/components/ui/spinner";
 import { RiskLevel } from "@/lib/risk-level";
+import { VerifyIdentityButton } from "../blocked-action-notice";
 
 const renderConfirmationBody = (riskLevel: RiskLevel, riskLabel: string) => {
   if (
@@ -68,6 +69,7 @@ export const DismissUserRiskPanel = memo(function DismissUserRiskPanel({
   riskLabel,
   canDismiss,
   dismissDisabledReason,
+  onVerifyIdentity,
 }: DismissUserRiskPanelProps) {
   const confirmation = useMemo(
     () => renderConfirmationBody(riskLevel, riskLabel),
@@ -152,16 +154,20 @@ export const DismissUserRiskPanel = memo(function DismissUserRiskPanel({
       ) : (
         <>
           {confirmationBox}
-          <button
-            type="button"
-            className="panel-primary-button"
-            onClick={triggerDismiss}
-            disabled={!canDismiss}
-            aria-disabled={!canDismiss || undefined}
-          >
-            <CircleCheckIcon />
-            Dismiss Risk
-          </button>
+          {!canDismiss && onVerifyIdentity ? (
+            <VerifyIdentityButton onClick={onVerifyIdentity} />
+          ) : (
+            <button
+              type="button"
+              className="panel-primary-button"
+              onClick={triggerDismiss}
+              disabled={!canDismiss}
+              aria-disabled={!canDismiss || undefined}
+            >
+              <CircleCheckIcon />
+              Dismiss Risk
+            </button>
+          )}
         </>
       )}
     </Panel>

@@ -27,6 +27,11 @@ export const useVerifiedIdStatus = (): VerifiedIdStatus => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [response, setResponse] = useState<TVerifiedIdStatusResponse>();
+  const [confirmingVerification, setConfirmingVerification] = useState(false);
+  // Timestamp (in milliseconds) of a verification that was already used for an action while every action
+  // requires its own verification. The server marks it as used, but the directory can lag behind, so a
+  // response that still reports this verification must not unlock the actions again.
+  const [usedVerificationAtInMilliseconds, setUsedVerificationAtInMilliseconds] = useState<number>();
   // Current time in milliseconds on the server's clock, so a skewed device clock cannot make a
   // valid verification look expired (or an expired one look valid).
   const [nowInMilliseconds, setNowInMilliseconds] = useState(() => Date.now());
@@ -85,6 +90,7 @@ export const useVerifiedIdStatus = (): VerifiedIdStatus => {
   // verification newer than the one known at the start becomes visible.
   const refreshAfterVerification = useCallback(() => {
     clearTimeout(postVerificationTimeoutRef.current);
+    setConfirmingVerification(true);
     const previousLastVerifiedAtInMilliseconds = lastVerifiedAtInMillisecondsRef.current;
     const attempt = async (attemptNumber: number) => {
       const result = await loadStatus();
@@ -98,6 +104,7 @@ export const useVerifiedIdStatus = (): VerifiedIdStatus => {
           lastVerifiedAtInMilliseconds > previousLastVerifiedAtInMilliseconds);
       const isNewVerificationVisible = isVerified && isNewerThanPreviousVerification;
       if (isNewVerificationVisible || attemptNumber >= POST_VERIFICATION_MAXIMUM_ATTEMPTS) {
+        setConfirmingVerification(false);
         return;
       }
       postVerificationTimeoutRef.current = setTimeout(
@@ -115,6 +122,7 @@ export const useVerifiedIdStatus = (): VerifiedIdStatus => {
   }, [refresh]);
 
   const required = response?.required ?? false;
+  const requiresVerificationPerAction = response?.requiresVerificationPerAction ?? false;
 
   // Poll while the requirement is active, and keep retrying while the status is unknown after a
   // failed request. Otherwise the status never changes.
@@ -138,11 +146,22 @@ export const useVerifiedIdStatus = (): VerifiedIdStatus => {
     [response?.validUntil],
   );
 
-  const isVerified = isVerificationValidAt(
-    response?.isVerified ?? false,
-    validUntil,
-    nowInMilliseconds,
-  );
+  const lastVerifiedAtInMilliseconds = lastVerifiedAt?.getTime();
+  const verificationAlreadyUsed =
+    requiresVerificationPerAction &&
+    lastVerifiedAtInMilliseconds !== undefined &&
+    lastVerifiedAtInMilliseconds === usedVerificationAtInMilliseconds;
+  const isVerified =
+    !verificationAlreadyUsed &&
+    isVerificationValidAt(response?.isVerified ?? false, validUntil, nowInMilliseconds);
+
+  const markVerificationAsUsed = useCallback(() => {
+    if (!requiresVerificationPerAction) {
+      return;
+    }
+    setUsedVerificationAtInMilliseconds(lastVerifiedAtInMilliseconds);
+    refresh();
+  }, [requiresVerificationPerAction, lastVerifiedAtInMilliseconds, refresh]);
 
   // Wake up exactly when the verification expires so the UI updates without user interaction.
   useEffect(() => {
@@ -162,23 +181,31 @@ export const useVerifiedIdStatus = (): VerifiedIdStatus => {
       loading,
       error,
       required,
+      requiresVerificationPerAction,
       isVerified,
+      verifiedForAction: response?.verifiedForAction ?? undefined,
+      confirmingVerification,
       lastVerifiedAt,
       validUntil,
       validityInMinutes: response?.validityInMinutes ?? 0,
       refresh,
       refreshAfterVerification,
+      markVerificationAsUsed,
     }),
     [
       loading,
       error,
       required,
+      requiresVerificationPerAction,
       isVerified,
+      response?.verifiedForAction,
+      confirmingVerification,
       lastVerifiedAt,
       validUntil,
       response?.validityInMinutes,
       refresh,
       refreshAfterVerification,
+      markVerificationAsUsed,
     ],
   );
 };

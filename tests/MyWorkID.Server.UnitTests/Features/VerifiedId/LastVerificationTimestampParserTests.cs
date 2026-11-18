@@ -4,6 +4,7 @@ using FluentAssertions;
 using Microsoft.Graph.Models;
 using Microsoft.Kiota.Abstractions.Serialization;
 using MyWorkID.Server.Features.VerifiedId;
+using MyWorkID.Server.Features.VerifiedId.Entities;
 
 namespace MyWorkID.Server.UnitTests.Features.VerifiedId
 {
@@ -183,6 +184,56 @@ namespace MyWorkID.Server.UnitTests.Features.VerifiedId
             bool found = LastVerificationTimestampParser.TryGetLastVerifiedAt(user, AttributeSetName, AttributeName, out _);
 
             found.Should().BeFalse();
+        }
+
+        [Theory]
+        [InlineData(VerifiedIdAction.DismissUserRisk)]
+        [InlineData(VerifiedIdAction.GenerateTemporaryAccessPass)]
+        [InlineData(VerifiedIdAction.ResetPassword)]
+        public void TryGetLastVerification_WithBoundAction_ParsesTimestampAndAction(VerifiedIdAction action)
+        {
+            User user = CreateUserWithUntypedAttribute(VerificationAttributeValue.Create(_timestamp, action));
+
+            bool found = LastVerificationTimestampParser.TryGetLastVerification(user, AttributeSetName, AttributeName, out DateTimeOffset lastVerifiedAt, out VerifiedIdAction? verifiedForAction);
+
+            found.Should().BeTrue();
+            lastVerifiedAt.Should().Be(_timestamp);
+            verifiedForAction.Should().Be(action);
+        }
+
+        [Fact]
+        public void TryGetLastVerification_WithoutAction_ParsesTimestampWithoutAction()
+        {
+            User user = CreateUserWithUntypedAttribute(BoundValue(_timestamp));
+
+            bool found = LastVerificationTimestampParser.TryGetLastVerification(user, AttributeSetName, AttributeName, out DateTimeOffset lastVerifiedAt, out VerifiedIdAction? verifiedForAction);
+
+            found.Should().BeTrue();
+            lastVerifiedAt.Should().Be(_timestamp);
+            verifiedForAction.Should().BeNull();
+        }
+
+        [Theory]
+        [InlineData("Unknown")]
+        [InlineData("dismissUserRisk")] // only exact action names are accepted
+        [InlineData("0")] // numeric enum values are not accepted
+        [InlineData("")]
+        public void TryGetLastVerification_WithUnknownAction_ReturnsFalse(string action)
+        {
+            User user = CreateUserWithUntypedAttribute(BoundValue(_timestamp) + Strings.VERIFIED_ID_ACTION_SEPARATOR + action);
+
+            bool found = LastVerificationTimestampParser.TryGetLastVerification(user, AttributeSetName, AttributeName, out _, out VerifiedIdAction? verifiedForAction);
+
+            found.Should().BeFalse("an unknown action must not turn into a verification that unlocks any action");
+            verifiedForAction.Should().BeNull();
+        }
+
+        [Fact]
+        public void VerificationAttributeValue_Create_AppendsActionOnlyWhenGiven()
+        {
+            VerificationAttributeValue.Create(_timestamp, null).Should().Be(BoundValue(_timestamp));
+            VerificationAttributeValue.Create(_timestamp, VerifiedIdAction.ResetPassword)
+                .Should().Be(BoundValue(_timestamp) + ";ResetPassword");
         }
 
         private static string BoundValue(DateTimeOffset timestamp)

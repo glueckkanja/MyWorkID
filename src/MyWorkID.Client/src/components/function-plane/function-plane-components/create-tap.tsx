@@ -21,6 +21,8 @@ export const CreateTapPanel = memo(function CreateTapPanel({
   onClose,
   comingFromRedirect,
   blockedReason,
+  onVerifyIdentity,
+  onCompleted,
 }: Readonly<CreateTapPanelProps>) {
   const [tap, setTap] = useState<TapState>({ status: "empty" });
   const [copiedTap, setCopiedTap] = useState(false);
@@ -39,6 +41,7 @@ export const CreateTapPanel = memo(function CreateTapPanel({
           !!id
         ) {
           setTap({ status: "ready", id, password });
+          onCompleted?.();
         } else {
           setTap({ status: "empty" });
           toastError();
@@ -130,6 +133,7 @@ export const CreateTapPanel = memo(function CreateTapPanel({
         <BlockedActionNotice
           reason={blockedReason}
           actionLabel="Generate Access Pass"
+          onVerifyIdentity={onVerifyIdentity}
         />
       );
     }
@@ -201,6 +205,7 @@ export const CreateTapPanel = memo(function CreateTapPanel({
           <BlockedActionNotice
             reason={blockedReason}
             actionLabel="Create New Pass"
+            onVerifyIdentity={onVerifyIdentity}
           />
         ) : (
           <button

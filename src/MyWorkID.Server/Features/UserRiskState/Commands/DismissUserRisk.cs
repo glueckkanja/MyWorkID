@@ -8,6 +8,7 @@ using Microsoft.Graph.Users.Item.RevokeSignInSessions;
 using Microsoft.Identity.Web;
 using MyWorkID.Server.Common;
 using MyWorkID.Server.Features.UserRiskState.Entities;
+using MyWorkID.Server.Features.VerifiedId.Entities;
 using MyWorkID.Server.Filters;
 using MyWorkID.Server.Options;
 
@@ -30,7 +31,7 @@ namespace MyWorkID.Server.Features.UserRiskState.Commands
                 .AddEndpointFilter<CheckDismissUserRiskAppConfigurationEndpointFilter>()
                 .AddEndpointFilter<DismissUserRiskAuthContextEndpointFilter>()
                 .AddEndpointFilter<CheckForObjectIdEndpointFilter>()
-                .AddEndpointFilter<RequireRecentVerifiedIdEndpointFilter>()
+                .RequireRecentVerifiedId(VerifiedIdAction.DismissUserRisk)
                 .WithTags(Strings.USERRISKSTATE_OPENAPI_TAG);
         }
 

@@ -55,8 +55,10 @@ namespace MyWorkID.Server.Features.VerifiedId.Queries
                     new GetVerifiedIdStatusResponse(
                         Required: false,
                         ValidityInMinutes: validityInMinutes,
+                        RequiresVerificationPerAction: verifiedIdRequirementService.RequiresVerificationPerAction,
                         IsVerified: false,
                         LastVerifiedAt: null,
+                        VerifiedForAction: null,
                         ValidUntil: null,
                         ServerTime: timeProvider.GetUtcNow()
                     )
@@ -89,8 +91,10 @@ namespace MyWorkID.Server.Features.VerifiedId.Queries
                 new GetVerifiedIdStatusResponse(
                     Required: true,
                     ValidityInMinutes: validityInMinutes,
+                    RequiresVerificationPerAction: verifiedIdRequirementService.RequiresVerificationPerAction,
                     IsVerified: verificationState.IsValid,
                     LastVerifiedAt: verificationState.LastVerifiedAt,
+                    VerifiedForAction: verificationState.VerifiedForAction,
                     ValidUntil: verificationState.ValidUntil,
                     ServerTime: timeProvider.GetUtcNow()
                 )

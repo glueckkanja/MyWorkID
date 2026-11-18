@@ -1,5 +1,4 @@
-﻿using System.Globalization;
-using System.Text.Json;
+﻿using System.Text.Json;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Options;
 using Microsoft.Graph;
@@ -53,10 +52,13 @@ namespace MyWorkID.Server.Features.VerifiedId
         /// Creates a presentation request for the specified user.
         /// </summary>
         /// <param name="userId">The ID of the user.</param>
+        /// <param name="action">The action the verification is started for, if any.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The response of the create presentation request.</returns>
         /// <exception cref="CreatePresentationException">Thrown when the presentation request fails.</exception>
         public async Task<CreatePresentationResponse?> CreatePresentationRequest(
             string userId,
+            VerifiedIdAction? action,
             CancellationToken cancellationToken
         )
         {
@@ -72,7 +74,7 @@ namespace MyWorkID.Server.Features.VerifiedId
                 {
                     {
                         "Authorization",
-                        $"Bearer {JwtTokenProvider.GenerateToken(userId, jwtSigningKey)}"
+                        $"Bearer {JwtTokenProvider.GenerateToken(userId, jwtSigningKey, action)}"
                     },
                 }
             );
@@ -212,11 +214,13 @@ namespace MyWorkID.Server.Features.VerifiedId
         /// Handles the presentation callback for the specified user.
         /// </summary>
         /// <param name="userId">The ID of the user.</param>
+        /// <param name="action">The action the verification was started for, if any. The recorded verification only unlocks this action when every action requires its own verification.</param>
         /// <param name="callbackBody">The callback body.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
         /// <exception cref="PresentationCallbackException">Thrown when the callback handling fails.</exception>
         public async Task HandlePresentationCallback(
             string userId,
+            VerifiedIdAction? action,
             CreatePresentationRequestCallback callbackBody
         )
         {
@@ -253,8 +257,7 @@ namespace MyWorkID.Server.Features.VerifiedId
                 }
 
                 User requestBody = CreateSetTargetSecurityAttributeRequestBody(
-                    Strings.VERIFIED_ID_BOUND_TIMESTAMP_PREFIX
-                        + DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)
+                    VerificationAttributeValue.Create(DateTimeOffset.UtcNow, action)
                 );
 
                 await _graphClient.Users[userId].PatchAsync(requestBody);
@@ -379,30 +382,11 @@ namespace MyWorkID.Server.Features.VerifiedId
         /// <returns>The user object with the target security attribute set.</returns>
         public User CreateSetTargetSecurityAttributeRequestBody(string targetSecurityAttributeValue)
         {
-            return new User
-            {
-                CustomSecurityAttributes = new CustomSecurityAttributeValue
-                {
-                    AdditionalData = new Dictionary<string, object>
-                    {
-                        {
-                            _verifiedIdOptions.TargetSecurityAttributeSet!,
-                            new CustomSecurityAttributeValue()
-                            {
-                                OdataType =
-                                    "#Microsoft.DirectoryServices.CustomSecurityAttributeValue",
-                                AdditionalData = new Dictionary<string, object>
-                                {
-                                    {
-                                        _verifiedIdOptions.TargetSecurityAttribute!,
-                                        targetSecurityAttributeValue
-                                    },
-                                },
-                            }
-                        },
-                    },
-                },
-            };
+            return TargetSecurityAttributeRequestBody.Create(
+                _verifiedIdOptions.TargetSecurityAttributeSet!,
+                _verifiedIdOptions.TargetSecurityAttribute!,
+                targetSecurityAttributeValue
+            );
         }
     }
 }

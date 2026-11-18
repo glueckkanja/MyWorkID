@@ -24,6 +24,11 @@ namespace MyWorkID.Server.Features.VerifiedId
         int ValidityInMinutes { get; }
 
         /// <summary>
+        /// <c>true</c> if every sensitive action requires its own verification, because no validity window is configured.
+        /// </summary>
+        bool RequiresVerificationPerAction { get; }
+
+        /// <summary>
         /// Reads the last verification timestamp of the user from the configured custom security attribute
         /// and evaluates it against the configured validity.
         /// </summary>
@@ -35,5 +40,14 @@ namespace MyWorkID.Server.Features.VerifiedId
             string userId,
             CancellationToken cancellationToken
         );
+
+        /// <summary>
+        /// Marks the current verification of the user as used, so the next sensitive action requires a new
+        /// verification. Overwrites the verification timestamp in the configured custom security attribute.
+        /// </summary>
+        /// <param name="userId">Object ID of the user.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <exception cref="Exceptions.ConfigurationMissingException">Thrown when the target security attribute is not configured.</exception>
+        Task MarkVerificationAsUsedAsync(string userId, CancellationToken cancellationToken);
     }
 }

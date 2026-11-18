@@ -33,7 +33,7 @@ namespace MyWorkID.Server.UnitTests.Configuration
         }
 
         [Fact]
-        public void EmptySection_IsDisabledWithDefaultValidity()
+        public void EmptySection_IsDisabledAndRequiresVerificationPerAction()
         {
             ServiceProvider serviceProvider = ConfigurationTestsHelper
                 .ConfigureOptions<VerifiedIdRequirementOptions>([], VerifiedIdRequirementOptions.SectionName, sectionRequired: false);
@@ -41,8 +41,9 @@ namespace MyWorkID.Server.UnitTests.Configuration
             var options = serviceProvider.GetRequiredService<IOptions<VerifiedIdRequirementOptions>>().Value;
 
             Assert.False(options.Enabled);
-            Assert.Equal(VerifiedIdRequirementOptions.DEFAULT_VALIDITY_IN_MINUTES, options.ValidityInMinutes);
-            Assert.Equal(TimeSpan.FromHours(24), options.Validity);
+            Assert.Equal(0, options.ValidityInMinutes);
+            Assert.True(options.RequiresVerificationPerAction);
+            Assert.Equal(TimeSpan.FromMinutes(VerifiedIdRequirementOptions.PER_ACTION_VERIFICATION_WINDOW_IN_MINUTES), options.Validity);
         }
 
         [Fact]
@@ -59,6 +60,7 @@ namespace MyWorkID.Server.UnitTests.Configuration
 
             Assert.True(options.Enabled);
             Assert.Equal(90, options.ValidityInMinutes);
+            Assert.False(options.RequiresVerificationPerAction);
             Assert.Equal(TimeSpan.FromMinutes(90), options.Validity);
         }
 
@@ -95,19 +97,28 @@ namespace MyWorkID.Server.UnitTests.Configuration
                     null,
                     null
                 },
+                // 0 requires a verification for every action
                 {
                     TestConfigurationSection.Create(
+                        ("VerifiedIdRequirement:Enabled", "true"),
                         ("VerifiedIdRequirement:ValidityInMinutes", "0")
                     ),
+                    null,
+                    null
+                },
+                {
+                    TestConfigurationSection.Create(
+                        ("VerifiedIdRequirement:ValidityInMinutes", "-1")
+                    ),
                     typeof(OptionsValidationException),
-                    "The field 'ValidityInMinutes' must be a positive number of minutes."
+                    "The field 'ValidityInMinutes' must be zero or a positive number of minutes."
                 },
                 {
                     TestConfigurationSection.Create(
                         ("VerifiedIdRequirement:ValidityInMinutes", "-5")
                     ),
                     typeof(OptionsValidationException),
-                    "The field 'ValidityInMinutes' must be a positive number of minutes."
+                    "The field 'ValidityInMinutes' must be zero or a positive number of minutes."
                 }
             };
         }

@@ -30,6 +30,10 @@ export type CreateTapPanelProps = {
   comingFromRedirect: boolean;
   /** When set, the action is blocked (e.g. identity not verified) and this reason is shown instead of the form. */
   blockedReason?: string;
+  /** When set, the blocked notice offers to start the identity verification. */
+  onVerifyIdentity?: () => void;
+  /** Called after a Temporary Access Pass was generated. */
+  onCompleted?: () => void;
 };
 
 export type TapState =
@@ -47,6 +51,8 @@ export type DismissUserRiskPanelProps = {
   riskLabel: string;
   canDismiss: boolean;
   dismissDisabledReason?: string;
+  /** When set, the disabled dismiss button is replaced by a button that starts the identity verification. */
+  onVerifyIdentity?: () => void;
 };
 
 export type PasswordResetPanelProps = {
@@ -55,6 +61,10 @@ export type PasswordResetPanelProps = {
   comingFromRedirect: boolean;
   /** When set, the action is blocked (e.g. identity not verified) and this reason is shown instead of the form. */
   blockedReason?: string;
+  /** When set, the blocked notice offers to start the identity verification. */
+  onVerifyIdentity?: () => void;
+  /** Called after the password was changed. */
+  onCompleted?: () => void;
 };
 
 export type ValidateIdentityPanelProps = {
@@ -62,6 +72,8 @@ export type ValidateIdentityPanelProps = {
   onClose: () => void;
   /** Called after the server confirmed a successful verification. */
   onVerified?: () => void;
+  /** The action the verification is started for, if it was started from an action panel. */
+  verificationAction?: VerifiedIdAction;
   /** Current verification requirement/state, used to explain the validity window to the user. */
   verifiedIdStatus?: VerifiedIdStatus;
 };
@@ -86,6 +98,8 @@ export type BlockedActionNoticeProps = {
   reason: string;
   /** Label of the disabled primary button that would normally trigger the action. */
   actionLabel: string;
+  /** When set, a button that starts the identity verification replaces the disabled action button. */
+  onVerifyIdentity?: () => void;
 };
 
 export type PanelKey =
@@ -120,6 +134,14 @@ export type UserProfile = {
 };
 
 /**
+ * A sensitive action a verification can be bound to. The names match the server's `VerifiedIdAction`.
+ */
+export type VerifiedIdAction =
+  | "DismissUserRisk"
+  | "GenerateTemporaryAccessPass"
+  | "ResetPassword";
+
+/**
  * Verification state of the signed-in user with regard to the optional
  * "require recent Verified ID" feature.
  */
@@ -130,14 +152,22 @@ export type VerifiedIdStatus = {
   error: boolean;
   /** True if sensitive actions require a recent verification. */
   required: boolean;
-  /** True if the user has a verification that is still within the validity window. */
+  /** True if every sensitive action requires its own verification, because no validity window is configured. */
+  requiresVerificationPerAction: boolean;
+  /** True if the user has a verification that is still within the validity window (and, per action, not used yet). */
   isVerified: boolean;
+  /** The action the verification is bound to. When every action requires its own verification, only this action is unlocked. */
+  verifiedForAction: VerifiedIdAction | undefined;
+  /** True while a just completed verification is not visible in the status yet. */
+  confirmingVerification: boolean;
   lastVerifiedAt: Date | undefined;
   validUntil: Date | undefined;
   validityInMinutes: number;
   refresh: () => void;
   /** Reloads the status repeatedly until the fresh verification is visible (the directory can lag behind). */
   refreshAfterVerification: () => void;
+  /** Call after a sensitive action succeeded. When every action requires its own verification, the current one no longer counts. */
+  markVerificationAsUsed: () => void;
 };
 
 export type TWWWAuthenticateHeader = {
@@ -210,7 +240,9 @@ export type TGetRiskStateResponse = {
 export type TVerifiedIdStatusResponse = {
   required: boolean;
   validityInMinutes: number;
+  requiresVerificationPerAction?: boolean;
   isVerified: boolean;
+  verifiedForAction?: VerifiedIdAction | null;
   lastVerifiedAt?: string | null;
   validUntil?: string | null;
   serverTime?: string | null;

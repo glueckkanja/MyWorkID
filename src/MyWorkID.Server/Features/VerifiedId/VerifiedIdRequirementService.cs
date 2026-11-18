@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.Extensions.Options;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
@@ -49,19 +50,16 @@ namespace MyWorkID.Server.Features.VerifiedId
         public int ValidityInMinutes => _requirementOptions.ValidityInMinutes;
 
         /// <inheritdoc/>
+        public bool RequiresVerificationPerAction =>
+            _requirementOptions.RequiresVerificationPerAction;
+
+        /// <inheritdoc/>
         public async Task<VerifiedIdVerificationState> GetVerificationStateAsync(
             string userId,
             CancellationToken cancellationToken
         )
         {
-            string attributeSetName = RequireSetting(
-                _verifiedIdOptions.TargetSecurityAttributeSet,
-                $"VerifiedId:{nameof(VerifiedIdOptions.TargetSecurityAttributeSet)}"
-            );
-            string attributeName = RequireSetting(
-                _verifiedIdOptions.TargetSecurityAttribute,
-                $"VerifiedId:{nameof(VerifiedIdOptions.TargetSecurityAttribute)}"
-            );
+            (string attributeSetName, string attributeName) = GetTargetSecurityAttribute();
 
             User? user = await _graphClient
                 .Users[userId]
@@ -78,11 +76,12 @@ namespace MyWorkID.Server.Features.VerifiedId
                 );
 
             if (
-                !LastVerificationTimestampParser.TryGetLastVerifiedAt(
+                !LastVerificationTimestampParser.TryGetLastVerification(
                     user,
                     attributeSetName,
                     attributeName,
-                    out DateTimeOffset lastVerifiedAt
+                    out DateTimeOffset lastVerifiedAt,
+                    out VerifiedIdAction? verifiedForAction
                 )
             )
             {
@@ -93,21 +92,65 @@ namespace MyWorkID.Server.Features.VerifiedId
                 return VerifiedIdVerificationState.NeverVerified;
             }
 
-            return Evaluate(lastVerifiedAt);
+            return Evaluate(lastVerifiedAt, verifiedForAction);
         }
 
         /// <summary>
         /// Evaluates a verification timestamp against the configured validity window.
         /// </summary>
         /// <param name="lastVerifiedAt">Timestamp of the last successful verification.</param>
+        /// <param name="verifiedForAction">The action the verification is bound to, if any.</param>
         /// <returns>The resulting verification state.</returns>
-        public VerifiedIdVerificationState Evaluate(DateTimeOffset lastVerifiedAt)
+        public VerifiedIdVerificationState Evaluate(
+            DateTimeOffset lastVerifiedAt,
+            VerifiedIdAction? verifiedForAction = null
+        )
         {
             DateTimeOffset now = _timeProvider.GetUtcNow();
             DateTimeOffset validUntil = lastVerifiedAt + Validity;
             // A timestamp in the future cannot be trusted (clock skew or manual tampering of the attribute).
             bool isValid = lastVerifiedAt <= now && now < validUntil;
-            return new VerifiedIdVerificationState(lastVerifiedAt, validUntil, isValid);
+            return new VerifiedIdVerificationState(
+                lastVerifiedAt,
+                validUntil,
+                isValid,
+                verifiedForAction
+            );
+        }
+
+        /// <inheritdoc/>
+        public async Task MarkVerificationAsUsedAsync(
+            string userId,
+            CancellationToken cancellationToken
+        )
+        {
+            (string attributeSetName, string attributeName) = GetTargetSecurityAttribute();
+
+            User requestBody = TargetSecurityAttributeRequestBody.Create(
+                attributeSetName,
+                attributeName,
+                Strings.VERIFIED_ID_USED_TIMESTAMP_PREFIX
+                    + _timeProvider
+                        .GetUtcNow()
+                        .UtcDateTime.ToString("O", CultureInfo.InvariantCulture)
+            );
+
+            await _graphClient
+                .Users[userId]
+                .PatchAsync(requestBody, cancellationToken: cancellationToken);
+        }
+
+        private (string AttributeSetName, string AttributeName) GetTargetSecurityAttribute()
+        {
+            string attributeSetName = RequireSetting(
+                _verifiedIdOptions.TargetSecurityAttributeSet,
+                $"VerifiedId:{nameof(VerifiedIdOptions.TargetSecurityAttributeSet)}"
+            );
+            string attributeName = RequireSetting(
+                _verifiedIdOptions.TargetSecurityAttribute,
+                $"VerifiedId:{nameof(VerifiedIdOptions.TargetSecurityAttribute)}"
+            );
+            return (attributeSetName, attributeName);
         }
 
         private static string RequireSetting(string? value, string configurationKey)
