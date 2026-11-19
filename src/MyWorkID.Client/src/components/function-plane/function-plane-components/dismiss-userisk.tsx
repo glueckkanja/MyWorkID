@@ -69,6 +69,7 @@ export const DismissUserRiskPanel = memo(function DismissUserRiskPanel({
   riskLabel,
   canDismiss,
   dismissDisabledReason,
+  dismissDisabledReasonVariant,
   onVerifyIdentity,
 }: DismissUserRiskPanelProps) {
   const confirmation = useMemo(
@@ -118,9 +119,16 @@ export const DismissUserRiskPanel = memo(function DismissUserRiskPanel({
 
   let confirmationBox: ReactNode;
   if (!canDismiss && dismissDisabledReason) {
+    const isWarning = dismissDisabledReasonVariant === "warning";
     confirmationBox = (
-      <div className="confirm-box">
-        <AlertErrorIcon aria-hidden="true" />
+      <div
+        className={isWarning ? "confirm-box confirm-box--warning" : "confirm-box"}
+      >
+        {isWarning ? (
+          <AlertWarningIcon aria-hidden="true" />
+        ) : (
+          <AlertErrorIcon aria-hidden="true" />
+        )}
         <span>{dismissDisabledReason}</span>
       </div>
     );

@@ -11,6 +11,7 @@ import { Role } from "../../services/roles-service";
 import {
   EApiFunctionTypes,
   PanelKey,
+  BlockedReasonVariant,
   VerifiedIdAction,
   VerifiedIdStatus,
 } from "../../types";
@@ -122,6 +123,8 @@ type ActionVerificationState = {
    * button already says so.
    */
   showBlockedReason: boolean;
+  /** A warning marks a state that resolves on its own; an error needs the user to act. */
+  blockedReasonVariant: BlockedReasonVariant;
   /** True if the user can start a verification for this action from its panel. */
   canVerifyIdentity: boolean;
 };
@@ -145,6 +148,7 @@ const getActionVerificationState = (
       blocked: true,
       blockedReason: VERIFICATION_STATUS_LOADING_REASON,
       showBlockedReason: true,
+      blockedReasonVariant: "error",
       canVerifyIdentity: false,
     };
   }
@@ -153,6 +157,7 @@ const getActionVerificationState = (
       blocked: true,
       blockedReason: VERIFICATION_STATUS_ERROR_REASON,
       showBlockedReason: true,
+      blockedReasonVariant: "error",
       canVerifyIdentity: false,
     };
   }
@@ -166,6 +171,7 @@ const getActionVerificationState = (
       blocked: false,
       blockedReason: undefined,
       showBlockedReason: true,
+      blockedReasonVariant: "error",
       canVerifyIdentity: false,
     };
   }
@@ -187,6 +193,8 @@ const getActionVerificationState = (
     blockedReason,
     // Every action needs its own verification there, so telling the user adds nothing.
     showBlockedReason: blockedReason !== VERIFICATION_REQUIRED_PER_ACTION_REASON,
+    blockedReasonVariant:
+      blockedReason === VERIFICATION_CONFIRMING_REASON ? "warning" : "error",
     canVerifyIdentity:
       canValidateIdentity && !verifiedIdStatus.confirmingVerification,
   };
@@ -215,6 +223,10 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
   // Action panel to reopen once the identity verification that was started from it succeeded.
   const [panelAwaitingVerification, setPanelAwaitingVerification] =
     useState<PanelKey>(null);
+  // Action panel that runs its action by itself as soon as it is unblocked, because the user just
+  // verified their identity from it. Cleared whenever a panel is closed or another flow starts.
+  const [panelRunningAfterVerification, setPanelRunningAfterVerification] =
+    useState<PanelKey>(null);
   // Action panel whose verification belongs to the current visit, when every action requires its own
   // verification. Leaving that panel discards the verification. The ref lets closePanel read the
   // latest value even when it runs right after an update in the same event.
@@ -234,11 +246,13 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
   const openDismissPanel = useCallback(() => setActivePanel("dismiss"), []);
   const openValidatePanel = useCallback(() => {
     setPanelAwaitingVerification(null);
+    setPanelRunningAfterVerification(null);
     setActivePanel("validate");
   }, []);
 
   const verifyIdentityForPanel = useCallback((panel: PanelKey) => {
     setPanelAwaitingVerification(panel);
+    setPanelRunningAfterVerification(null);
     setActivePanel("validate");
   }, []);
   const verifyIdentityForPasswordReset = useCallback(
@@ -278,6 +292,7 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
         }
         setActivePanel(panelAwaitingVerification);
         setPanelAwaitingVerification(null);
+        setPanelRunningAfterVerification(panelAwaitingVerification);
       }
     },
     [
@@ -406,6 +421,7 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
     }
     setActivePanel(null);
     setRedirectAction(undefined);
+    setPanelRunningAfterVerification(null);
   }, [setVerifiedPanel, markVerificationAsUsed]);
 
   // Closing the identity validation abandons a verification started from an action panel.
@@ -479,6 +495,7 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
           }
           blockedReason={passwordResetVerification.blockedReason}
           showBlockedReason={passwordResetVerification.showBlockedReason}
+          blockedReasonVariant={passwordResetVerification.blockedReasonVariant}
           onVerifyIdentity={
             passwordResetVerification.canVerifyIdentity
               ? verifyIdentityForPasswordReset
@@ -493,10 +510,12 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
           onClose={closePanel}
           comingFromRedirect={
             !temporaryAccessPassVerification.blocked &&
-            redirectAction === EApiFunctionTypes.CREATE_TAP
+            (redirectAction === EApiFunctionTypes.CREATE_TAP ||
+              panelRunningAfterVerification === "tap")
           }
           blockedReason={temporaryAccessPassVerification.blockedReason}
           showBlockedReason={temporaryAccessPassVerification.showBlockedReason}
+          blockedReasonVariant={temporaryAccessPassVerification.blockedReasonVariant}
           onVerifyIdentity={
             temporaryAccessPassVerification.canVerifyIdentity
               ? verifyIdentityForTemporaryAccessPass
@@ -511,13 +530,19 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
           onClose={closePanel}
           comingFromRedirect={
             !dismissRiskVerification.blocked &&
-            redirectAction === EApiFunctionTypes.DISMISS_USER_RISK
+            (redirectAction === EApiFunctionTypes.DISMISS_USER_RISK ||
+              panelRunningAfterVerification === "dismiss")
           }
           onDismissed={handleRiskDismissed}
           riskLevel={profile.riskLevel}
           riskLabel={profile.riskLabel}
           canDismiss={dismissAllowedForCurrentLevel && !dismissRiskVerification.blocked}
           dismissDisabledReason={dismissDisabledReason}
+          dismissDisabledReasonVariant={
+            dismissAllowedForCurrentLevel
+              ? dismissRiskVerification.blockedReasonVariant
+              : "error"
+          }
           onVerifyIdentity={
             dismissAllowedForCurrentLevel && dismissRiskVerification.canVerifyIdentity
               ? verifyIdentityForDismissRisk

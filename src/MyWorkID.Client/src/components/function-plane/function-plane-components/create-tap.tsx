@@ -16,12 +16,16 @@ import { RefreshArrowIcon } from "@/components/ui/icons/refresh-arrow-icon";
 import { InformationCircleIcon } from "@/components/ui/icons/information-circle-icon";
 import { BlockedActionNotice } from "../blocked-action-notice";
 
+const GENERATE_HINT =
+  "Generate a one-time code to sign in on a new device without your regular credentials.";
+
 export const CreateTapPanel = memo(function CreateTapPanel({
   open,
   onClose,
   comingFromRedirect,
   blockedReason,
   showBlockedReason,
+  blockedReasonVariant,
   onVerifyIdentity,
   onCompleted,
 }: Readonly<CreateTapPanelProps>) {
@@ -121,6 +125,8 @@ export const CreateTapPanel = memo(function CreateTapPanel({
     if (!open) {
       setTap({ status: "empty" });
       setCopiedTap(false);
+      // The next verification or redirect may start a pass again.
+      setRedirectConsumed(false);
     }
   }
 
@@ -134,8 +140,10 @@ export const CreateTapPanel = memo(function CreateTapPanel({
         <BlockedActionNotice
           reason={blockedReason}
           actionLabel="Generate Access Pass"
+          hint={GENERATE_HINT}
           onVerifyIdentity={onVerifyIdentity}
           showReason={showBlockedReason}
+          reasonVariant={blockedReasonVariant}
         />
       );
     }
@@ -153,10 +161,7 @@ export const CreateTapPanel = memo(function CreateTapPanel({
         <>
           <div className="form-hint">
             <InformationCircleIcon />
-            <span>
-              Generate a one-time code to sign in on a new device without your
-              regular credentials.
-            </span>
+            <span>{GENERATE_HINT}</span>
           </div>
           <button
             type="button"
@@ -209,6 +214,7 @@ export const CreateTapPanel = memo(function CreateTapPanel({
             actionLabel="Create New Pass"
             onVerifyIdentity={onVerifyIdentity}
             showReason={showBlockedReason}
+            reasonVariant={blockedReasonVariant}
           />
         ) : (
           <button
