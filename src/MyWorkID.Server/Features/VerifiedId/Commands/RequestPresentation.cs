@@ -47,7 +47,11 @@ namespace MyWorkID.Server.Features.VerifiedId.Commands
             {
                 CreatePresentationRequestCallback parsedBody =
                     await verifiedIdService.ParseCreatePresentationRequestCallback(context);
-                await verifiedIdService.HandlePresentationCallback(userId!, parsedBody);
+                await verifiedIdService.HandlePresentationCallback(
+                    userId!,
+                    user.GetVerifiedIdAction(),
+                    parsedBody
+                );
                 return TypedResults.NoContent();
             }
             catch (CreatePresentationException)

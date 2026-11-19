@@ -119,6 +119,58 @@ namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
         }
 
         [Fact]
+        public async Task ValidateIdentity_WithKnownAction_Returns201WithPresentation()
+        {
+            var expectedPresentation = new CreatePresentationResponse(
+                requestId: Guid.NewGuid().ToString(),
+                expiryDate: DateTimeOffset.UtcNow.ToUnixTimeSeconds() + 3600,
+                qrCodeBase64: _fixture.Create<string>(),
+                url: _fixture.Create<string>()
+            );
+            var handler = new MockHttpMessageHandler(HttpStatusCode.OK, expectedPresentation);
+            var provider = new TestClaimsProvider()
+                .WithValidateIdentityRole()
+                .WithRandomSubAndOid();
+            var client = _testApplicationFactory
+                .WithHttpMock(handler)
+                .CreateClientWithTestAuth(provider);
+
+            var response = await client.PostAsync(
+                $"{_baseUrl}?action={nameof(VerifiedIdAction.DismissUserRisk)}",
+                null,
+                TestContext.Current.CancellationToken
+            );
+
+            response.StatusCode.Should().Be(HttpStatusCode.Created);
+        }
+
+        [Theory]
+        [InlineData("Unknown")]
+        [InlineData("dismissUserRisk")] // only exact action names are accepted
+        [InlineData("0")] // numeric enum values are not accepted
+        [InlineData("")]
+        public async Task ValidateIdentity_WithUnknownAction_Returns400WithoutCreatingPresentation(string action)
+        {
+            var handler = new MockHttpMessageHandler(HttpStatusCode.OK, null);
+            var provider = new TestClaimsProvider()
+                .WithValidateIdentityRole()
+                .WithRandomSubAndOid();
+            var client = _testApplicationFactory
+                .WithHttpMock(handler)
+                .CreateClientWithTestAuth(provider);
+
+            var response = await client.PostAsync(
+                $"{_baseUrl}?action={action}",
+                null,
+                TestContext.Current.CancellationToken
+            );
+
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>(TestContext.Current.CancellationToken);
+            problemDetails!.Detail.Should().Be(Strings.ERROR_VERIFIED_ID_UNKNOWN_ACTION);
+        }
+
+        [Fact]
         public async Task ValidateIdentity_Returns500_WithoutPresentation()
         {
             var handler = new MockHttpMessageHandler(HttpStatusCode.OK, null);
