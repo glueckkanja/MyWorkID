@@ -6,6 +6,7 @@ using Microsoft.Graph.Models;
 using Microsoft.Identity.Web;
 using MyWorkID.Server.Common;
 using MyWorkID.Server.Features.GenerateTap.Entities;
+using MyWorkID.Server.Features.VerifiedId.Entities;
 using MyWorkID.Server.Filters;
 using MyWorkID.Server.Options;
 
@@ -28,6 +29,7 @@ namespace MyWorkID.Server.Features.GenerateTap.Commands
                 .AddEndpointFilter<CheckGenerateTapAppConfigurationEndpointFilter>()
                 .AddEndpointFilter<GenerateTapAuthContextEndpointFilter>()
                 .AddEndpointFilter<CheckForObjectIdEndpointFilter>()
+                .RequireRecentVerifiedId(VerifiedIdAction.GenerateTemporaryAccessPass)
                 .WithTags(nameof(GenerateTap));
         }
 
