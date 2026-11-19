@@ -1,68 +1,155 @@
-import { useEffect, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { Panel } from "../../panel";
 import { verifyIdentity } from "../../../services/api-service";
-import { HubConnectionState } from "@microsoft/signalr";
+import { HubConnectionState, type HubConnection } from "@microsoft/signalr";
 import { getVerifiedIdConnection } from "../../../services/signal-r-service";
-import { ValidateIdentityPanelProps, VerifyState } from "../../../types";
+import {
+  ValidateIdentityPanelProps,
+  VerifiedIdAction,
+  VerifyState,
+} from "../../../types";
 import { useToast } from "@/hooks/use-toast";
 import { Spinner } from "@/components/ui/spinner";
+import { formatValidityDuration } from "@/lib/verified-id-status";
 
 // Import Icons
 import { FaceCheckCameraIcon } from "@/components/ui/icons/face-check-camera-icon";
-import { InformationCircleIcon } from "@/components/ui/icons/information-circle-icon";
+import { AlertWarningIcon } from "@/components/ui/icons/alert-warning-icon";
 import VerifiedIdentityIllustrationSvg from "../../../assets/svg/verified-identity-illustration.svg";
 
-export const ValidateIdentityPanel = ({
+const PANEL_DESCRIPTIONS: Record<VerifyState["status"], string> = {
+  idle: "Prove your identity using a face scan via Verified ID. You'll be asked to take a real-time selfie, which is matched against your Microsoft Entra ID photo. Results are stored securely.",
+  loading:
+    "Prove your identity using a face scan via Verified ID. You'll be asked to take a real-time selfie, which is matched against your Microsoft Entra ID photo. Results are stored securely.",
+  ready:
+    "Scan this QR code with the Microsoft Authenticator app to present your Verified ID credential.",
+  scanned:
+    "QR code scanned. Complete the face check on your mobile device. The action continues here automatically afterwards.",
+};
+
+const getPanelDescription = (status: VerifyState["status"]) =>
+  PANEL_DESCRIPTIONS[status];
+
+export const ValidateIdentityPanel = memo(function ValidateIdentityPanel({
   open,
   onClose,
-}: ValidateIdentityPanelProps) => {
+  onVerified,
+  verificationAction,
+  verifiedIdStatus,
+}: Readonly<ValidateIdentityPanelProps>) {
   const [verifyState, setVerifyState] = useState<VerifyState>({
     status: "idle",
   });
   const { toastError, toastException, toastInfo, toastSuccess } = useToast();
 
+  const onVerifiedRef = useRef(onVerified);
   useEffect(() => {
-    getVerifiedIdConnection().then((connection) => {
-      if (connection.state === HubConnectionState.Disconnected) {
-        connection.on("HideQrCode", () => {
-          setVerifyState({ status: "idle" });
-          toastInfo(
-            "QR code scanned",
-            "Please continue on your mobile device.",
-          );
-          onClose();
-        });
+    onVerifiedRef.current = onVerified;
+  }, [onVerified]);
 
-        connection.on("VerificationSuccess", () => {
-          setVerifyState({ status: "idle" });
+  const openRef = useRef(open);
+  useEffect(() => {
+    openRef.current = open;
+  }, [open]);
+
+  const requiresVerificationPerAction =
+    verifiedIdStatus?.requiresVerificationPerAction ?? false;
+  const requiresVerificationPerActionRef = useRef(
+    requiresVerificationPerAction,
+  );
+  useEffect(() => {
+    requiresVerificationPerActionRef.current = requiresVerificationPerAction;
+  }, [requiresVerificationPerAction]);
+
+  // Action the running verification was started for; undefined for the standalone verification.
+  const runningVerificationActionRef = useRef<VerifiedIdAction | undefined>(
+    undefined,
+  );
+
+  useEffect(() => {
+    const connectToVerifiedId = async () => {
+      let connection: HubConnection;
+      try {
+        connection = await getVerifiedIdConnection();
+      } catch (connectionError) {
+        console.error("Could not get Verified ID connection", connectionError);
+        return;
+      }
+
+      if (connection.state !== HubConnectionState.Disconnected) {
+        return;
+      }
+
+      connection.on("HideQrCode", () => {
+        // A verification started from an action keeps the panel open until it completes, so the
+        // action can continue right away.
+        if (runningVerificationActionRef.current) {
+          if (openRef.current) {
+            setVerifyState({ status: "scanned" });
+          }
+          return;
+        }
+        setVerifyState({ status: "idle" });
+        toastInfo("QR code scanned", "Please continue on your mobile device.");
+        onClose();
+      });
+
+      connection.on("VerificationSuccess", () => {
+        const verificationAction = runningVerificationActionRef.current;
+        runningVerificationActionRef.current = undefined;
+        setVerifyState({ status: "idle" });
+        if (!verificationAction) {
           toastSuccess(
             "Identity Verified",
             "Your identity has been successfully verified.",
           );
           onClose();
-        });
-
-        connection.on("VerificationFailed", (errorMessage: string) => {
-          setVerifyState({ status: "idle" });
-          toastError(
-            errorMessage || "Identity verification failed. Please try again.",
+        } else if (
+          openRef.current ||
+          !requiresVerificationPerActionRef.current
+        ) {
+          // An abandoned verification only counts when a validity window is configured.
+          toastSuccess(
+            "Identity Verified",
+            openRef.current
+              ? "You can continue with the action now."
+              : "Your identity has been successfully verified.",
           );
-        });
+        }
+        // For an action, onVerified opens that action's panel, which replaces this one.
+        onVerifiedRef.current?.(verificationAction);
+      });
 
-        connection.start();
+      connection.on("VerificationFailed", (errorMessage: string) => {
+        runningVerificationActionRef.current = undefined;
+        setVerifyState({ status: "idle" });
+        toastError(
+          errorMessage || "Identity verification failed. Please try again.",
+        );
+      });
+
+      try {
+        await connection.start();
+      } catch (startError) {
+        console.error("Could not start Verified ID connection", startError);
       }
-    });
+    };
+
+    void connectToVerifiedId();
   }, [toastError, toastInfo, toastSuccess, onClose]);
 
-  useEffect(() => {
+  const [previousOpen, setPreviousOpen] = useState(open);
+  if (open !== previousOpen) {
+    setPreviousOpen(open);
     if (!open) {
       setVerifyState({ status: "idle" });
     }
-  }, [open]);
+  }
 
   const startVerification = () => {
     setVerifyState({ status: "loading" });
-    verifyIdentity()
+    runningVerificationActionRef.current = verificationAction;
+    verifyIdentity(verificationAction)
       .then((result) => {
         const qrCode = result.data?.qrCode;
         if (qrCode) {
@@ -78,12 +165,54 @@ export const ValidateIdentityPanel = ({
       });
   };
 
+  const renderRequirementHint = () => {
+    if (!verifiedIdStatus?.required || verifiedIdStatus.loading) {
+      return null;
+    }
+    // Every action asks for its own verification, so there is no validity to explain.
+    if (verifiedIdStatus.requiresVerificationPerAction) {
+      return null;
+    }
+    if (verifiedIdStatus.isVerified) {
+      return null;
+    }
+    const validity = formatValidityDuration(verifiedIdStatus.validityInMinutes);
+    return (
+      <div className="confirm-box confirm-box--warning">
+        <AlertWarningIcon aria-hidden="true" />
+        <span>
+          {verifiedIdStatus.lastVerifiedAt ? (
+            <>
+              Your identity verification has <strong>expired</strong>.
+            </>
+          ) : (
+            <>
+              Your identity is <strong>not verified</strong> yet.
+            </>
+          )}{" "}
+          Resetting your password, creating an access pass and dismissing your
+          risk require a verification that is not older than {validity}.
+        </span>
+      </div>
+    );
+  };
+
   const renderBody = () => {
     if (verifyState.status === "loading") {
       return (
         <div className="panel-loading">
           <Spinner />
         </div>
+      );
+    }
+
+    if (verifyState.status === "scanned") {
+      return (
+        <>
+          <div className="panel-loading">
+            <Spinner />
+          </div>
+        </>
       );
     }
 
@@ -96,13 +225,6 @@ export const ValidateIdentityPanel = ({
               alt="Verified ID QR Code"
               className="verify-illustration__qr"
             />
-          </div>
-          <div className="form-hint">
-            <InformationCircleIcon />
-            <span>
-              Scan this QR code with the Microsoft Authenticator app to present
-              your Verified ID credential.
-            </span>
           </div>
         </>
       );
@@ -118,13 +240,7 @@ export const ValidateIdentityPanel = ({
             className="verify-illustration__icon"
           />
         </div>
-        <div className="form-hint">
-          <InformationCircleIcon />
-          <span>
-            You'll be asked to take a real-time selfie. The system matches it
-            against your Microsoft Entra ID photo. Results are stored securely.
-          </span>
-        </div>
+        {renderRequirementHint()}
         <button
           type="button"
           className="panel-primary-button"
@@ -141,10 +257,10 @@ export const ValidateIdentityPanel = ({
     <Panel
       open={open}
       title="Validate Identity"
-      subtitle="Prove your identity using a face scan via Verified ID."
+      subtitle={getPanelDescription(verifyState.status)}
       onClose={onClose}
     >
       {renderBody()}
     </Panel>
   );
-};
+});
