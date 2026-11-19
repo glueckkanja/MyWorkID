@@ -32,7 +32,7 @@ type UserDisplayProps = {
   profile: UserProfile;
 };
 
-export const UserDisplay = ({ profile }: UserDisplayProps) => {
+export const UserDisplay = ({ profile }: Readonly<UserDisplayProps>) => {
   const { user, userImage, riskLoading, riskLevel, riskLabel } = profile;
   const displayName = user?.displayName;
   const email = user?.mail ?? user?.userPrincipalName;
@@ -49,7 +49,7 @@ export const UserDisplay = ({ profile }: UserDisplayProps) => {
           )}
         </div>
         <div>
-          <h2 className="user-card__name">{displayName ?? " "}</h2>
+          <h2 className="user-card__name">{displayName ?? " "}</h2>
           {email && <p className="user-card__email">{email}</p>}
         </div>
       </div>
