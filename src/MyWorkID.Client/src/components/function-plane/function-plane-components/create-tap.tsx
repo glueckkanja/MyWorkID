@@ -160,15 +160,13 @@ export const CreateTapPanel = memo(function CreateTapPanel({
 
     if (tap.status === "empty") {
       return (
-        <>
-          <button
-            type="button"
-            className="panel-primary-button"
-            onClick={createTap}
-          >
-            Generate Access Pass
-          </button>
-        </>
+        <button
+          type="button"
+          className="panel-primary-button"
+          onClick={createTap}
+        >
+          Generate Access Pass
+        </button>
       );
     }
 

@@ -52,9 +52,9 @@ const PANEL_BY_ACTION: Record<
 };
 
 const VERIFICATION_REQUIRED_REASON =
-  "This action requires a face check. It starts when you click the button below.";
+  "This action requires a verification. It starts when you click the button below.";
 const VERIFICATION_EXPIRED_REASON =
-  "Your identity verification has expired. A new face check starts when you click the button below.";
+  "Your identity verification has expired. By clicking the button below the verification process will be started.";
 const VERIFICATION_REQUIRED_PER_ACTION_REASON =
   "For your security, this action requires a new identity verification every time. Verify your identity to continue.";
 const VERIFICATION_CONFIRMING_REASON =
@@ -164,7 +164,8 @@ const getActionVerificationState = (
   const isVerifiedForAction =
     verifiedIdStatus.isVerified &&
     (!verifiedIdStatus.requiresVerificationPerAction ||
-      (verifiedIdStatus.verifiedForAction === action && verifiedInCurrentVisit));
+      (verifiedIdStatus.verifiedForAction === action &&
+        verifiedInCurrentVisit));
   if (!verifiedIdStatus.required || isVerifiedForAction) {
     return {
       blocked: false,
@@ -191,7 +192,8 @@ const getActionVerificationState = (
     blocked: true,
     blockedReason,
     // Every action needs its own verification there, so telling the user adds nothing.
-    showBlockedReason: blockedReason !== VERIFICATION_REQUIRED_PER_ACTION_REASON,
+    showBlockedReason:
+      blockedReason !== VERIFICATION_REQUIRED_PER_ACTION_REASON,
     waitingForVerification: blockedReason === VERIFICATION_CONFIRMING_REASON,
     canVerifyIdentity:
       canValidateIdentity && !verifiedIdStatus.confirmingVerification,
@@ -228,11 +230,11 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
   // Action panel whose verification belongs to the current visit, when every action requires its own
   // verification. Leaving that panel discards the verification. The ref lets closePanel read the
   // latest value even when it runs right after an update in the same event.
-  const [verifiedPanel, setVerifiedPanelState] = useState<PanelKey>(null);
+  const [verifiedPanel, setVerifiedPanel] = useState<PanelKey>(null);
   const verifiedPanelRef = useRef<PanelKey>(null);
-  const setVerifiedPanel = useCallback((panel: PanelKey) => {
+  const updateVerifiedPanel = useCallback((panel: PanelKey) => {
     verifiedPanelRef.current = panel;
-    setVerifiedPanelState(panel);
+    setVerifiedPanel(panel);
     storeVerifiedPanel(panel);
   }, []);
 
@@ -272,7 +274,8 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
         ? VERIFIED_ID_ACTION_BY_PANEL[panelAwaitingVerification]
         : undefined;
       const wasAbandoned =
-        verificationAction !== undefined && verificationAction !== awaitedAction;
+        verificationAction !== undefined &&
+        verificationAction !== awaitedAction;
       // The user left the verification before it completed. With a validity window it still counts,
       // but when every action requires its own verification it must not unlock the action later.
       if (wasAbandoned && requiresVerificationPerAction) {
@@ -286,7 +289,7 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
       refreshAfterVerification();
       if (panelAwaitingVerification && !wasAbandoned) {
         if (requiresVerificationPerAction) {
-          setVerifiedPanel(panelAwaitingVerification);
+          updateVerifiedPanel(panelAwaitingVerification);
         }
         setActivePanel(panelAwaitingVerification);
         setPanelAwaitingVerification(null);
@@ -298,16 +301,16 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
       refreshVerifiedIdStatus,
       requiresVerificationPerAction,
       panelAwaitingVerification,
-      setVerifiedPanel,
+      updateVerifiedPanel,
     ],
   );
 
   // The gated endpoint marks the verification as used once the action succeeded, so there is nothing
   // left to discard when the panel closes afterwards.
   const handleActionCompleted = useCallback(() => {
-    setVerifiedPanel(null);
+    updateVerifiedPanel(null);
     markVerificationAsUsed();
-  }, [setVerifiedPanel, markVerificationAsUsed]);
+  }, [updateVerifiedPanel, markVerificationAsUsed]);
 
   const handleRiskDismissed = useCallback(() => {
     refreshRiskState();
@@ -324,7 +327,7 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
       }
       if (storedVerifiedPanel === resumedPanel) {
         verifiedPanelRef.current = storedVerifiedPanel;
-        setVerifiedPanelState(storedVerifiedPanel);
+        setVerifiedPanel(storedVerifiedPanel);
         return;
       }
       // The page was reloaded or left while a verification was unlocked: the visit is over.
@@ -414,13 +417,13 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
   const closePanel = useCallback(() => {
     if (verifiedPanelRef.current) {
       discardVerificationForPanel(verifiedPanelRef.current);
-      setVerifiedPanel(null);
+      updateVerifiedPanel(null);
       markVerificationAsUsed();
     }
     setActivePanel(null);
     setRedirectAction(undefined);
     setPanelRunningAfterVerification(null);
-  }, [setVerifiedPanel, markVerificationAsUsed]);
+  }, [updateVerifiedPanel, markVerificationAsUsed]);
 
   // Closing the identity validation abandons a verification started from an action panel.
   const closeValidatePanel = useCallback(() => {
@@ -538,14 +541,17 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
           onDismissed={handleRiskDismissed}
           riskLevel={profile.riskLevel}
           riskLabel={profile.riskLabel}
-          canDismiss={dismissAllowedForCurrentLevel && !dismissRiskVerification.blocked}
+          canDismiss={
+            dismissAllowedForCurrentLevel && !dismissRiskVerification.blocked
+          }
           dismissDisabledReason={dismissDisabledReason}
           waitingForVerification={
             dismissAllowedForCurrentLevel &&
             dismissRiskVerification.waitingForVerification
           }
           onVerifyIdentity={
-            dismissAllowedForCurrentLevel && dismissRiskVerification.canVerifyIdentity
+            dismissAllowedForCurrentLevel &&
+            dismissRiskVerification.canVerifyIdentity
               ? verifyIdentityForDismissRisk
               : undefined
           }
