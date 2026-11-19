@@ -157,22 +157,9 @@ export const ValidateIdentityPanel = memo(function ValidateIdentityPanel({
     if (!verifiedIdStatus?.required || verifiedIdStatus.loading) {
       return null;
     }
-    // Started from an action panel: the verification unlocks exactly that action, nothing to explain.
-    if (verifiedIdStatus.requiresVerificationPerAction && verificationAction) {
-      return null;
-    }
+    // Every action asks for its own verification, so there is no validity to explain.
     if (verifiedIdStatus.requiresVerificationPerAction) {
-      return (
-        <div className="confirm-box confirm-box--warning">
-          <AlertWarningIcon aria-hidden="true" />
-          <span>
-            Resetting your password, creating an access pass and dismissing
-            your risk each require <strong>their own verification</strong>. A
-            verification started here does not unlock them. Open the action
-            you want to perform and verify your identity from there.
-          </span>
-        </div>
-      );
+      return null;
     }
     if (verifiedIdStatus.isVerified) {
       return null;

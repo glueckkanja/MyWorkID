@@ -21,6 +21,7 @@ export const CreateTapPanel = memo(function CreateTapPanel({
   onClose,
   comingFromRedirect,
   blockedReason,
+  showBlockedReason,
   onVerifyIdentity,
   onCompleted,
 }: Readonly<CreateTapPanelProps>) {
@@ -134,6 +135,7 @@ export const CreateTapPanel = memo(function CreateTapPanel({
           reason={blockedReason}
           actionLabel="Generate Access Pass"
           onVerifyIdentity={onVerifyIdentity}
+          showReason={showBlockedReason}
         />
       );
     }
@@ -206,6 +208,7 @@ export const CreateTapPanel = memo(function CreateTapPanel({
             reason={blockedReason}
             actionLabel="Create New Pass"
             onVerifyIdentity={onVerifyIdentity}
+            showReason={showBlockedReason}
           />
         ) : (
           <button

@@ -117,6 +117,11 @@ type ActionVerificationState = {
   blocked: boolean;
   /** Explains why the action is blocked. */
   blockedReason: string | undefined;
+  /**
+   * False when the reason is not worth showing: the user only has to verify, and the "Verify Identity"
+   * button already says so.
+   */
+  showBlockedReason: boolean;
   /** True if the user can start a verification for this action from its panel. */
   canVerifyIdentity: boolean;
 };
@@ -139,6 +144,7 @@ const getActionVerificationState = (
     return {
       blocked: true,
       blockedReason: VERIFICATION_STATUS_LOADING_REASON,
+      showBlockedReason: true,
       canVerifyIdentity: false,
     };
   }
@@ -146,6 +152,7 @@ const getActionVerificationState = (
     return {
       blocked: true,
       blockedReason: VERIFICATION_STATUS_ERROR_REASON,
+      showBlockedReason: true,
       canVerifyIdentity: false,
     };
   }
@@ -158,6 +165,7 @@ const getActionVerificationState = (
     return {
       blocked: false,
       blockedReason: undefined,
+      showBlockedReason: true,
       canVerifyIdentity: false,
     };
   }
@@ -177,6 +185,8 @@ const getActionVerificationState = (
   return {
     blocked: true,
     blockedReason,
+    // Every action needs its own verification there, so telling the user adds nothing.
+    showBlockedReason: blockedReason !== VERIFICATION_REQUIRED_PER_ACTION_REASON,
     canVerifyIdentity:
       canValidateIdentity && !verifiedIdStatus.confirmingVerification,
   };
@@ -373,9 +383,12 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
   const dismissAllowedForCurrentLevel =
     profile.riskLoading ||
     canDismissRiskLevel(profile.riskLevel, maxDismissibleRiskLevel);
-  const dismissDisabledReason = dismissAllowedForCurrentLevel
-    ? dismissRiskVerification.blockedReason
-    : `Your ${getRiskLabelFromLevel(profile.riskLevel)} risk level cannot be dismissed via self-service. Please contact your administrator.`;
+  let dismissDisabledReason: string | undefined;
+  if (!dismissAllowedForCurrentLevel) {
+    dismissDisabledReason = `Your ${getRiskLabelFromLevel(profile.riskLevel)} risk level cannot be dismissed via self-service. Please contact your administrator.`;
+  } else if (dismissRiskVerification.showBlockedReason) {
+    dismissDisabledReason = dismissRiskVerification.blockedReason;
+  }
 
   const showRecommendedDismiss =
     canDismissRisk &&
@@ -465,6 +478,7 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
             redirectAction === EApiFunctionTypes.PASSWORD_RESET
           }
           blockedReason={passwordResetVerification.blockedReason}
+          showBlockedReason={passwordResetVerification.showBlockedReason}
           onVerifyIdentity={
             passwordResetVerification.canVerifyIdentity
               ? verifyIdentityForPasswordReset
@@ -482,6 +496,7 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
             redirectAction === EApiFunctionTypes.CREATE_TAP
           }
           blockedReason={temporaryAccessPassVerification.blockedReason}
+          showBlockedReason={temporaryAccessPassVerification.showBlockedReason}
           onVerifyIdentity={
             temporaryAccessPassVerification.canVerifyIdentity
               ? verifyIdentityForTemporaryAccessPass

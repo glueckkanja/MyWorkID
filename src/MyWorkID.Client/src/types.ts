@@ -32,6 +32,8 @@ export type CreateTapPanelProps = {
   blockedReason?: string;
   /** When set, the blocked notice offers to start the identity verification. */
   onVerifyIdentity?: () => void;
+  /** False hides the blocked reason, e.g. when the verification button already explains what to do. */
+  showBlockedReason?: boolean;
   /** Called after a Temporary Access Pass was generated. */
   onCompleted?: () => void;
 };
@@ -63,6 +65,8 @@ export type PasswordResetPanelProps = {
   blockedReason?: string;
   /** When set, the blocked notice offers to start the identity verification. */
   onVerifyIdentity?: () => void;
+  /** False hides the blocked reason, e.g. when the verification button already explains what to do. */
+  showBlockedReason?: boolean;
   /** Called after the password was changed. */
   onCompleted?: () => void;
 };
@@ -102,6 +106,8 @@ export type BlockedActionNoticeProps = {
   actionLabel: string;
   /** When set, a button that starts the identity verification replaces the disabled action button. */
   onVerifyIdentity?: () => void;
+  /** False hides the reason, e.g. when the verification button already explains what to do. */
+  showReason?: boolean;
 };
 
 export type PanelKey =

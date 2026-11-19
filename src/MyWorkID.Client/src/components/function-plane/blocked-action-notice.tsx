@@ -10,12 +10,15 @@ export const BlockedActionNotice = ({
   reason,
   actionLabel,
   onVerifyIdentity,
+  showReason = true,
 }: Readonly<BlockedActionNoticeProps>) => (
   <>
-    <div className="confirm-box">
-      <AlertErrorIcon aria-hidden="true" />
-      <span>{reason}</span>
-    </div>
+    {showReason && (
+      <div className="confirm-box">
+        <AlertErrorIcon aria-hidden="true" />
+        <span>{reason}</span>
+      </div>
+    )}
     {onVerifyIdentity ? (
       <VerifyIdentityButton onClick={onVerifyIdentity} />
     ) : (

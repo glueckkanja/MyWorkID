@@ -50,6 +50,7 @@ export const PasswordResetPanel = memo(function PasswordResetPanel({
   onClose,
   comingFromRedirect,
   blockedReason,
+  showBlockedReason,
   onVerifyIdentity,
   onCompleted,
 }: Readonly<PasswordResetPanelProps>) {
@@ -126,6 +127,7 @@ export const PasswordResetPanel = memo(function PasswordResetPanel({
           reason={blockedReason}
           actionLabel="Change Password"
           onVerifyIdentity={onVerifyIdentity}
+          showReason={showBlockedReason}
         />
       );
     }
