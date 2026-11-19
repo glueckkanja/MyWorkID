@@ -36,6 +36,12 @@ namespace MyWorkID.Server.IntegrationTests.Authentication
             return this;
         }
 
+        public TestClaimsProvider WithVerifiedIdAction(string action)
+        {
+            Claims.Add(new Claim(Strings.VERIFIED_ID_ACTION_CLAIM, action));
+            return this;
+        }
+
         public TestClaimsProvider AddRole(string role)
         {
             Claims.Add(new Claim(ClaimTypes.Role, role));
