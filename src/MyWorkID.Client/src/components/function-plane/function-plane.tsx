@@ -118,8 +118,8 @@ type ActionVerificationState = {
   /** Explains why the action is blocked. */
   blockedReason: string | undefined;
   /**
-   * False when the reason is not worth showing: the user only has to verify, and the "Verify Identity"
-   * button already says so.
+   * False when the reason is not worth showing: the user only has to verify, and the action button
+   * starts the face check on its own.
    */
   showBlockedReason: boolean;
   /** True while a just completed verification is being confirmed, so the panel shows a spinner. */

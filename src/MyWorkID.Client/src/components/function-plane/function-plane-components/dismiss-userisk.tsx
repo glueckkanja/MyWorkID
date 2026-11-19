@@ -15,7 +15,7 @@ import { AlertErrorIcon } from "@/components/ui/icons/alert-error-icon";
 import { useToast } from "@/hooks/use-toast";
 import { Spinner } from "@/components/ui/spinner";
 import { RiskLevel } from "@/lib/risk-level";
-import { VerifyIdentityButton } from "../blocked-action-notice";
+import { BlockedActionButton } from "../blocked-action-notice";
 import { InformationBox } from "../information-box";
 
 const renderConfirmationBody = (riskLevel: RiskLevel, riskLabel: string) => {
@@ -151,7 +151,11 @@ export const DismissUserRiskPanel = memo(function DismissUserRiskPanel({
         <>
           {confirmationBox}
           {!canDismiss && onVerifyIdentity ? (
-            <VerifyIdentityButton onClick={onVerifyIdentity} />
+            <BlockedActionButton
+              label="Dismiss Risk"
+              icon={<CircleCheckIcon />}
+              onClick={onVerifyIdentity}
+            />
           ) : (
             <button
               type="button"

@@ -1,6 +1,6 @@
 import { AlertErrorIcon } from "@/components/ui/icons/alert-error-icon";
-import { FaceCheckCameraIcon } from "@/components/ui/icons/face-check-camera-icon";
 import { Spinner } from "@/components/ui/spinner";
+import type { ReactNode } from "react";
 import type { BlockedActionNoticeProps } from "../../types";
 import { InformationBox } from "./information-box";
 
@@ -11,6 +11,8 @@ import { InformationBox } from "./information-box";
 export const BlockedActionNotice = ({
   reason,
   actionLabel,
+  actionIcon,
+  actionVariant,
   hint,
   onVerifyIdentity,
   showReason = true,
@@ -33,30 +35,43 @@ export const BlockedActionNotice = ({
         </div>
       )}
       {hint && <InformationBox>{hint}</InformationBox>}
-      {onVerifyIdentity ? (
-        <VerifyIdentityButton onClick={onVerifyIdentity} />
-      ) : (
-        <button
-          type="button"
-          className="panel-primary-button"
-          disabled
-          aria-disabled
-        >
-          {actionLabel}
-        </button>
-      )}
+      <BlockedActionButton
+        label={actionLabel}
+        icon={actionIcon}
+        variant={actionVariant}
+        onClick={onVerifyIdentity}
+      />
     </>
   );
 };
 
 /**
- * Primary panel button that starts the identity verification for a blocked action.
+ * Looks like the button that runs the action. While the action is blocked, clicking it starts the
+ * identity verification first (the face check opens right away); without a way to verify it is disabled.
  */
-export const VerifyIdentityButton = ({
+export const BlockedActionButton = ({
+  label,
+  icon,
+  variant = "primary",
   onClick,
-}: Readonly<{ onClick: () => void }>) => (
-  <button type="button" className="panel-primary-button" onClick={onClick}>
-    <FaceCheckCameraIcon />
-    Verify Identity
+}: Readonly<{
+  label: string;
+  icon?: ReactNode;
+  variant?: "primary" | "secondary";
+  onClick?: () => void;
+}>) => (
+  <button
+    type="button"
+    className={
+      variant === "secondary"
+        ? "panel-secondary-button"
+        : "panel-primary-button"
+    }
+    onClick={onClick}
+    disabled={!onClick}
+    aria-disabled={!onClick || undefined}
+  >
+    {icon}
+    {label}
   </button>
 );

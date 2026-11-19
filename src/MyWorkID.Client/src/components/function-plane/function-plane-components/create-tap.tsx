@@ -204,6 +204,8 @@ export const CreateTapPanel = memo(function CreateTapPanel({
           <BlockedActionNotice
             reason={blockedReason}
             actionLabel="Create New Pass"
+            actionIcon={<RefreshArrowIcon />}
+            actionVariant="secondary"
             onVerifyIdentity={onVerifyIdentity}
             showReason={showBlockedReason}
             waiting={waitingForVerification}

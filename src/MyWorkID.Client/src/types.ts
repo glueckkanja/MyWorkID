@@ -110,11 +110,15 @@ export type BlockedActionNoticeProps = {
   reason: string;
   /** True while a just completed verification is being confirmed; a spinner replaces the notice. */
   waiting?: boolean;
-  /** Label of the disabled primary button that would normally trigger the action. */
+  /** Label of the button that would normally trigger the action. */
   actionLabel: string;
+  /** Icon of that button, if the action button has one. */
+  actionIcon?: ReactNode;
+  /** Style of that button. Defaults to the primary style. */
+  actionVariant?: "primary" | "secondary";
   /** Grey information shown above the button, e.g. what the action does. */
   hint?: string;
-  /** When set, a button that starts the identity verification replaces the disabled action button. */
+  /** When set, the action button starts the identity verification instead of being disabled. */
   onVerifyIdentity?: () => void;
   /** False hides the reason, e.g. when the verification button already explains what to do. */
   showReason?: boolean;
