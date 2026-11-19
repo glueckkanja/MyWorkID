@@ -13,8 +13,8 @@ import { CircleXIcon } from "@/components/ui/icons/circle-x-icon";
 import { CheckmarkIcon } from "@/components/ui/icons/checkmark-icon";
 import { CopyDocumentIcon } from "@/components/ui/icons/copy-document-icon";
 import { RefreshArrowIcon } from "@/components/ui/icons/refresh-arrow-icon";
-import { InformationCircleIcon } from "@/components/ui/icons/information-circle-icon";
 import { BlockedActionNotice } from "../blocked-action-notice";
+import { InformationBox } from "../information-box";
 
 const GENERATE_HINT =
   "Generate a one-time code to sign in on a new device without your regular credentials.";
@@ -25,7 +25,7 @@ export const CreateTapPanel = memo(function CreateTapPanel({
   comingFromRedirect,
   blockedReason,
   showBlockedReason,
-  blockedReasonVariant,
+  waitingForVerification,
   onVerifyIdentity,
   onCompleted,
 }: Readonly<CreateTapPanelProps>) {
@@ -34,8 +34,8 @@ export const CreateTapPanel = memo(function CreateTapPanel({
   const { toastError, toastException } = useToast();
 
   // Expects the caller to have set the "loading" state already.
-  const requestTemporaryAccessPass = () => {
-    generateTAP()
+  const requestTemporaryAccessPass = (startedRightAfterVerification = false) => {
+    generateTAP(startedRightAfterVerification)
       .then((result) => {
         const password = result.data?.temporaryAccessPassword;
         const id = result.data?.temporaryAccessPassId;
@@ -110,7 +110,7 @@ export const CreateTapPanel = memo(function CreateTapPanel({
   }
 
   const requestTemporaryAccessPassFromRedirect = useEffectEvent(() => {
-    requestTemporaryAccessPass();
+    requestTemporaryAccessPass(true);
   });
   useEffect(() => {
     if (redirectConsumed) {
@@ -143,7 +143,7 @@ export const CreateTapPanel = memo(function CreateTapPanel({
           hint={GENERATE_HINT}
           onVerifyIdentity={onVerifyIdentity}
           showReason={showBlockedReason}
-          reasonVariant={blockedReasonVariant}
+          waiting={waitingForVerification}
         />
       );
     }
@@ -159,10 +159,7 @@ export const CreateTapPanel = memo(function CreateTapPanel({
     if (tap.status === "empty") {
       return (
         <>
-          <div className="form-hint">
-            <InformationCircleIcon />
-            <span>{GENERATE_HINT}</span>
-          </div>
+          <InformationBox>{GENERATE_HINT}</InformationBox>
           <button
             type="button"
             className="panel-primary-button"
@@ -201,20 +198,15 @@ export const CreateTapPanel = memo(function CreateTapPanel({
             )}
           </button>
         </div>
-        <div className="form-hint">
-          <InformationCircleIcon />
-          <span>
-            Use this code to sign in on your new device. Once expired, you can
-            generate a new pass.
-          </span>
-        </div>
+        <InformationBox>Use this code to sign in on your new device. Once expired, you can
+            generate a new pass.</InformationBox>
         {blockedReason ? (
           <BlockedActionNotice
             reason={blockedReason}
             actionLabel="Create New Pass"
             onVerifyIdentity={onVerifyIdentity}
             showReason={showBlockedReason}
-            reasonVariant={blockedReasonVariant}
+            waiting={waitingForVerification}
           />
         ) : (
           <button

@@ -1,8 +1,8 @@
 import { AlertErrorIcon } from "@/components/ui/icons/alert-error-icon";
-import { AlertWarningIcon } from "@/components/ui/icons/alert-warning-icon";
 import { FaceCheckCameraIcon } from "@/components/ui/icons/face-check-camera-icon";
-import { InformationCircleIcon } from "@/components/ui/icons/information-circle-icon";
+import { Spinner } from "@/components/ui/spinner";
 import type { BlockedActionNoticeProps } from "../../types";
+import { InformationBox } from "./information-box";
 
 /**
  * Shown inside an action panel instead of its form while the action is blocked
@@ -10,49 +10,44 @@ import type { BlockedActionNoticeProps } from "../../types";
  */
 export const BlockedActionNotice = ({
   reason,
-  reasonVariant = "error",
   actionLabel,
   hint,
   onVerifyIdentity,
   showReason = true,
-}: Readonly<BlockedActionNoticeProps>) => (
-  <>
-    {showReason && (
-      <div
-        className={
-          reasonVariant === "warning"
-            ? "confirm-box confirm-box--warning"
-            : "confirm-box"
-        }
-      >
-        {reasonVariant === "warning" ? (
-          <AlertWarningIcon aria-hidden="true" />
-        ) : (
+  waiting = false,
+}: Readonly<BlockedActionNoticeProps>) => {
+  if (waiting) {
+    return (
+      <div className="panel-loading">
+        <Spinner />
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {showReason && (
+        <div className="confirm-box">
           <AlertErrorIcon aria-hidden="true" />
-        )}
-        <span>{reason}</span>
-      </div>
-    )}
-    {hint && (
-      <div className="form-hint">
-        <InformationCircleIcon />
-        <span>{hint}</span>
-      </div>
-    )}
-    {onVerifyIdentity ? (
-      <VerifyIdentityButton onClick={onVerifyIdentity} />
-    ) : (
-      <button
-        type="button"
-        className="panel-primary-button"
-        disabled
-        aria-disabled
-      >
-        {actionLabel}
-      </button>
-    )}
-  </>
-);
+          <span>{reason}</span>
+        </div>
+      )}
+      {hint && <InformationBox>{hint}</InformationBox>}
+      {onVerifyIdentity ? (
+        <VerifyIdentityButton onClick={onVerifyIdentity} />
+      ) : (
+        <button
+          type="button"
+          className="panel-primary-button"
+          disabled
+          aria-disabled
+        >
+          {actionLabel}
+        </button>
+      )}
+    </>
+  );
+};
 
 /**
  * Primary panel button that starts the identity verification for a blocked action.

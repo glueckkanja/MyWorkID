@@ -1,5 +1,6 @@
 import { memo, useEffect, useRef, useState } from "react";
 import { Panel } from "../../panel";
+import { InformationBox } from "../information-box";
 import { verifyIdentity } from "../../../services/api-service";
 import { HubConnectionState, type HubConnection } from "@microsoft/signalr";
 import { getVerifiedIdConnection } from "../../../services/signal-r-service";
@@ -14,7 +15,6 @@ import { formatValidityDuration } from "@/lib/verified-id-status";
 
 // Import Icons
 import { FaceCheckCameraIcon } from "@/components/ui/icons/face-check-camera-icon";
-import { InformationCircleIcon } from "@/components/ui/icons/information-circle-icon";
 import { AlertWarningIcon } from "@/components/ui/icons/alert-warning-icon";
 import VerifiedIdentityIllustrationSvg from "../../../assets/svg/verified-identity-illustration.svg";
 
@@ -200,13 +200,8 @@ export const ValidateIdentityPanel = memo(function ValidateIdentityPanel({
           <div className="panel-loading">
             <Spinner />
           </div>
-          <div className="form-hint">
-            <InformationCircleIcon />
-            <span>
-              QR code scanned. Complete the face check on your mobile device.
-              The action continues here automatically afterwards.
-            </span>
-          </div>
+          <InformationBox>QR code scanned. Complete the face check on your mobile device.
+              The action continues here automatically afterwards.</InformationBox>
         </>
       );
     }
@@ -221,13 +216,8 @@ export const ValidateIdentityPanel = memo(function ValidateIdentityPanel({
               className="verify-illustration__qr"
             />
           </div>
-          <div className="form-hint">
-            <InformationCircleIcon />
-            <span>
-              Scan this QR code with the Microsoft Authenticator app to present
-              your Verified ID credential.
-            </span>
-          </div>
+          <InformationBox>Scan this QR code with the Microsoft Authenticator app to present
+              your Verified ID credential.</InformationBox>
         </>
       );
     }
@@ -243,13 +233,8 @@ export const ValidateIdentityPanel = memo(function ValidateIdentityPanel({
           />
         </div>
         {renderRequirementHint()}
-        <div className="form-hint">
-          <InformationCircleIcon />
-          <span>
-            You'll be asked to take a real-time selfie. The system matches it
-            against your Microsoft Entra ID photo. Results are stored securely.
-          </span>
-        </div>
+        <InformationBox>You'll be asked to take a real-time selfie. The system matches it
+            against your Microsoft Entra ID photo. Results are stored securely.</InformationBox>
         <button
           type="button"
           className="panel-primary-button"

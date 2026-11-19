@@ -40,6 +40,47 @@ const convertTFunctionResult = async <T>(
   }
 };
 
+// Entra ID can take a few seconds until a freshly written verification is readable everywhere, so the
+// request of an action that starts right after a verification may be rejected although the status
+// already showed the verification.
+const VERIFICATION_PROPAGATION_RETRY_INTERVAL_MILLISECONDS = 2000;
+const VERIFICATION_PROPAGATION_MAXIMUM_ATTEMPTS = 8;
+
+// The gate answers with 403 and the verification timestamps as problem details extensions. Other
+// 403 responses (e.g. a missing role) do not carry them.
+const isVerificationRejection = (error: unknown): boolean =>
+  axios.isAxiosError(error) &&
+  error.response?.status === 403 &&
+  typeof error.response.data === "object" &&
+  error.response.data !== null &&
+  "lastVerifiedAt" in error.response.data;
+
+const delay = (milliseconds: number) =>
+  new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
+
+/**
+ * Sends the request of an action that runs right after a verification. While the server still
+ * rejects it for a missing verification, the request is repeated for a short while before the
+ * rejection is reported.
+ */
+const requestAfterVerification = async <T>(
+  request: () => Promise<T>
+): Promise<T> => {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await request();
+    } catch (error) {
+      if (
+        !isVerificationRejection(error) ||
+        attempt >= VERIFICATION_PROPAGATION_MAXIMUM_ATTEMPTS
+      ) {
+        throw error;
+      }
+      await delay(VERIFICATION_PROPAGATION_RETRY_INTERVAL_MILLISECONDS);
+    }
+  }
+};
+
 const backendApiUrl: string = `${window.location.protocol}//${window.location.host}/api`;
 
 export const getUser = async (): Promise<User> => {
@@ -62,27 +103,44 @@ export const getUserImage = async (): Promise<Blob> => {
   ).data;
 };
 
-export const dismissUserRisk = async (): Promise<
-  TFunctionResult<TDismissUserRiskResponse>
-> => {
-  return convertTFunctionResult<TDismissUserRiskResponse>(
-    authenticateRequest(
+/**
+ * @param startedRightAfterVerification True when the user just verified their identity for this
+ * action, so a rejection for a missing verification is retried for a short while.
+ */
+export const dismissUserRisk = async (
+  startedRightAfterVerification = false
+): Promise<TFunctionResult<TDismissUserRiskResponse>> => {
+  const sendRequest = () =>
+    authenticateRequest<TDismissUserRiskResponse>(
       `${backendApiUrl}/me/riskstate/dismiss`,
       REQUEST_TYPE.PUT,
       EApiFunctionTypes.DISMISS_USER_RISK
-    ),
+    );
+  return convertTFunctionResult<TDismissUserRiskResponse>(
+    startedRightAfterVerification
+      ? requestAfterVerification(sendRequest)
+      : sendRequest(),
     EApiFunctionTypes.DISMISS_USER_RISK
   );
 };
-export const generateTAP = async (): Promise<
-  TFunctionResult<TGenerateTapResponse>
-> => {
-  return convertTFunctionResult<TGenerateTapResponse>(
+
+/**
+ * @param startedRightAfterVerification True when the user just verified their identity for this
+ * action, so a rejection for a missing verification is retried for a short while.
+ */
+export const generateTAP = async (
+  startedRightAfterVerification = false
+): Promise<TFunctionResult<TGenerateTapResponse>> => {
+  const sendRequest = () =>
     authenticateRequest<TGenerateTapResponse>(
       `${backendApiUrl}/me/generatetap`,
       REQUEST_TYPE.PUT,
       EApiFunctionTypes.CREATE_TAP
-    ),
+    );
+  return convertTFunctionResult<TGenerateTapResponse>(
+    startedRightAfterVerification
+      ? requestAfterVerification(sendRequest)
+      : sendRequest(),
     EApiFunctionTypes.CREATE_TAP
   );
 };

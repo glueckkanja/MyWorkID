@@ -12,11 +12,11 @@ import { DismissUserRiskPanelProps } from "../../../types";
 import { CircleCheckIcon } from "@/components/ui/icons/circle-check-icon";
 import { AlertWarningIcon } from "@/components/ui/icons/alert-warning-icon";
 import { AlertErrorIcon } from "@/components/ui/icons/alert-error-icon";
-import { InformationCircleIcon } from "@/components/ui/icons/information-circle-icon";
 import { useToast } from "@/hooks/use-toast";
 import { Spinner } from "@/components/ui/spinner";
 import { RiskLevel } from "@/lib/risk-level";
 import { VerifyIdentityButton } from "../blocked-action-notice";
+import { InformationBox } from "../information-box";
 
 const renderConfirmationBody = (riskLevel: RiskLevel, riskLabel: string) => {
   if (
@@ -69,7 +69,7 @@ export const DismissUserRiskPanel = memo(function DismissUserRiskPanel({
   riskLabel,
   canDismiss,
   dismissDisabledReason,
-  dismissDisabledReasonVariant,
+  waitingForVerification,
   onVerifyIdentity,
 }: DismissUserRiskPanelProps) {
   const confirmation = useMemo(
@@ -84,9 +84,9 @@ export const DismissUserRiskPanel = memo(function DismissUserRiskPanel({
     onClose();
   }, [onClose]);
 
-  const triggerDismiss = useCallback(() => {
+  const triggerDismiss = useCallback((startedRightAfterVerification = false) => {
     setSubmitting(true);
-    dismissUserRisk()
+    dismissUserRisk(startedRightAfterVerification)
       .then((result) => {
         if (result.data?.sessionsRevoked === false) {
           toastSuccess(
@@ -113,32 +113,20 @@ export const DismissUserRiskPanel = memo(function DismissUserRiskPanel({
     if (!open || !comingFromRedirect || !canDismiss) {
       return;
     }
-    const timeoutId = setTimeout(triggerDismiss, 0);
+    const timeoutId = setTimeout(() => triggerDismiss(true), 0);
     return () => clearTimeout(timeoutId);
   }, [open, comingFromRedirect, canDismiss, triggerDismiss]);
 
   let confirmationBox: ReactNode;
   if (!canDismiss && dismissDisabledReason) {
-    const isWarning = dismissDisabledReasonVariant === "warning";
     confirmationBox = (
-      <div
-        className={isWarning ? "confirm-box confirm-box--warning" : "confirm-box"}
-      >
-        {isWarning ? (
-          <AlertWarningIcon aria-hidden="true" />
-        ) : (
-          <AlertErrorIcon aria-hidden="true" />
-        )}
+      <div className="confirm-box">
+        <AlertErrorIcon aria-hidden="true" />
         <span>{dismissDisabledReason}</span>
       </div>
     );
   } else if (confirmation.variant === "neutral") {
-    confirmationBox = (
-      <div className="confirm-box confirm-box--neutral">
-        <InformationCircleIcon aria-hidden="true" />
-        <span>{confirmation.content}</span>
-      </div>
-    );
+    confirmationBox = <InformationBox>{confirmation.content}</InformationBox>;
   } else {
     confirmationBox = (
       <div className="confirm-box confirm-box--warning">
@@ -155,7 +143,7 @@ export const DismissUserRiskPanel = memo(function DismissUserRiskPanel({
       subtitle="Confirm that your account is safe and request risk removal. All your sessions will be revoked."
       onClose={handleClose}
     >
-      {submitting ? (
+      {submitting || waitingForVerification ? (
         <div className="panel-loading">
           <Spinner />
         </div>
@@ -168,7 +156,7 @@ export const DismissUserRiskPanel = memo(function DismissUserRiskPanel({
             <button
               type="button"
               className="panel-primary-button"
-              onClick={triggerDismiss}
+              onClick={() => triggerDismiss()}
               disabled={!canDismiss}
               aria-disabled={!canDismiss || undefined}
             >

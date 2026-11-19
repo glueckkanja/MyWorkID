@@ -11,8 +11,8 @@ import { Spinner } from "@/components/ui/spinner";
 // Import Icons
 import { EyeIcon } from "@/components/ui/icons/eye-icon";
 import { EyeOffIcon } from "@/components/ui/icons/eye-off-icon";
-import { InformationCircleIcon } from "@/components/ui/icons/information-circle-icon";
 import { BlockedActionNotice } from "../blocked-action-notice";
+import { InformationBox } from "../information-box";
 
 const PASSWORD_LENGTH_ERROR_MESSAGE =
   "Password must be at least 8 characters long.";
@@ -53,7 +53,7 @@ export const PasswordResetPanel = memo(function PasswordResetPanel({
   comingFromRedirect,
   blockedReason,
   showBlockedReason,
-  blockedReasonVariant,
+  waitingForVerification,
   onVerifyIdentity,
   onCompleted,
 }: Readonly<PasswordResetPanelProps>) {
@@ -132,7 +132,7 @@ export const PasswordResetPanel = memo(function PasswordResetPanel({
           hint={PASSWORD_REQUIREMENTS_HINT}
           onVerifyIdentity={onVerifyIdentity}
           showReason={showBlockedReason}
-          reasonVariant={blockedReasonVariant}
+          waiting={waitingForVerification}
         />
       );
     }
@@ -197,10 +197,7 @@ export const PasswordResetPanel = memo(function PasswordResetPanel({
             </button>
           </div>
         </div>
-        <div className="form-hint">
-          <InformationCircleIcon />
-          <span>{PASSWORD_REQUIREMENTS_HINT}</span>
-        </div>
+        <InformationBox>{PASSWORD_REQUIREMENTS_HINT}</InformationBox>
         <button
           type="button"
           className="panel-primary-button"

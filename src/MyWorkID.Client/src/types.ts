@@ -34,8 +34,8 @@ export type CreateTapPanelProps = {
   onVerifyIdentity?: () => void;
   /** False hides the blocked reason, e.g. when the verification button already explains what to do. */
   showBlockedReason?: boolean;
-  /** Severity of the blocked reason. Defaults to an error. */
-  blockedReasonVariant?: BlockedReasonVariant;
+  /** True while a just completed verification is being confirmed; the panel shows a spinner. */
+  waitingForVerification?: boolean;
   /** Called after a Temporary Access Pass was generated. */
   onCompleted?: () => void;
 };
@@ -55,8 +55,8 @@ export type DismissUserRiskPanelProps = {
   riskLabel: string;
   canDismiss: boolean;
   dismissDisabledReason?: string;
-  /** Severity of the dismiss disabled reason. Defaults to an error. */
-  dismissDisabledReasonVariant?: BlockedReasonVariant;
+  /** True while a just completed verification is being confirmed; the panel shows a spinner. */
+  waitingForVerification?: boolean;
   /** When set, the disabled dismiss button is replaced by a button that starts the identity verification. */
   onVerifyIdentity?: () => void;
 };
@@ -71,8 +71,8 @@ export type PasswordResetPanelProps = {
   onVerifyIdentity?: () => void;
   /** False hides the blocked reason, e.g. when the verification button already explains what to do. */
   showBlockedReason?: boolean;
-  /** Severity of the blocked reason. Defaults to an error. */
-  blockedReasonVariant?: BlockedReasonVariant;
+  /** True while a just completed verification is being confirmed; the panel shows a spinner. */
+  waitingForVerification?: boolean;
   /** Called after the password was changed. */
   onCompleted?: () => void;
 };
@@ -105,13 +105,11 @@ export type ActionCardProps = {
   disabledReason?: string;
 };
 
-export type BlockedReasonVariant = "error" | "warning";
-
 export type BlockedActionNoticeProps = {
   /** Explains why the action is currently unavailable. */
   reason: string;
-  /** Severity of the reason. Defaults to an error. */
-  reasonVariant?: BlockedReasonVariant;
+  /** True while a just completed verification is being confirmed; a spinner replaces the notice. */
+  waiting?: boolean;
   /** Label of the disabled primary button that would normally trigger the action. */
   actionLabel: string;
   /** Grey information shown above the button, e.g. what the action does. */

@@ -11,7 +11,6 @@ import { Role } from "../../services/roles-service";
 import {
   EApiFunctionTypes,
   PanelKey,
-  BlockedReasonVariant,
   VerifiedIdAction,
   VerifiedIdStatus,
 } from "../../types";
@@ -123,8 +122,8 @@ type ActionVerificationState = {
    * button already says so.
    */
   showBlockedReason: boolean;
-  /** A warning marks a state that resolves on its own; an error needs the user to act. */
-  blockedReasonVariant: BlockedReasonVariant;
+  /** True while a just completed verification is being confirmed, so the panel shows a spinner. */
+  waitingForVerification: boolean;
   /** True if the user can start a verification for this action from its panel. */
   canVerifyIdentity: boolean;
 };
@@ -148,7 +147,7 @@ const getActionVerificationState = (
       blocked: true,
       blockedReason: VERIFICATION_STATUS_LOADING_REASON,
       showBlockedReason: true,
-      blockedReasonVariant: "error",
+      waitingForVerification: false,
       canVerifyIdentity: false,
     };
   }
@@ -157,7 +156,7 @@ const getActionVerificationState = (
       blocked: true,
       blockedReason: VERIFICATION_STATUS_ERROR_REASON,
       showBlockedReason: true,
-      blockedReasonVariant: "error",
+      waitingForVerification: false,
       canVerifyIdentity: false,
     };
   }
@@ -171,7 +170,7 @@ const getActionVerificationState = (
       blocked: false,
       blockedReason: undefined,
       showBlockedReason: true,
-      blockedReasonVariant: "error",
+      waitingForVerification: false,
       canVerifyIdentity: false,
     };
   }
@@ -193,8 +192,7 @@ const getActionVerificationState = (
     blockedReason,
     // Every action needs its own verification there, so telling the user adds nothing.
     showBlockedReason: blockedReason !== VERIFICATION_REQUIRED_PER_ACTION_REASON,
-    blockedReasonVariant:
-      blockedReason === VERIFICATION_CONFIRMING_REASON ? "warning" : "error",
+    waitingForVerification: blockedReason === VERIFICATION_CONFIRMING_REASON,
     canVerifyIdentity:
       canValidateIdentity && !verifiedIdStatus.confirmingVerification,
   };
@@ -495,7 +493,9 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
           }
           blockedReason={passwordResetVerification.blockedReason}
           showBlockedReason={passwordResetVerification.showBlockedReason}
-          blockedReasonVariant={passwordResetVerification.blockedReasonVariant}
+          waitingForVerification={
+            passwordResetVerification.waitingForVerification
+          }
           onVerifyIdentity={
             passwordResetVerification.canVerifyIdentity
               ? verifyIdentityForPasswordReset
@@ -515,7 +515,9 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
           }
           blockedReason={temporaryAccessPassVerification.blockedReason}
           showBlockedReason={temporaryAccessPassVerification.showBlockedReason}
-          blockedReasonVariant={temporaryAccessPassVerification.blockedReasonVariant}
+          waitingForVerification={
+            temporaryAccessPassVerification.waitingForVerification
+          }
           onVerifyIdentity={
             temporaryAccessPassVerification.canVerifyIdentity
               ? verifyIdentityForTemporaryAccessPass
@@ -538,10 +540,9 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
           riskLabel={profile.riskLabel}
           canDismiss={dismissAllowedForCurrentLevel && !dismissRiskVerification.blocked}
           dismissDisabledReason={dismissDisabledReason}
-          dismissDisabledReasonVariant={
-            dismissAllowedForCurrentLevel
-              ? dismissRiskVerification.blockedReasonVariant
-              : "error"
+          waitingForVerification={
+            dismissAllowedForCurrentLevel &&
+            dismissRiskVerification.waitingForVerification
           }
           onVerifyIdentity={
             dismissAllowedForCurrentLevel && dismissRiskVerification.canVerifyIdentity
