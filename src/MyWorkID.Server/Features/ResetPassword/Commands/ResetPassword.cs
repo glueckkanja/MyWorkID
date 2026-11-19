@@ -7,6 +7,7 @@ using Microsoft.Identity.Web;
 using MyWorkID.Server.Common;
 using MyWorkID.Server.Features.ResetPassword.Entities;
 using MyWorkID.Server.Features.ResetPassword.Filters;
+using MyWorkID.Server.Features.VerifiedId.Entities;
 using MyWorkID.Server.Filters;
 
 namespace MyWorkID.Server.Features.ResetPassword.Commands
@@ -28,6 +29,7 @@ namespace MyWorkID.Server.Features.ResetPassword.Commands
                 .AddEndpointFilter<CheckResetPasswordAppConfigurationEndpointFilter>()
                 .AddEndpointFilter<ResetPasswordAuthContextEndpointFilter>()
                 .AddEndpointFilter<CheckForObjectIdEndpointFilter>()
+                .RequireRecentVerifiedId(VerifiedIdAction.ResetPassword)
                 .AddEndpointFilter<PasswordValidationFilter>()
                 .WithTags(Strings.RESET_PASSWORD_OPENAPI_TAG);
         }
