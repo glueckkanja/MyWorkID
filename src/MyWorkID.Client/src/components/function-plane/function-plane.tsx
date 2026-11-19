@@ -52,9 +52,9 @@ const PANEL_BY_ACTION: Record<
 };
 
 const VERIFICATION_REQUIRED_REASON =
-  "Validate your identity first to unlock this action.";
+  "This action requires a face check. It starts when you click the button below.";
 const VERIFICATION_EXPIRED_REASON =
-  "Your identity verification has expired. Validate your identity again to unlock this action.";
+  "Your identity verification has expired. A new face check starts when you click the button below.";
 const VERIFICATION_REQUIRED_PER_ACTION_REASON =
   "For your security, this action requires a new identity verification every time. Verify your identity to continue.";
 const VERIFICATION_CONFIRMING_REASON =

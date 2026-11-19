@@ -2,7 +2,6 @@ import { AlertErrorIcon } from "@/components/ui/icons/alert-error-icon";
 import { Spinner } from "@/components/ui/spinner";
 import type { ReactNode } from "react";
 import type { BlockedActionNoticeProps } from "../../types";
-import { InformationBox } from "./information-box";
 
 /**
  * Shown inside an action panel instead of its form while the action is blocked
@@ -13,7 +12,6 @@ export const BlockedActionNotice = ({
   actionLabel,
   actionIcon,
   actionVariant,
-  hint,
   onVerifyIdentity,
   showReason = true,
   waiting = false,
@@ -34,7 +32,6 @@ export const BlockedActionNotice = ({
           <span>{reason}</span>
         </div>
       )}
-      {hint && <InformationBox>{hint}</InformationBox>}
       <BlockedActionButton
         label={actionLabel}
         icon={actionIcon}

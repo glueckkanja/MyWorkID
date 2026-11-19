@@ -1,6 +1,5 @@
 import { memo, useEffect, useRef, useState } from "react";
 import { Panel } from "../../panel";
-import { InformationBox } from "../information-box";
 import { verifyIdentity } from "../../../services/api-service";
 import { HubConnectionState, type HubConnection } from "@microsoft/signalr";
 import { getVerifiedIdConnection } from "../../../services/signal-r-service";
@@ -17,6 +16,19 @@ import { formatValidityDuration } from "@/lib/verified-id-status";
 import { FaceCheckCameraIcon } from "@/components/ui/icons/face-check-camera-icon";
 import { AlertWarningIcon } from "@/components/ui/icons/alert-warning-icon";
 import VerifiedIdentityIllustrationSvg from "../../../assets/svg/verified-identity-illustration.svg";
+
+const PANEL_DESCRIPTIONS: Record<VerifyState["status"], string> = {
+  idle: "Prove your identity using a face scan via Verified ID. You'll be asked to take a real-time selfie, which is matched against your Microsoft Entra ID photo. Results are stored securely.",
+  loading:
+    "Prove your identity using a face scan via Verified ID. You'll be asked to take a real-time selfie, which is matched against your Microsoft Entra ID photo. Results are stored securely.",
+  ready:
+    "Scan this QR code with the Microsoft Authenticator app to present your Verified ID credential.",
+  scanned:
+    "QR code scanned. Complete the face check on your mobile device. The action continues here automatically afterwards.",
+};
+
+const getPanelDescription = (status: VerifyState["status"]) =>
+  PANEL_DESCRIPTIONS[status];
 
 export const ValidateIdentityPanel = memo(function ValidateIdentityPanel({
   open,
@@ -200,8 +212,6 @@ export const ValidateIdentityPanel = memo(function ValidateIdentityPanel({
           <div className="panel-loading">
             <Spinner />
           </div>
-          <InformationBox>QR code scanned. Complete the face check on your mobile device.
-              The action continues here automatically afterwards.</InformationBox>
         </>
       );
     }
@@ -216,8 +226,6 @@ export const ValidateIdentityPanel = memo(function ValidateIdentityPanel({
               className="verify-illustration__qr"
             />
           </div>
-          <InformationBox>Scan this QR code with the Microsoft Authenticator app to present
-              your Verified ID credential.</InformationBox>
         </>
       );
     }
@@ -233,8 +241,6 @@ export const ValidateIdentityPanel = memo(function ValidateIdentityPanel({
           />
         </div>
         {renderRequirementHint()}
-        <InformationBox>You'll be asked to take a real-time selfie. The system matches it
-            against your Microsoft Entra ID photo. Results are stored securely.</InformationBox>
         <button
           type="button"
           className="panel-primary-button"
@@ -251,7 +257,7 @@ export const ValidateIdentityPanel = memo(function ValidateIdentityPanel({
     <Panel
       open={open}
       title="Validate Identity"
-      subtitle="Prove your identity using a face scan via Verified ID."
+      subtitle={getPanelDescription(verifyState.status)}
       onClose={onClose}
     >
       {renderBody()}

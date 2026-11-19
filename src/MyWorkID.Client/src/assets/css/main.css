@@ -655,6 +655,9 @@
   border: none;
   padding: 0;
   margin: 0;
+  /* A dialog is as wide as its content by default, so a narrow state such as a lone spinner would
+     leave the panel short of the screen edge. */
+  width: 100%;
   max-width: none;
   max-height: 90vh;
   background: var(--surface);
@@ -940,19 +943,6 @@
   flex-shrink: 0;
   margin-top: 1px;
   color: var(--status-danger-text);
-}
-
-.confirm-box--neutral {
-  background: var(--surface-hover);
-  border-color: var(--surface-border);
-}
-
-.confirm-box--neutral strong {
-  color: var(--text-primary);
-}
-
-.confirm-box--neutral svg {
-  color: var(--text-secondary);
 }
 
 .confirm-box--warning {

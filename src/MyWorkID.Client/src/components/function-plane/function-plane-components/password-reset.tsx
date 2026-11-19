@@ -12,7 +12,6 @@ import { Spinner } from "@/components/ui/spinner";
 import { EyeIcon } from "@/components/ui/icons/eye-icon";
 import { EyeOffIcon } from "@/components/ui/icons/eye-off-icon";
 import { BlockedActionNotice } from "../blocked-action-notice";
-import { InformationBox } from "../information-box";
 
 const PASSWORD_LENGTH_ERROR_MESSAGE =
   "Password must be at least 8 characters long.";
@@ -20,8 +19,8 @@ const PASSWORD_COMPLEXITY_ERROR_MESSAGE =
   "Please use characters from at least 3 of these groups: lowercase, uppercase, digits, special symbols.";
 const PASSWORD_MISMATCH_ERROR_MESSAGE =
   "Password must be the same in both fields.";
-const PASSWORD_REQUIREMENTS_HINT =
-  "At least 8 characters (24 for admin accounts) including uppercase and lowercase letters, a number, and a symbol.";
+const PANEL_DESCRIPTION =
+  "Choose a strong password you haven't used before. At least 8 characters (24 for admin accounts) including uppercase and lowercase letters, a number, and a symbol.";
 const PASSWORD_CHANGED_SUCCESS_TITLE = "Password Changed";
 const PASSWORD_CHANGED_SUCCESS_MESSAGE =
   "Your new password is active. Use it the next time you sign in.";
@@ -129,7 +128,6 @@ export const PasswordResetPanel = memo(function PasswordResetPanel({
         <BlockedActionNotice
           reason={blockedReason}
           actionLabel="Change Password"
-          hint={PASSWORD_REQUIREMENTS_HINT}
           onVerifyIdentity={onVerifyIdentity}
           showReason={showBlockedReason}
           waiting={waitingForVerification}
@@ -197,7 +195,6 @@ export const PasswordResetPanel = memo(function PasswordResetPanel({
             </button>
           </div>
         </div>
-        <InformationBox>{PASSWORD_REQUIREMENTS_HINT}</InformationBox>
         <button
           type="button"
           className="panel-primary-button"
@@ -214,7 +211,7 @@ export const PasswordResetPanel = memo(function PasswordResetPanel({
     <Panel
       open={open}
       title="Reset Password"
-      subtitle="Choose a strong password you haven't used before."
+      subtitle={PANEL_DESCRIPTION}
       onClose={onClose}
     >
       {renderBody()}

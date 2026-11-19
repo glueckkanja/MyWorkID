@@ -14,10 +14,11 @@ import { CheckmarkIcon } from "@/components/ui/icons/checkmark-icon";
 import { CopyDocumentIcon } from "@/components/ui/icons/copy-document-icon";
 import { RefreshArrowIcon } from "@/components/ui/icons/refresh-arrow-icon";
 import { BlockedActionNotice } from "../blocked-action-notice";
-import { InformationBox } from "../information-box";
 
-const GENERATE_HINT =
+const PANEL_DESCRIPTION =
   "Generate a one-time code to sign in on a new device without your regular credentials.";
+const PANEL_DESCRIPTION_WITH_PASS =
+  "Use this code to sign in on your new device. Once expired, you can generate a new pass.";
 
 export const CreateTapPanel = memo(function CreateTapPanel({
   open,
@@ -34,7 +35,9 @@ export const CreateTapPanel = memo(function CreateTapPanel({
   const { toastError, toastException } = useToast();
 
   // Expects the caller to have set the "loading" state already.
-  const requestTemporaryAccessPass = (startedRightAfterVerification = false) => {
+  const requestTemporaryAccessPass = (
+    startedRightAfterVerification = false,
+  ) => {
     generateTAP(startedRightAfterVerification)
       .then((result) => {
         const password = result.data?.temporaryAccessPassword;
@@ -140,7 +143,6 @@ export const CreateTapPanel = memo(function CreateTapPanel({
         <BlockedActionNotice
           reason={blockedReason}
           actionLabel="Generate Access Pass"
-          hint={GENERATE_HINT}
           onVerifyIdentity={onVerifyIdentity}
           showReason={showBlockedReason}
           waiting={waitingForVerification}
@@ -159,7 +161,6 @@ export const CreateTapPanel = memo(function CreateTapPanel({
     if (tap.status === "empty") {
       return (
         <>
-          <InformationBox>{GENERATE_HINT}</InformationBox>
           <button
             type="button"
             className="panel-primary-button"
@@ -198,8 +199,6 @@ export const CreateTapPanel = memo(function CreateTapPanel({
             )}
           </button>
         </div>
-        <InformationBox>Use this code to sign in on your new device. Once expired, you can
-            generate a new pass.</InformationBox>
         {blockedReason ? (
           <BlockedActionNotice
             reason={blockedReason}
@@ -236,7 +235,11 @@ export const CreateTapPanel = memo(function CreateTapPanel({
     <Panel
       open={open}
       title="Temporary Access Pass"
-      subtitle="A one-time code to sign in without your regular credentials."
+      subtitle={
+        tap.status === "ready" || tap.status === "revoking"
+          ? PANEL_DESCRIPTION_WITH_PASS
+          : PANEL_DESCRIPTION
+      }
       onClose={onClose}
     >
       {renderBody()}

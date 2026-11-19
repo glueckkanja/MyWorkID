@@ -116,8 +116,6 @@ export type BlockedActionNoticeProps = {
   actionIcon?: ReactNode;
   /** Style of that button. Defaults to the primary style. */
   actionVariant?: "primary" | "secondary";
-  /** Grey information shown above the button, e.g. what the action does. */
-  hint?: string;
   /** When set, the action button starts the identity verification instead of being disabled. */
   onVerifyIdentity?: () => void;
   /** False hides the reason, e.g. when the verification button already explains what to do. */
