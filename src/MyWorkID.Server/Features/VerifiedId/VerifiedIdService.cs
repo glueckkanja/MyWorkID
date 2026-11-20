@@ -20,6 +20,7 @@ namespace MyWorkID.Server.Features.VerifiedId
         private readonly GraphServiceClient _graphClient;
         private readonly IVerifiedIdSignalRRepository _verifiedIdSignalRRepository;
         private readonly IHubContext<VerifiedIdHub, IVerifiedIdHub> _hubContext;
+        private readonly IVerifiedIdRequirementService _verifiedIdRequirementService;
         private readonly ILogger _logger;
 
         /// <summary>
@@ -30,6 +31,7 @@ namespace MyWorkID.Server.Features.VerifiedId
         /// <param name="graphClient">The Graph service client.</param>
         /// <param name="verifiedIdSignalRRepository">The SignalR repository for Verified ID operations.</param>
         /// <param name="hubContext">The SignalR hub context.</param>
+        /// <param name="verifiedIdRequirementService">The service that manages the verification state.</param>
         /// <param name="logger">The logger instance.</param>
         public VerifiedIdService(
             HttpClient verifiedIdClient,
@@ -37,6 +39,7 @@ namespace MyWorkID.Server.Features.VerifiedId
             GraphServiceClient graphClient,
             IVerifiedIdSignalRRepository verifiedIdSignalRRepository,
             IHubContext<VerifiedIdHub, IVerifiedIdHub> hubContext,
+            IVerifiedIdRequirementService verifiedIdRequirementService,
             ILogger<VerifiedIdService> logger
         )
         {
@@ -45,6 +48,7 @@ namespace MyWorkID.Server.Features.VerifiedId
             _graphClient = graphClient;
             _verifiedIdSignalRRepository = verifiedIdSignalRRepository;
             _hubContext = hubContext;
+            _verifiedIdRequirementService = verifiedIdRequirementService;
             _logger = logger;
         }
 
@@ -256,12 +260,43 @@ namespace MyWorkID.Server.Features.VerifiedId
                     return;
                 }
 
+                DateTimeOffset verifiedAt = DateTimeOffset.UtcNow;
                 User requestBody = CreateSetTargetSecurityAttributeRequestBody(
-                    VerificationAttributeValue.Create(DateTimeOffset.UtcNow, action)
+                    VerificationAttributeValue.Create(verifiedAt, action)
                 );
 
                 await _graphClient.Users[userId].PatchAsync(requestBody);
                 await NotifyVerificationSuccess(userId);
+                await RestoreVerificationOverwrittenByDiscardAsync(userId, verifiedAt, action);
+            }
+        }
+
+        /// <summary>
+        /// Restores the recorded verification if a concurrent discard of an earlier verification overwrote it.
+        /// The verification was already recorded and reported, so a failure is logged instead of failing the callback.
+        /// </summary>
+        private async Task RestoreVerificationOverwrittenByDiscardAsync(
+            string userId,
+            DateTimeOffset verifiedAt,
+            VerifiedIdAction? action
+        )
+        {
+            try
+            {
+                await _verifiedIdRequirementService.RestoreVerificationOverwrittenByDiscardAsync(
+                    userId,
+                    verifiedAt,
+                    action,
+                    CancellationToken.None
+                );
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(
+                    exception,
+                    "Could not check whether a concurrent discard overwrote the Verified ID verification of user {UserId}.",
+                    userId
+                );
             }
         }
 
