@@ -57,6 +57,63 @@ namespace MyWorkID.Server.Features.VerifiedId
         }
 
         /// <summary>
+        /// Creates the attribute value that discards the verification completed at
+        /// <paramref name="discardedVerifiedAt"/>. Like <see cref="CreateUsed"/>, it no longer unlocks any action,
+        /// but it names the discarded verification, so a verification recorded concurrently can tell that the
+        /// discard was not meant for it (see <see cref="IsDiscardOfOtherVerification"/>).
+        /// </summary>
+        /// <param name="discardedAt">When the verification was discarded.</param>
+        /// <param name="discardedVerifiedAt">When the discarded verification was completed.</param>
+        /// <returns>The value to store in the custom security attribute.</returns>
+        public static string CreateDiscarded(DateTimeOffset discardedAt, DateTimeOffset discardedVerifiedAt)
+        {
+            return CreateUsed(discardedAt)
+                + Strings.VERIFIED_ID_ACTION_SEPARATOR
+                + FormatTimestamp(discardedVerifiedAt);
+        }
+
+        /// <summary>
+        /// <c>true</c> if <paramref name="value"/> was created by <see cref="CreateDiscarded"/> for a verification
+        /// other than the one completed at <paramref name="verifiedAt"/>.
+        /// </summary>
+        /// <param name="value">The value stored in the custom security attribute.</param>
+        /// <param name="verifiedAt">When the verification to compare with was completed.</param>
+        /// <returns><c>true</c> if the value discards another verification.</returns>
+        public static bool IsDiscardOfOtherVerification(string? value, DateTimeOffset verifiedAt)
+        {
+            if (
+                value is null
+                || !value.StartsWith(Strings.VERIFIED_ID_USED_TIMESTAMP_PREFIX, StringComparison.Ordinal)
+            )
+            {
+                return false;
+            }
+
+            int separatorIndex = value.IndexOf(Strings.VERIFIED_ID_ACTION_SEPARATOR);
+            if (separatorIndex < 0)
+            {
+                return false;
+            }
+
+            // Claims carry a claim ID instead of a timestamp, so they are not discards.
+            string discardedTimestamp = value[(separatorIndex + 1)..];
+            if (
+                !DateTimeOffset.TryParseExact(
+                    discardedTimestamp,
+                    TIMESTAMP_FORMAT,
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
+                    out _
+                )
+            )
+            {
+                return false;
+            }
+
+            return !string.Equals(discardedTimestamp, FormatTimestamp(verifiedAt), StringComparison.Ordinal);
+        }
+
+        /// <summary>
         /// Parses an action name. Only exact names of defined actions are accepted, so neither numbers
         /// nor differently cased names can bind a verification to an action.
         /// </summary>

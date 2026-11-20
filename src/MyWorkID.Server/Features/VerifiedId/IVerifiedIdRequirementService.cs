@@ -81,7 +81,9 @@ namespace MyWorkID.Server.Features.VerifiedId
         /// <summary>
         /// Marks the current verification of the user as used if every action requires its own verification
         /// and the current verification is bound to <paramref name="action"/>. Verifications that are not bound
-        /// to an action (started from the standalone identity validation) stay untouched.
+        /// to an action (started from the standalone identity validation) stay untouched. The stored value names
+        /// the discarded verification, so a verification that is recorded concurrently and overwritten by the
+        /// discard can restore itself (see <see cref="RestoreVerificationOverwrittenByDiscardAsync"/>).
         /// </summary>
         /// <param name="userId">Object ID of the user.</param>
         /// <param name="action">The action the verification to discard was started for.</param>
@@ -91,6 +93,25 @@ namespace MyWorkID.Server.Features.VerifiedId
         Task<bool> DiscardVerificationAsync(
             string userId,
             VerifiedIdAction action,
+            CancellationToken cancellationToken
+        );
+
+        /// <summary>
+        /// Restores a newly recorded verification if a concurrent discard of an earlier verification overwrote
+        /// it. Graph has no conditional updates, so a discard that looked up the earlier verification before the
+        /// new one was recorded overwrites the new one. Waits
+        /// <see cref="VerifiedIdRequirementService.CLAIM_SETTLE_DELAY"/> before reading the attribute back. Does
+        /// nothing unless every action requires its own verification.
+        /// </summary>
+        /// <param name="userId">Object ID of the user.</param>
+        /// <param name="verifiedAt">When the new verification was completed.</param>
+        /// <param name="action">The action the new verification is bound to, if any.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <exception cref="Exceptions.ConfigurationMissingException">Thrown when the target security attribute is not configured.</exception>
+        Task RestoreVerificationOverwrittenByDiscardAsync(
+            string userId,
+            DateTimeOffset verifiedAt,
+            VerifiedIdAction? action,
             CancellationToken cancellationToken
         );
     }
