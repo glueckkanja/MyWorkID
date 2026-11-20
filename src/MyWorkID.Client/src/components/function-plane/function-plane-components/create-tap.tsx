@@ -32,12 +32,24 @@ export const CreateTapPanel = memo(function CreateTapPanel({
 }: Readonly<CreateTapPanelProps>) {
   const [tap, setTap] = useState<TapState>({ status: "empty" });
   const [copiedTap, setCopiedTap] = useState(false);
+  // Set while the identity verification started from this panel temporarily closes it, so an
+  // existing pass survives the round trip and can still be used or revoked afterwards.
+  const [leavingForVerification, setLeavingForVerification] = useState(false);
   const { toastError, toastException } = useToast();
 
-  // Expects the caller to have set the "loading" state already.
+  // Expects the caller to have set the "loading" state already. A failed request keeps the pass that
+  // was shown before, because it has not been replaced.
   const requestTemporaryAccessPass = (
+    previousTemporaryAccessPass: TapState,
     startedRightAfterVerification = false,
   ) => {
+    const restorePreviousTemporaryAccessPass = () => {
+      setTap(
+        previousTemporaryAccessPass.status === "ready"
+          ? previousTemporaryAccessPass
+          : { status: "empty" },
+      );
+    };
     generateTAP(startedRightAfterVerification)
       .then((result) => {
         const password = result.data?.temporaryAccessPassword;
@@ -51,20 +63,27 @@ export const CreateTapPanel = memo(function CreateTapPanel({
           setTap({ status: "ready", id, password });
           onCompleted?.();
         } else {
-          setTap({ status: "empty" });
+          restorePreviousTemporaryAccessPass();
           toastError();
         }
       })
       .catch((error) => {
-        setTap({ status: "empty" });
+        restorePreviousTemporaryAccessPass();
         toastException(error);
       });
   };
 
   const createTap = () => {
     setTap({ status: "loading" });
-    requestTemporaryAccessPass();
+    requestTemporaryAccessPass(tap);
   };
+
+  const verifyIdentity = onVerifyIdentity
+    ? () => {
+        setLeavingForVerification(true);
+        onVerifyIdentity();
+      }
+    : undefined;
 
   const revokeTap = () => {
     if (tap.status !== "ready") {
@@ -107,13 +126,16 @@ export const CreateTapPanel = memo(function CreateTapPanel({
   // is dispatched, so a later toggle of comingFromRedirect (e.g. after a failed verification
   // status poll recovers) cannot generate another TAP. Until then the request waits while blocked.
   const [redirectConsumed, setRedirectConsumed] = useState(false);
+  const [passReplacedByRedirect, setPassReplacedByRedirect] =
+    useState<TapState>({ status: "empty" });
   if (open && comingFromRedirect && !blockedReason && !redirectConsumed) {
     setRedirectConsumed(true);
+    setPassReplacedByRedirect(tap);
     setTap({ status: "loading" });
   }
 
   const requestTemporaryAccessPassFromRedirect = useEffectEvent(() => {
-    requestTemporaryAccessPass(true);
+    requestTemporaryAccessPass(passReplacedByRedirect, true);
   });
   useEffect(() => {
     if (redirectConsumed) {
@@ -121,12 +143,16 @@ export const CreateTapPanel = memo(function CreateTapPanel({
     }
   }, [redirectConsumed]);
 
-  // clear TAP state when panel is closed
+  // clear TAP state when panel is closed, unless it only closed for the identity verification
+  // started from it: cancelling or failing that verification must not lose the still active pass.
   const [previousOpen, setPreviousOpen] = useState(open);
   if (open !== previousOpen) {
     setPreviousOpen(open);
+    setLeavingForVerification(false);
     if (!open) {
-      setTap({ status: "empty" });
+      if (!leavingForVerification) {
+        setTap({ status: "empty" });
+      }
       setCopiedTap(false);
       // The next verification or redirect may start a pass again.
       setRedirectConsumed(false);
@@ -143,7 +169,7 @@ export const CreateTapPanel = memo(function CreateTapPanel({
         <BlockedActionNotice
           reason={blockedReason}
           actionLabel="Generate Access Pass"
-          onVerifyIdentity={onVerifyIdentity}
+          onVerifyIdentity={verifyIdentity}
           showReason={showBlockedReason}
           waiting={waitingForVerification}
         />
@@ -203,7 +229,7 @@ export const CreateTapPanel = memo(function CreateTapPanel({
             actionLabel="Create New Pass"
             actionIcon={<RefreshArrowIcon />}
             actionVariant="secondary"
-            onVerifyIdentity={onVerifyIdentity}
+            onVerifyIdentity={verifyIdentity}
             showReason={showBlockedReason}
             waiting={waitingForVerification}
           />
