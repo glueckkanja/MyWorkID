@@ -53,7 +53,9 @@ namespace MyWorkID.Server.Features.VerifiedId
         /// <summary>
         /// Claims the current verification of the user for a single action, so concurrent requests cannot use the
         /// same verification. The claim marks the verification as used and is then read back: only the request
-        /// whose claim is still stored after <see cref="VerifiedIdRequirementService.CLAIM_SETTLE_DELAY"/> wins.
+        /// whose claim is still stored after <see cref="VerifiedIdRequirementService.CLAIM_SETTLE_DELAY"/> wins. While
+        /// the directory still returns the claimed verification, the claim is not readable yet and the attribute is
+        /// read again (see <see cref="VerifiedIdRequirementService.CLAIM_READ_RETRY_INTERVAL"/>).
         /// </summary>
         /// <param name="userId">Object ID of the user.</param>
         /// <param name="verificationState">The verification that was checked before claiming it.</param>

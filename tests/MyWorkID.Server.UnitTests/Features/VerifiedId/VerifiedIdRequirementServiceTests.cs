@@ -121,6 +121,32 @@ namespace MyWorkID.Server.UnitTests.Features.VerifiedId
         }
 
         [Fact]
+        public async Task TryClaimVerificationAsync_WhenDirectoryReturnsClaimedVerificationAtFirst_WaitsForOwnClaim()
+        {
+            DateTimeOffset lastVerifiedAt = _now.AddMinutes(-1);
+            IRequestAdapter requestAdapter = CreateRequestAdapterStoringWrittenValue(VerificationAttributeValue.Create(lastVerifiedAt, VerifiedIdAction.DismissUserRisk), staleReadCount: 3);
+            var sut = CreateService(enabled: true, validityInMinutes: 0, requestAdapter);
+
+            VerifiedIdVerificationClaim? claim = await sut.TryClaimVerificationAsync("user-id", sut.Evaluate(lastVerifiedAt, VerifiedIdAction.DismissUserRisk), TestContext.Current.CancellationToken);
+
+            claim.Should().NotBeNull();
+            GetWrittenAttributeValues(requestAdapter).Should().Equal(claim!.ClaimedValue);
+        }
+
+        [Fact]
+        public async Task TryClaimVerificationAsync_WhenDirectoryNeverReturnsOwnClaim_ReturnsNull()
+        {
+            DateTimeOffset lastVerifiedAt = _now.AddMinutes(-1);
+            IRequestAdapter requestAdapter = CreateRequestAdapterStoringWrittenValue(VerificationAttributeValue.Create(lastVerifiedAt, VerifiedIdAction.DismissUserRisk), staleReadCount: int.MaxValue);
+            var sut = CreateService(enabled: true, validityInMinutes: 0, requestAdapter);
+
+            VerifiedIdVerificationClaim? claim = await sut.TryClaimVerificationAsync("user-id", sut.Evaluate(lastVerifiedAt, VerifiedIdAction.DismissUserRisk), TestContext.Current.CancellationToken);
+
+            claim.Should().BeNull();
+            GetReadCount(requestAdapter).Should().Be(VerifiedIdRequirementService.CLAIM_READ_MAXIMUM_ATTEMPTS);
+        }
+
+        [Fact]
         public async Task TryClaimVerificationAsync_WithoutVerification_ReturnsNullWithoutCallingGraph()
         {
             IRequestAdapter requestAdapter = Substitute.For<IRequestAdapter>();
@@ -440,11 +466,14 @@ namespace MyWorkID.Server.UnitTests.Features.VerifiedId
 
         /// <summary>
         /// Creates a request adapter that returns a user holding <paramref name="initialValue"/> and, like Graph,
-        /// returns the last written attribute value once a request overwrote it.
+        /// returns the last written attribute value once a request overwrote it. Like a lagging directory, the
+        /// first <paramref name="staleReadCount"/> reads after a write still return the previous value.
         /// </summary>
-        private static IRequestAdapter CreateRequestAdapterStoringWrittenValue(string initialValue)
+        private static IRequestAdapter CreateRequestAdapterStoringWrittenValue(string initialValue, int staleReadCount = 0)
         {
-            User currentUser = CreateUser(initialValue);
+            User previousUser = CreateUser(initialValue);
+            User currentUser = previousUser;
+            int remainingStaleReadCount = 0;
             var requestAdapter = Substitute.For<IRequestAdapter>();
             requestAdapter.SerializationWriterFactory.Returns(new JsonSerializationWriterFactory());
             requestAdapter.SendAsync(
@@ -457,11 +486,28 @@ namespace MyWorkID.Server.UnitTests.Features.VerifiedId
                     string? writtenValue = GetWrittenAttributeValue(callInfo.ArgAt<RequestInformation>(0));
                     if (writtenValue is not null)
                     {
+                        previousUser = currentUser;
                         currentUser = CreateUser(writtenValue);
+                        remainingStaleReadCount = staleReadCount;
+                        return currentUser;
+                    }
+                    if (remainingStaleReadCount > 0)
+                    {
+                        remainingStaleReadCount--;
+                        return previousUser;
                     }
                     return currentUser;
                 });
             return requestAdapter;
+        }
+
+        private static int GetReadCount(IRequestAdapter requestAdapter)
+        {
+            return requestAdapter
+                .ReceivedCalls()
+                .SelectMany(call => call.GetArguments())
+                .OfType<RequestInformation>()
+                .Count(requestInformation => requestInformation.HttpMethod == Method.GET);
         }
 
         private static List<string> GetWrittenAttributeValues(IRequestAdapter requestAdapter)
