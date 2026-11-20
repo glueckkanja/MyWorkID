@@ -91,6 +91,75 @@ namespace MyWorkID.Server.UnitTests.Features.VerifiedId
         }
 
         [Fact]
+        public async Task TryClaimVerificationAsync_WhenOwnClaimIsReadBack_ReturnsClaimThatRestoresVerification()
+        {
+            DateTimeOffset lastVerifiedAt = _now.AddMinutes(-1);
+            IRequestAdapter requestAdapter = CreateRequestAdapterStoringWrittenValue(VerificationAttributeValue.Create(lastVerifiedAt, VerifiedIdAction.ResetPassword));
+            var sut = CreateService(enabled: true, validityInMinutes: 0, requestAdapter);
+            VerifiedIdVerificationState verificationState = sut.Evaluate(lastVerifiedAt, VerifiedIdAction.ResetPassword);
+
+            VerifiedIdVerificationClaim? claim = await sut.TryClaimVerificationAsync("user-id", verificationState, TestContext.Current.CancellationToken);
+
+            claim.Should().NotBeNull();
+            claim!.UserId.Should().Be("user-id");
+            claim.ClaimedValue.Should().StartWith("used-v1:2026-10-20T12:00:00Z;");
+            claim.ReleasedValue.Should().Be(VerificationAttributeValue.Create(lastVerifiedAt, VerifiedIdAction.ResetPassword));
+            GetWrittenAttributeValues(requestAdapter).Should().Equal(claim.ClaimedValue);
+        }
+
+        [Fact]
+        public async Task TryClaimVerificationAsync_WhenConcurrentClaimIsReadBack_ReturnsNull()
+        {
+            DateTimeOffset lastVerifiedAt = _now.AddMinutes(-1);
+            IRequestAdapter requestAdapter = CreateRequestAdapterReturning(CreateUser(VerificationAttributeValue.CreateClaimed(_now)));
+            requestAdapter.SerializationWriterFactory.Returns(new JsonSerializationWriterFactory());
+            var sut = CreateService(enabled: true, validityInMinutes: 0, requestAdapter);
+
+            VerifiedIdVerificationClaim? claim = await sut.TryClaimVerificationAsync("user-id", sut.Evaluate(lastVerifiedAt, VerifiedIdAction.ResetPassword), TestContext.Current.CancellationToken);
+
+            claim.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task TryClaimVerificationAsync_WithoutVerification_ReturnsNullWithoutCallingGraph()
+        {
+            IRequestAdapter requestAdapter = Substitute.For<IRequestAdapter>();
+            var sut = CreateService(enabled: true, validityInMinutes: 0, requestAdapter);
+
+            VerifiedIdVerificationClaim? claim = await sut.TryClaimVerificationAsync("user-id", VerifiedIdVerificationState.NeverVerified, TestContext.Current.CancellationToken);
+
+            claim.Should().BeNull();
+            requestAdapter.ReceivedCalls()
+                .SelectMany(call => call.GetArguments())
+                .OfType<RequestInformation>()
+                .Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task ReleaseVerificationClaimAsync_WhenClaimIsStillStored_RestoresVerification()
+        {
+            var claim = new VerifiedIdVerificationClaim("user-id", VerificationAttributeValue.CreateClaimed(_now), VerificationAttributeValue.Create(_now.AddMinutes(-1), VerifiedIdAction.ResetPassword));
+            IRequestAdapter requestAdapter = CreateRequestAdapterStoringWrittenValue(claim.ClaimedValue);
+            var sut = CreateService(enabled: true, validityInMinutes: 0, requestAdapter);
+
+            await sut.ReleaseVerificationClaimAsync(claim, TestContext.Current.CancellationToken);
+
+            GetWrittenAttributeValues(requestAdapter).Should().Equal(claim.ReleasedValue);
+        }
+
+        [Fact]
+        public async Task ReleaseVerificationClaimAsync_WhenAttributeWasOverwritten_KeepsNewValue()
+        {
+            var claim = new VerifiedIdVerificationClaim("user-id", VerificationAttributeValue.CreateClaimed(_now), VerificationAttributeValue.Create(_now.AddMinutes(-1), VerifiedIdAction.ResetPassword));
+            IRequestAdapter requestAdapter = CreateRequestAdapterStoringWrittenValue(VerificationAttributeValue.Create(_now, VerifiedIdAction.GenerateTemporaryAccessPass));
+            var sut = CreateService(enabled: true, validityInMinutes: 0, requestAdapter);
+
+            await sut.ReleaseVerificationClaimAsync(claim, TestContext.Current.CancellationToken);
+
+            GetWrittenAttributeValues(requestAdapter).Should().BeEmpty();
+        }
+
+        [Fact]
         public async Task MarkVerificationAsUsedAsync_WithoutTargetAttributeConfiguration_ThrowsWithoutCallingGraph()
         {
             IRequestAdapter requestAdapter = Substitute.For<IRequestAdapter>();
@@ -305,6 +374,58 @@ namespace MyWorkID.Server.UnitTests.Features.VerifiedId
                 Arg.Any<CancellationToken>())
                 .ReturnsForAnyArgs(user);
             return requestAdapter;
+        }
+
+        /// <summary>
+        /// Creates a request adapter that returns a user holding <paramref name="initialValue"/> and, like Graph,
+        /// returns the last written attribute value once a request overwrote it.
+        /// </summary>
+        private static IRequestAdapter CreateRequestAdapterStoringWrittenValue(string initialValue)
+        {
+            User currentUser = CreateUser(initialValue);
+            var requestAdapter = Substitute.For<IRequestAdapter>();
+            requestAdapter.SerializationWriterFactory.Returns(new JsonSerializationWriterFactory());
+            requestAdapter.SendAsync(
+                Arg.Any<RequestInformation>(),
+                Arg.Any<ParsableFactory<User>>(),
+                Arg.Any<Dictionary<string, ParsableFactory<IParsable>>>(),
+                Arg.Any<CancellationToken>())
+                .ReturnsForAnyArgs(callInfo =>
+                {
+                    string? writtenValue = GetWrittenAttributeValue(callInfo.ArgAt<RequestInformation>(0));
+                    if (writtenValue is not null)
+                    {
+                        currentUser = CreateUser(writtenValue);
+                    }
+                    return currentUser;
+                });
+            return requestAdapter;
+        }
+
+        private static List<string> GetWrittenAttributeValues(IRequestAdapter requestAdapter)
+        {
+            return requestAdapter
+                .ReceivedCalls()
+                .SelectMany(call => call.GetArguments())
+                .OfType<RequestInformation>()
+                .Select(GetWrittenAttributeValue)
+                .OfType<string>()
+                .ToList();
+        }
+
+        private static string? GetWrittenAttributeValue(RequestInformation requestInformation)
+        {
+            if (requestInformation.HttpMethod != Method.PATCH || requestInformation.Content is null)
+            {
+                return null;
+            }
+
+            requestInformation.Content.Position = 0;
+            using var reader = new StreamReader(requestInformation.Content, leaveOpen: true);
+            string content = reader.ReadToEnd();
+            requestInformation.Content.Position = 0;
+            using JsonDocument body = JsonDocument.Parse(content);
+            return body.RootElement.GetProperty("customSecurityAttributes").GetProperty(AttributeSetName).GetProperty(AttributeName).GetString();
         }
 
         private static User CreateUser(string timestamp)

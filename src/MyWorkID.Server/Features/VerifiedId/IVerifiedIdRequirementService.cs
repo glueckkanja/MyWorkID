@@ -51,6 +51,34 @@ namespace MyWorkID.Server.Features.VerifiedId
         Task MarkVerificationAsUsedAsync(string userId, CancellationToken cancellationToken);
 
         /// <summary>
+        /// Claims the current verification of the user for a single action, so concurrent requests cannot use the
+        /// same verification. The claim marks the verification as used and is then read back: only the request
+        /// whose claim is still stored after <see cref="VerifiedIdRequirementService.CLAIM_SETTLE_DELAY"/> wins.
+        /// </summary>
+        /// <param name="userId">Object ID of the user.</param>
+        /// <param name="verificationState">The verification that was checked before claiming it.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The claim if this request won it; otherwise <c>null</c>.</returns>
+        /// <exception cref="Exceptions.ConfigurationMissingException">Thrown when the target security attribute is not configured.</exception>
+        Task<VerifiedIdVerificationClaim?> TryClaimVerificationAsync(
+            string userId,
+            VerifiedIdVerificationState verificationState,
+            CancellationToken cancellationToken
+        );
+
+        /// <summary>
+        /// Restores the claimed verification after the action failed, unless the attribute was overwritten in the
+        /// meantime (e.g. by a new verification).
+        /// </summary>
+        /// <param name="claim">The claim returned by <see cref="TryClaimVerificationAsync"/>.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <exception cref="Exceptions.ConfigurationMissingException">Thrown when the target security attribute is not configured.</exception>
+        Task ReleaseVerificationClaimAsync(
+            VerifiedIdVerificationClaim claim,
+            CancellationToken cancellationToken
+        );
+
+        /// <summary>
         /// Marks the current verification of the user as used if every action requires its own verification
         /// and the current verification is bound to <paramref name="action"/>. Verifications that are not bound
         /// to an action (started from the standalone identity validation) stay untouched.
