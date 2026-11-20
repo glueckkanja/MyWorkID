@@ -1,0 +1,510 @@
+using System.Globalization;
+using System.Text.Json;
+using FluentAssertions;
+using Microsoft.Extensions.Logging;
+using Microsoft.Graph;
+using Microsoft.Graph.Models;
+using Microsoft.Kiota.Abstractions;
+using Microsoft.Kiota.Abstractions.Serialization;
+using Microsoft.Kiota.Serialization.Json;
+using MyWorkID.Server.Exceptions;
+using MyWorkID.Server.Features.VerifiedId;
+using MyWorkID.Server.Features.VerifiedId.Entities;
+using MyWorkID.Server.Options;
+using MyWorkID.Server.UnitTests.TestModels;
+using NSubstitute;
+
+namespace MyWorkID.Server.UnitTests.Features.VerifiedId
+{
+    public class VerifiedIdRequirementServiceTests
+    {
+        private const string AttributeSetName = "MyWorkID";
+        private const string AttributeName = "lastVerifiedFaceCheck";
+        private static readonly DateTimeOffset _now = new(2026, 10, 20, 12, 0, 0, TimeSpan.Zero);
+
+        [Fact]
+        public void IsEnabledAndValidity_ReflectOptions()
+        {
+            var sut = CreateService(enabled: true, validityInMinutes: 120, requestAdapter: Substitute.For<IRequestAdapter>());
+
+            sut.IsEnabled.Should().BeTrue();
+            sut.Validity.Should().Be(TimeSpan.FromMinutes(120));
+            sut.RequiresVerificationPerAction.Should().BeFalse();
+        }
+
+        [Fact]
+        public void WithoutValidity_RequiresVerificationPerActionWithinPerActionWindow()
+        {
+            var sut = CreateService(enabled: true, validityInMinutes: 0, requestAdapter: Substitute.For<IRequestAdapter>());
+
+            sut.RequiresVerificationPerAction.Should().BeTrue();
+            sut.ValidityInMinutes.Should().Be(0);
+            sut.Validity.Should().Be(TimeSpan.FromMinutes(VerifiedIdRequirementOptions.PER_ACTION_VERIFICATION_WINDOW_IN_MINUTES));
+        }
+
+        [Theory]
+        [InlineData(0, true)] // verified right now
+        [InlineData(VerifiedIdRequirementOptions.PER_ACTION_VERIFICATION_WINDOW_IN_MINUTES - 1, true)]
+        [InlineData(VerifiedIdRequirementOptions.PER_ACTION_VERIFICATION_WINDOW_IN_MINUTES, false)] // the window is exclusive at its end
+        public void Evaluate_WhenVerificationIsRequiredPerAction_UsesPerActionWindow(int minutesAgo, bool expectedIsValid)
+        {
+            var sut = CreateService(enabled: true, validityInMinutes: 0, requestAdapter: Substitute.For<IRequestAdapter>());
+
+            VerifiedIdVerificationState state = sut.Evaluate(_now.AddMinutes(-minutesAgo));
+
+            state.IsValid.Should().Be(expectedIsValid);
+            state.ValidUntil.Should().Be(_now.AddMinutes(VerifiedIdRequirementOptions.PER_ACTION_VERIFICATION_WINDOW_IN_MINUTES - minutesAgo));
+        }
+
+        [Fact]
+        public async Task GetVerificationStateAsync_WithUsedVerificationInGraph_ReturnsNeverVerified()
+        {
+            IRequestAdapter requestAdapter = CreateRequestAdapterReturning(CreateUser(Strings.VERIFIED_ID_USED_TIMESTAMP_PREFIX + _now.UtcDateTime.ToString("O", CultureInfo.InvariantCulture)));
+            var sut = CreateService(enabled: true, validityInMinutes: 0, requestAdapter);
+
+            VerifiedIdVerificationState state = await sut.GetVerificationStateAsync("user-id", TestContext.Current.CancellationToken);
+
+            state.Should().Be(VerifiedIdVerificationState.NeverVerified);
+        }
+
+        [Fact]
+        public async Task MarkVerificationAsUsedAsync_PatchesTargetSecurityAttributeWithUsedTimestamp()
+        {
+            IRequestAdapter requestAdapter = Substitute.For<IRequestAdapter>();
+            requestAdapter.SerializationWriterFactory.Returns(new JsonSerializationWriterFactory());
+            var sut = CreateService(enabled: true, validityInMinutes: 0, requestAdapter);
+
+            await sut.MarkVerificationAsUsedAsync("user-id", TestContext.Current.CancellationToken);
+
+            RequestInformation sentRequest = requestAdapter
+                .ReceivedCalls()
+                .SelectMany(call => call.GetArguments())
+                .OfType<RequestInformation>()
+                .Should().ContainSingle().Subject;
+            sentRequest.HttpMethod.Should().Be(Method.PATCH);
+            sentRequest.URI.AbsolutePath.Should().EndWith("/users/user-id");
+            using var reader = new StreamReader(sentRequest.Content);
+            using JsonDocument body = JsonDocument.Parse(await reader.ReadToEndAsync(TestContext.Current.CancellationToken));
+            JsonElement attributeSet = body.RootElement.GetProperty("customSecurityAttributes").GetProperty(AttributeSetName);
+            attributeSet.GetProperty("@odata.type").GetString().Should().Be("#Microsoft.DirectoryServices.CustomSecurityAttributeValue");
+            attributeSet.GetProperty(AttributeName).GetString().Should().Be("used-v1:2026-10-20T12:00:00Z");
+        }
+
+        [Fact]
+        public async Task TryClaimVerificationAsync_WhenOwnClaimIsReadBack_ReturnsClaimThatRestoresVerification()
+        {
+            DateTimeOffset lastVerifiedAt = _now.AddMinutes(-1);
+            IRequestAdapter requestAdapter = CreateRequestAdapterStoringWrittenValue(VerificationAttributeValue.Create(lastVerifiedAt, VerifiedIdAction.ResetPassword));
+            var sut = CreateService(enabled: true, validityInMinutes: 0, requestAdapter);
+            VerifiedIdVerificationState verificationState = sut.Evaluate(lastVerifiedAt, VerifiedIdAction.ResetPassword);
+
+            VerifiedIdVerificationClaim? claim = await sut.TryClaimVerificationAsync("user-id", verificationState, TestContext.Current.CancellationToken);
+
+            claim.Should().NotBeNull();
+            claim!.UserId.Should().Be("user-id");
+            claim.ClaimedValue.Should().StartWith("used-v1:2026-10-20T12:00:00Z;");
+            claim.ReleasedValue.Should().Be(VerificationAttributeValue.Create(lastVerifiedAt, VerifiedIdAction.ResetPassword));
+            GetWrittenAttributeValues(requestAdapter).Should().Equal(claim.ClaimedValue);
+        }
+
+        [Fact]
+        public async Task TryClaimVerificationAsync_WhenConcurrentClaimIsReadBack_ReturnsNull()
+        {
+            DateTimeOffset lastVerifiedAt = _now.AddMinutes(-1);
+            IRequestAdapter requestAdapter = CreateRequestAdapterReturning(CreateUser(VerificationAttributeValue.CreateClaimed(_now)));
+            requestAdapter.SerializationWriterFactory.Returns(new JsonSerializationWriterFactory());
+            var sut = CreateService(enabled: true, validityInMinutes: 0, requestAdapter);
+
+            VerifiedIdVerificationClaim? claim = await sut.TryClaimVerificationAsync("user-id", sut.Evaluate(lastVerifiedAt, VerifiedIdAction.ResetPassword), TestContext.Current.CancellationToken);
+
+            claim.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task TryClaimVerificationAsync_WithoutVerification_ReturnsNullWithoutCallingGraph()
+        {
+            IRequestAdapter requestAdapter = Substitute.For<IRequestAdapter>();
+            var sut = CreateService(enabled: true, validityInMinutes: 0, requestAdapter);
+
+            VerifiedIdVerificationClaim? claim = await sut.TryClaimVerificationAsync("user-id", VerifiedIdVerificationState.NeverVerified, TestContext.Current.CancellationToken);
+
+            claim.Should().BeNull();
+            requestAdapter.ReceivedCalls()
+                .SelectMany(call => call.GetArguments())
+                .OfType<RequestInformation>()
+                .Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task ReleaseVerificationClaimAsync_WhenClaimIsStillStored_RestoresVerification()
+        {
+            var claim = new VerifiedIdVerificationClaim("user-id", VerificationAttributeValue.CreateClaimed(_now), VerificationAttributeValue.Create(_now.AddMinutes(-1), VerifiedIdAction.ResetPassword));
+            IRequestAdapter requestAdapter = CreateRequestAdapterStoringWrittenValue(claim.ClaimedValue);
+            var sut = CreateService(enabled: true, validityInMinutes: 0, requestAdapter);
+
+            await sut.ReleaseVerificationClaimAsync(claim, TestContext.Current.CancellationToken);
+
+            GetWrittenAttributeValues(requestAdapter).Should().Equal(claim.ReleasedValue);
+        }
+
+        [Fact]
+        public async Task ReleaseVerificationClaimAsync_WhenAttributeWasOverwritten_KeepsNewValue()
+        {
+            var claim = new VerifiedIdVerificationClaim("user-id", VerificationAttributeValue.CreateClaimed(_now), VerificationAttributeValue.Create(_now.AddMinutes(-1), VerifiedIdAction.ResetPassword));
+            IRequestAdapter requestAdapter = CreateRequestAdapterStoringWrittenValue(VerificationAttributeValue.Create(_now, VerifiedIdAction.GenerateTemporaryAccessPass));
+            var sut = CreateService(enabled: true, validityInMinutes: 0, requestAdapter);
+
+            await sut.ReleaseVerificationClaimAsync(claim, TestContext.Current.CancellationToken);
+
+            GetWrittenAttributeValues(requestAdapter).Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task DiscardVerificationAsync_WhenVerificationIsBoundToAction_StoresDiscardNamingTheVerification()
+        {
+            DateTimeOffset lastVerifiedAt = _now.AddMinutes(-1);
+            IRequestAdapter requestAdapter = CreateRequestAdapterStoringWrittenValue(VerificationAttributeValue.Create(lastVerifiedAt, VerifiedIdAction.ResetPassword));
+            var sut = CreateService(enabled: true, validityInMinutes: 0, requestAdapter);
+
+            bool discarded = await sut.DiscardVerificationAsync("user-id", VerifiedIdAction.ResetPassword, TestContext.Current.CancellationToken);
+
+            discarded.Should().BeTrue();
+            GetWrittenAttributeValues(requestAdapter).Should().Equal("used-v1:2026-10-20T12:00:00Z;2026-10-20T11:59:00Z");
+        }
+
+        [Fact]
+        public async Task RestoreVerificationOverwrittenByDiscardAsync_WhenDiscardOfEarlierVerificationIsStored_RestoresVerification()
+        {
+            IRequestAdapter requestAdapter = CreateRequestAdapterStoringWrittenValue(VerificationAttributeValue.CreateDiscarded(_now, _now.AddMinutes(-1)));
+            var sut = CreateService(enabled: true, validityInMinutes: 0, requestAdapter);
+
+            await sut.RestoreVerificationOverwrittenByDiscardAsync("user-id", _now, VerifiedIdAction.GenerateTemporaryAccessPass, TestContext.Current.CancellationToken);
+
+            GetWrittenAttributeValues(requestAdapter).Should().Equal(VerificationAttributeValue.Create(_now, VerifiedIdAction.GenerateTemporaryAccessPass));
+        }
+
+        [Fact]
+        public async Task RestoreVerificationOverwrittenByDiscardAsync_WhenDiscardOfThisVerificationIsStored_KeepsDiscard()
+        {
+            IRequestAdapter requestAdapter = CreateRequestAdapterStoringWrittenValue(VerificationAttributeValue.CreateDiscarded(_now, _now));
+            var sut = CreateService(enabled: true, validityInMinutes: 0, requestAdapter);
+
+            await sut.RestoreVerificationOverwrittenByDiscardAsync("user-id", _now, VerifiedIdAction.GenerateTemporaryAccessPass, TestContext.Current.CancellationToken);
+
+            GetWrittenAttributeValues(requestAdapter).Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task RestoreVerificationOverwrittenByDiscardAsync_WhenVerificationWasClaimed_KeepsClaim()
+        {
+            IRequestAdapter requestAdapter = CreateRequestAdapterStoringWrittenValue(VerificationAttributeValue.CreateClaimed(_now));
+            var sut = CreateService(enabled: true, validityInMinutes: 0, requestAdapter);
+
+            await sut.RestoreVerificationOverwrittenByDiscardAsync("user-id", _now, VerifiedIdAction.GenerateTemporaryAccessPass, TestContext.Current.CancellationToken);
+
+            GetWrittenAttributeValues(requestAdapter).Should().BeEmpty();
+        }
+
+        [Theory]
+        [InlineData(false, 0)]
+        [InlineData(true, 60)]
+        public async Task RestoreVerificationOverwrittenByDiscardAsync_WhenNotInPerActionMode_DoesNotCallGraph(bool enabled, int validityInMinutes)
+        {
+            IRequestAdapter requestAdapter = Substitute.For<IRequestAdapter>();
+            var sut = CreateService(enabled, validityInMinutes, requestAdapter);
+
+            await sut.RestoreVerificationOverwrittenByDiscardAsync("user-id", _now, null, TestContext.Current.CancellationToken);
+
+            requestAdapter.ReceivedCalls()
+                .SelectMany(call => call.GetArguments())
+                .OfType<RequestInformation>()
+                .Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task MarkVerificationAsUsedAsync_WithoutTargetAttributeConfiguration_ThrowsWithoutCallingGraph()
+        {
+            IRequestAdapter requestAdapter = Substitute.For<IRequestAdapter>();
+            var sut = CreateService(enabled: true, validityInMinutes: 0, requestAdapter, attributeName: null);
+
+            Func<Task> act = () => sut.MarkVerificationAsUsedAsync("user-id", TestContext.Current.CancellationToken);
+
+            await act.Should().ThrowAsync<ConfigurationMissingException>();
+            requestAdapter.ReceivedCalls()
+                .SelectMany(call => call.GetArguments())
+                .OfType<RequestInformation>()
+                .Should().BeEmpty();
+        }
+
+        [Fact]
+        public void Evaluate_WithVerificationInsideWindow_IsValid()
+        {
+            var sut = CreateService(enabled: true, validityInMinutes: 60, requestAdapter: Substitute.For<IRequestAdapter>());
+            DateTimeOffset lastVerifiedAt = _now.AddMinutes(-30);
+
+            VerifiedIdVerificationState state = sut.Evaluate(lastVerifiedAt);
+
+            state.IsValid.Should().BeTrue();
+            state.LastVerifiedAt.Should().Be(lastVerifiedAt);
+            state.ValidUntil.Should().Be(lastVerifiedAt.AddMinutes(60));
+        }
+
+        [Fact]
+        public void Evaluate_WithVerificationExactlyAtExpiry_IsInvalid()
+        {
+            var sut = CreateService(enabled: true, validityInMinutes: 60, requestAdapter: Substitute.For<IRequestAdapter>());
+
+            VerifiedIdVerificationState state = sut.Evaluate(_now.AddMinutes(-60));
+
+            state.IsValid.Should().BeFalse();
+            state.ValidUntil.Should().Be(_now);
+        }
+
+        [Fact]
+        public void Evaluate_WithExpiredVerification_IsInvalidButKeepsTimestamps()
+        {
+            var sut = CreateService(enabled: true, validityInMinutes: 60, requestAdapter: Substitute.For<IRequestAdapter>());
+            DateTimeOffset lastVerifiedAt = _now.AddHours(-5);
+
+            VerifiedIdVerificationState state = sut.Evaluate(lastVerifiedAt);
+
+            state.IsValid.Should().BeFalse();
+            state.LastVerifiedAt.Should().Be(lastVerifiedAt);
+            state.ValidUntil.Should().Be(lastVerifiedAt.AddMinutes(60));
+        }
+
+        [Fact]
+        public void Evaluate_WithVerificationInTheFuture_IsInvalid()
+        {
+            var sut = CreateService(enabled: true, validityInMinutes: 60, requestAdapter: Substitute.For<IRequestAdapter>());
+
+            VerifiedIdVerificationState state = sut.Evaluate(_now.AddMinutes(10));
+
+            state.IsValid.Should().BeFalse();
+        }
+
+        [Theory]
+        [InlineData(0, true)] // verified exactly now: the window is inclusive at its start
+        [InlineData(-1, true)] // verified one tick ago
+        [InlineData(1, false)] // one tick in the future
+        public void Evaluate_AtStartOfValidityWindow_HasTickPrecision(long offsetInTicks, bool expectedIsValid)
+        {
+            var sut = CreateService(enabled: true, validityInMinutes: 60, requestAdapter: Substitute.For<IRequestAdapter>());
+
+            VerifiedIdVerificationState state = sut.Evaluate(_now.AddTicks(offsetInTicks));
+
+            state.IsValid.Should().Be(expectedIsValid);
+        }
+
+        [Theory]
+        [InlineData(1, true)] // expires one tick from now
+        [InlineData(0, false)] // expires exactly now: the window is exclusive at its end
+        [InlineData(-1, false)] // expired one tick ago
+        public void Evaluate_AtEndOfValidityWindow_HasTickPrecision(long ticksUntilExpiry, bool expectedIsValid)
+        {
+            var sut = CreateService(enabled: true, validityInMinutes: 60, requestAdapter: Substitute.For<IRequestAdapter>());
+            DateTimeOffset lastVerifiedAt = _now.AddMinutes(-60).AddTicks(ticksUntilExpiry);
+
+            VerifiedIdVerificationState state = sut.Evaluate(lastVerifiedAt);
+
+            state.IsValid.Should().Be(expectedIsValid);
+            state.ValidUntil.Should().Be(_now.AddTicks(ticksUntilExpiry));
+        }
+
+        [Fact]
+        public async Task GetVerificationStateAsync_WithFutureTimestampInGraph_ReturnsInvalidStateWithTimestamp()
+        {
+            DateTimeOffset lastVerifiedAt = _now.AddMinutes(5);
+            IRequestAdapter requestAdapter = CreateRequestAdapterReturning(CreateUser(Strings.VERIFIED_ID_BOUND_TIMESTAMP_PREFIX + lastVerifiedAt.UtcDateTime.ToString("O", CultureInfo.InvariantCulture)));
+            var sut = CreateService(enabled: true, validityInMinutes: 60, requestAdapter);
+
+            VerifiedIdVerificationState state = await sut.GetVerificationStateAsync(Guid.NewGuid().ToString(), TestContext.Current.CancellationToken);
+
+            state.IsValid.Should().BeFalse();
+            state.LastVerifiedAt.Should().Be(lastVerifiedAt);
+            state.ValidUntil.Should().Be(lastVerifiedAt.AddMinutes(60));
+        }
+
+        [Fact]
+        public async Task GetVerificationStateAsync_WithRecentTimestampInGraph_ReturnsValidState()
+        {
+            DateTimeOffset lastVerifiedAt = _now.AddMinutes(-10);
+            IRequestAdapter requestAdapter = CreateRequestAdapterReturning(CreateUser(Strings.VERIFIED_ID_BOUND_TIMESTAMP_PREFIX + lastVerifiedAt.UtcDateTime.ToString("O", CultureInfo.InvariantCulture)));
+            var sut = CreateService(enabled: true, validityInMinutes: 60, requestAdapter);
+
+            VerifiedIdVerificationState state = await sut.GetVerificationStateAsync(Guid.NewGuid().ToString(), TestContext.Current.CancellationToken);
+
+            state.IsValid.Should().BeTrue();
+            state.LastVerifiedAt.Should().Be(lastVerifiedAt);
+            state.ValidUntil.Should().Be(lastVerifiedAt.AddMinutes(60));
+        }
+
+        [Fact]
+        public async Task GetVerificationStateAsync_RequestsCustomSecurityAttributesForUser()
+        {
+            string userId = Guid.NewGuid().ToString();
+            IRequestAdapter requestAdapter = CreateRequestAdapterReturning(CreateUser(Strings.VERIFIED_ID_BOUND_TIMESTAMP_PREFIX + _now.UtcDateTime.ToString("O", CultureInfo.InvariantCulture)));
+            var sut = CreateService(enabled: true, validityInMinutes: 60, requestAdapter);
+
+            await sut.GetVerificationStateAsync(userId, TestContext.Current.CancellationToken);
+
+            await requestAdapter.Received(1).SendAsync(
+                Arg.Is<RequestInformation>(requestInformation =>
+                    requestInformation.HttpMethod == Method.GET
+                    && requestInformation.PathParameters.Values.Contains(userId)
+                    && requestInformation.URI.Query.Contains("customSecurityAttributes")),
+                Arg.Any<ParsableFactory<User>>(),
+                Arg.Any<Dictionary<string, ParsableFactory<IParsable>>>(),
+                Arg.Any<CancellationToken>());
+        }
+
+        [Fact]
+        public async Task GetVerificationStateAsync_WithoutTimestampInGraph_ReturnsNeverVerified()
+        {
+            IRequestAdapter requestAdapter = CreateRequestAdapterReturning(new User());
+            var sut = CreateService(enabled: true, validityInMinutes: 60, requestAdapter);
+
+            VerifiedIdVerificationState state = await sut.GetVerificationStateAsync(Guid.NewGuid().ToString(), TestContext.Current.CancellationToken);
+
+            state.Should().Be(VerifiedIdVerificationState.NeverVerified);
+            state.IsValid.Should().BeFalse();
+            state.LastVerifiedAt.Should().BeNull();
+            state.ValidUntil.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task GetVerificationStateAsync_WhenGraphReturnsNull_ReturnsNeverVerified()
+        {
+            IRequestAdapter requestAdapter = CreateRequestAdapterReturning(null);
+            var sut = CreateService(enabled: true, validityInMinutes: 60, requestAdapter);
+
+            VerifiedIdVerificationState state = await sut.GetVerificationStateAsync(Guid.NewGuid().ToString(), TestContext.Current.CancellationToken);
+
+            state.IsValid.Should().BeFalse();
+        }
+
+        [Theory]
+        [InlineData(null, AttributeName, "VerifiedId:TargetSecurityAttributeSet")]
+        [InlineData("", AttributeName, "VerifiedId:TargetSecurityAttributeSet")]
+        [InlineData(AttributeSetName, null, "VerifiedId:TargetSecurityAttribute")]
+        [InlineData(AttributeSetName, " ", "VerifiedId:TargetSecurityAttribute")]
+        public async Task GetVerificationStateAsync_WithoutTargetAttributeConfiguration_Throws(string? attributeSetName, string? attributeName, string expectedConfigurationKey)
+        {
+            IRequestAdapter requestAdapter = Substitute.For<IRequestAdapter>();
+            var sut = CreateService(enabled: true, validityInMinutes: 60, requestAdapter, attributeSetName, attributeName);
+
+            Func<Task> act = () => sut.GetVerificationStateAsync(Guid.NewGuid().ToString(), TestContext.Current.CancellationToken);
+
+            var exception = await act.Should().ThrowAsync<ConfigurationMissingException>();
+            exception.Which.ConfigurationKey.Should().Be(expectedConfigurationKey);
+            await requestAdapter.DidNotReceiveWithAnyArgs().SendAsync(
+                default!,
+                Arg.Any<ParsableFactory<User>>(),
+                default,
+                TestContext.Current.CancellationToken);
+        }
+
+        private static VerifiedIdRequirementService CreateService(
+            bool enabled,
+            int validityInMinutes,
+            IRequestAdapter requestAdapter,
+            string? attributeSetName = AttributeSetName,
+            string? attributeName = AttributeName)
+        {
+            var requirementOptions = Microsoft.Extensions.Options.Options.Create(new VerifiedIdRequirementOptions
+            {
+                Enabled = enabled,
+                ValidityInMinutes = validityInMinutes,
+            });
+            var verifiedIdOptions = Microsoft.Extensions.Options.Options.Create(new VerifiedIdOptions
+            {
+                TargetSecurityAttributeSet = attributeSetName,
+                TargetSecurityAttribute = attributeName,
+            });
+            var graphClient = new GraphServiceClient(requestAdapter);
+            var logger = Substitute.For<ILogger<VerifiedIdRequirementService>>();
+            return new VerifiedIdRequirementService(requirementOptions, verifiedIdOptions, graphClient, new FixedTimeProvider(_now), logger);
+        }
+
+        private static IRequestAdapter CreateRequestAdapterReturning(User? user)
+        {
+            var requestAdapter = Substitute.For<IRequestAdapter>();
+            requestAdapter.SendAsync(
+                Arg.Any<RequestInformation>(),
+                Arg.Any<ParsableFactory<User>>(),
+                Arg.Any<Dictionary<string, ParsableFactory<IParsable>>>(),
+                Arg.Any<CancellationToken>())
+                .ReturnsForAnyArgs(user);
+            return requestAdapter;
+        }
+
+        /// <summary>
+        /// Creates a request adapter that returns a user holding <paramref name="initialValue"/> and, like Graph,
+        /// returns the last written attribute value once a request overwrote it.
+        /// </summary>
+        private static IRequestAdapter CreateRequestAdapterStoringWrittenValue(string initialValue)
+        {
+            User currentUser = CreateUser(initialValue);
+            var requestAdapter = Substitute.For<IRequestAdapter>();
+            requestAdapter.SerializationWriterFactory.Returns(new JsonSerializationWriterFactory());
+            requestAdapter.SendAsync(
+                Arg.Any<RequestInformation>(),
+                Arg.Any<ParsableFactory<User>>(),
+                Arg.Any<Dictionary<string, ParsableFactory<IParsable>>>(),
+                Arg.Any<CancellationToken>())
+                .ReturnsForAnyArgs(callInfo =>
+                {
+                    string? writtenValue = GetWrittenAttributeValue(callInfo.ArgAt<RequestInformation>(0));
+                    if (writtenValue is not null)
+                    {
+                        currentUser = CreateUser(writtenValue);
+                    }
+                    return currentUser;
+                });
+            return requestAdapter;
+        }
+
+        private static List<string> GetWrittenAttributeValues(IRequestAdapter requestAdapter)
+        {
+            return requestAdapter
+                .ReceivedCalls()
+                .SelectMany(call => call.GetArguments())
+                .OfType<RequestInformation>()
+                .Select(GetWrittenAttributeValue)
+                .OfType<string>()
+                .ToList();
+        }
+
+        private static string? GetWrittenAttributeValue(RequestInformation requestInformation)
+        {
+            if (requestInformation.HttpMethod != Method.PATCH || requestInformation.Content is null)
+            {
+                return null;
+            }
+
+            requestInformation.Content.Position = 0;
+            using var reader = new StreamReader(requestInformation.Content, leaveOpen: true);
+            string content = reader.ReadToEnd();
+            requestInformation.Content.Position = 0;
+            using JsonDocument body = JsonDocument.Parse(content);
+            return body.RootElement.GetProperty("customSecurityAttributes").GetProperty(AttributeSetName).GetProperty(AttributeName).GetString();
+        }
+
+        private static User CreateUser(string timestamp)
+        {
+            return new User
+            {
+                CustomSecurityAttributes = new CustomSecurityAttributeValue
+                {
+                    AdditionalData = new Dictionary<string, object>
+                    {
+                        [AttributeSetName] = new UntypedObject(new Dictionary<string, UntypedNode>
+                        {
+                            [AttributeName] = new UntypedString(timestamp),
+                        }),
+                    },
+                },
+            };
+        }
+    }
+}
