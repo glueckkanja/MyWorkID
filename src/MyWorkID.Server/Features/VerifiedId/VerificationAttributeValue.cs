@@ -43,6 +43,20 @@ namespace MyWorkID.Server.Features.VerifiedId
         }
 
         /// <summary>
+        /// Creates the attribute value that claims a verification for a single action at <paramref name="claimedAt"/>.
+        /// It marks the verification as used and carries a unique claim ID, so a request can tell by reading the
+        /// attribute back whether its own claim or the claim of a concurrent request was stored.
+        /// </summary>
+        /// <param name="claimedAt">When the verification was claimed.</param>
+        /// <returns>The value to store in the custom security attribute.</returns>
+        public static string CreateClaimed(DateTimeOffset claimedAt)
+        {
+            return CreateUsed(claimedAt)
+                + Strings.VERIFIED_ID_ACTION_SEPARATOR
+                + Guid.NewGuid().ToString("N");
+        }
+
+        /// <summary>
         /// Parses an action name. Only exact names of defined actions are accepted, so neither numbers
         /// nor differently cased names can bind a verification to an action.
         /// </summary>

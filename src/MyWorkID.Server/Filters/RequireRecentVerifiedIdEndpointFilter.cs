@@ -10,8 +10,9 @@ namespace MyWorkID.Server.Filters
     /// verification within the configured validity window. The filter is a no-op when the
     /// <c>VerifiedIdRequirement</c> feature is disabled, which keeps existing deployments unaffected.
     /// When every action requires its own verification, the verification must be bound to the action of the
-    /// endpoint (see <see cref="RequireRecentVerifiedIdExtensions.RequireRecentVerifiedId"/>) and is marked as
-    /// used after the action succeeded.
+    /// endpoint (see <see cref="RequireRecentVerifiedIdExtensions.RequireRecentVerifiedId"/>) and is claimed
+    /// before the action runs, so it unlocks a single action even for overlapping requests. The claim is given
+    /// back if the action fails.
     /// </summary>
     public class RequireRecentVerifiedIdEndpointFilter : IEndpointFilter
     {
@@ -77,29 +78,57 @@ namespace MyWorkID.Server.Filters
 
             if (!IsVerificationAcceptedForEndpoint(verificationState, context.HttpContext))
             {
-                return Results.Problem(
-                    GetVerificationMissingDetail(verificationState),
-                    statusCode: StatusCodes.Status403Forbidden,
-                    extensions: new Dictionary<string, object?>
-                    {
-                        ["verifiedIdRequired"] = true,
-                        ["lastVerifiedAt"] = verificationState.LastVerifiedAt,
-                        ["validUntil"] = verificationState.ValidUntil,
-                    }
-                );
+                return CreateVerificationMissingResult(verificationState);
             }
 
-            object? result = await next(context);
-
-            if (
-                _verifiedIdRequirementService.RequiresVerificationPerAction
-                && IsSuccessfulResult(result)
-            )
+            if (!_verifiedIdRequirementService.RequiresVerificationPerAction)
             {
-                await MarkVerificationAsUsedAsync(userId);
+                return await next(context);
+            }
+
+            // The verification is claimed before the action runs, so overlapping requests cannot use it twice.
+            VerifiedIdVerificationClaim? claim =
+                await _verifiedIdRequirementService.TryClaimVerificationAsync(
+                    userId,
+                    verificationState,
+                    context.HttpContext.RequestAborted
+                );
+            if (claim is null)
+            {
+                return CreateVerificationMissingResult(verificationState);
+            }
+
+            object? result;
+            try
+            {
+                result = await next(context);
+            }
+            catch
+            {
+                await ReleaseVerificationClaimAsync(claim);
+                throw;
+            }
+
+            if (!IsSuccessfulResult(result))
+            {
+                await ReleaseVerificationClaimAsync(claim);
             }
 
             return result;
+        }
+
+        private IResult CreateVerificationMissingResult(VerifiedIdVerificationState verificationState)
+        {
+            return Results.Problem(
+                GetVerificationMissingDetail(verificationState),
+                statusCode: StatusCodes.Status403Forbidden,
+                extensions: new Dictionary<string, object?>
+                {
+                    ["verifiedIdRequired"] = true,
+                    ["lastVerifiedAt"] = verificationState.LastVerifiedAt,
+                    ["validUntil"] = verificationState.ValidUntil,
+                }
+            );
         }
 
         /// <summary>
@@ -143,18 +172,17 @@ namespace MyWorkID.Server.Filters
         }
 
         /// <summary>
-        /// Marks the verification as used once the action succeeded. The action has already been performed at this
-        /// point, so a failure is logged instead of turning the successful response into an error. The verification
-        /// then stays usable until the per-action window ends.
+        /// Gives the verification back after the action failed, so the user does not have to verify again. The
+        /// action result is returned either way, so a failure is logged and the verification stays used.
         /// </summary>
-        private async Task MarkVerificationAsUsedAsync(string userId)
+        private async Task ReleaseVerificationClaimAsync(VerifiedIdVerificationClaim claim)
         {
             try
             {
-                // Not bound to the request: the verification must be marked as used even if the client disconnects
-                // after the action was performed.
-                await _verifiedIdRequirementService.MarkVerificationAsUsedAsync(
-                    userId,
+                // Not bound to the request: the action already ran, so the claim is released even if the client
+                // disconnected in the meantime.
+                await _verifiedIdRequirementService.ReleaseVerificationClaimAsync(
+                    claim,
                     CancellationToken.None
                 );
             }
@@ -162,15 +190,15 @@ namespace MyWorkID.Server.Filters
             {
                 _logger.LogError(
                     exception,
-                    "Could not mark the Verified ID verification of user {UserId} as used.",
-                    userId
+                    "Could not release the Verified ID verification of user {UserId} after the action failed.",
+                    claim.UserId
                 );
             }
         }
 
         /// <summary>
         /// <c>true</c> unless the endpoint reported a non-success status code. Results without a status code are
-        /// treated as successful, so the verification is rather used up once too often than left reusable.
+        /// treated as successful, so the verification is rather used up once too often than given back.
         /// </summary>
         private static bool IsSuccessfulResult(object? result)
         {

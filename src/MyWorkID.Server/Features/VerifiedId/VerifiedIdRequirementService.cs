@@ -10,6 +10,12 @@ namespace MyWorkID.Server.Features.VerifiedId
     /// <inheritdoc cref="IVerifiedIdRequirementService"/>
     public class VerifiedIdRequirementService : IVerifiedIdRequirementService
     {
+        /// <summary>
+        /// How long a claim waits before it reads the attribute back. Longer than the time a concurrent request
+        /// needs between reading the verification and storing its own claim.
+        /// </summary>
+        public static readonly TimeSpan CLAIM_SETTLE_DELAY = TimeSpan.FromSeconds(2);
+
         private readonly VerifiedIdRequirementOptions _requirementOptions;
         private readonly VerifiedIdOptions _verifiedIdOptions;
         private readonly GraphServiceClient _graphClient;
@@ -60,19 +66,7 @@ namespace MyWorkID.Server.Features.VerifiedId
         {
             (string attributeSetName, string attributeName) = GetTargetSecurityAttribute();
 
-            User? user = await _graphClient
-                .Users[userId]
-                .GetAsync(
-                    requestConfiguration =>
-                    {
-                        requestConfiguration.QueryParameters.Select =
-                        [
-                            "id",
-                            "customSecurityAttributes",
-                        ];
-                    },
-                    cancellationToken
-                );
+            User? user = await GetUserWithCustomSecurityAttributesAsync(userId, cancellationToken);
 
             if (
                 !LastVerificationTimestampParser.TryGetLastVerification(
@@ -123,17 +117,82 @@ namespace MyWorkID.Server.Features.VerifiedId
             CancellationToken cancellationToken
         )
         {
-            (string attributeSetName, string attributeName) = GetTargetSecurityAttribute();
+            await WriteTargetSecurityAttributeAsync(
+                userId,
+                VerificationAttributeValue.CreateUsed(_timeProvider.GetUtcNow()),
+                cancellationToken
+            );
+        }
 
-            User requestBody = TargetSecurityAttributeRequestBody.Create(
+        /// <inheritdoc/>
+        public async Task<VerifiedIdVerificationClaim?> TryClaimVerificationAsync(
+            string userId,
+            VerifiedIdVerificationState verificationState,
+            CancellationToken cancellationToken
+        )
+        {
+            if (!verificationState.LastVerifiedAt.HasValue)
+            {
+                return null;
+            }
+
+            (string attributeSetName, string attributeName) = GetTargetSecurityAttribute();
+            string claimedValue = VerificationAttributeValue.CreateClaimed(_timeProvider.GetUtcNow());
+            await WriteTargetSecurityAttributeAsync(userId, claimedValue, cancellationToken);
+
+            // Graph has no conditional updates, so concurrent claims overwrite each other and the last write wins.
+            // Waiting before reading the attribute back lets every claim of a request that read the verification
+            // before this claim was stored land first, so exactly one of the concurrent requests reads its own claim.
+            await Task.Delay(CLAIM_SETTLE_DELAY, _timeProvider, cancellationToken);
+
+            string? storedValue = await ReadTargetSecurityAttributeAsync(
+                userId,
                 attributeSetName,
                 attributeName,
-                VerificationAttributeValue.CreateUsed(_timeProvider.GetUtcNow())
+                cancellationToken
             );
+            if (!string.Equals(storedValue, claimedValue, StringComparison.Ordinal))
+            {
+                _logger.LogWarning(
+                    "The Verified ID verification of user {UserId} was claimed by a concurrent request.",
+                    userId
+                );
+                return null;
+            }
 
-            await _graphClient
-                .Users[userId]
-                .PatchAsync(requestBody, cancellationToken: cancellationToken);
+            return new VerifiedIdVerificationClaim(
+                userId,
+                claimedValue,
+                VerificationAttributeValue.Create(
+                    verificationState.LastVerifiedAt.Value,
+                    verificationState.VerifiedForAction
+                )
+            );
+        }
+
+        /// <inheritdoc/>
+        public async Task ReleaseVerificationClaimAsync(
+            VerifiedIdVerificationClaim claim,
+            CancellationToken cancellationToken
+        )
+        {
+            (string attributeSetName, string attributeName) = GetTargetSecurityAttribute();
+            string? storedValue = await ReadTargetSecurityAttributeAsync(
+                claim.UserId,
+                attributeSetName,
+                attributeName,
+                cancellationToken
+            );
+            if (!string.Equals(storedValue, claim.ClaimedValue, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            await WriteTargetSecurityAttributeAsync(
+                claim.UserId,
+                claim.ReleasedValue,
+                cancellationToken
+            );
         }
 
         /// <inheritdoc/>
@@ -159,6 +218,59 @@ namespace MyWorkID.Server.Features.VerifiedId
 
             await MarkVerificationAsUsedAsync(userId, cancellationToken);
             return true;
+        }
+
+        private async Task WriteTargetSecurityAttributeAsync(
+            string userId,
+            string value,
+            CancellationToken cancellationToken
+        )
+        {
+            (string attributeSetName, string attributeName) = GetTargetSecurityAttribute();
+            User requestBody = TargetSecurityAttributeRequestBody.Create(
+                attributeSetName,
+                attributeName,
+                value
+            );
+
+            await _graphClient
+                .Users[userId]
+                .PatchAsync(requestBody, cancellationToken: cancellationToken);
+        }
+
+        private async Task<string?> ReadTargetSecurityAttributeAsync(
+            string userId,
+            string attributeSetName,
+            string attributeName,
+            CancellationToken cancellationToken
+        )
+        {
+            User? user = await GetUserWithCustomSecurityAttributesAsync(userId, cancellationToken);
+            return LastVerificationTimestampParser.GetRawAttributeValue(
+                user,
+                attributeSetName,
+                attributeName
+            );
+        }
+
+        private Task<User?> GetUserWithCustomSecurityAttributesAsync(
+            string userId,
+            CancellationToken cancellationToken
+        )
+        {
+            return _graphClient
+                .Users[userId]
+                .GetAsync(
+                    requestConfiguration =>
+                    {
+                        requestConfiguration.QueryParameters.Select =
+                        [
+                            "id",
+                            "customSecurityAttributes",
+                        ];
+                    },
+                    cancellationToken
+                );
         }
 
         private (string AttributeSetName, string AttributeName) GetTargetSecurityAttribute()
