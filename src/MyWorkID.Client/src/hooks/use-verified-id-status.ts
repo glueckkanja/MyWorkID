@@ -120,6 +120,8 @@ export const useVerifiedIdStatus = (): VerifiedIdStatus => {
       if (retryGeneration !== postVerificationRetryGenerationRef.current) {
         return;
       }
+      // Without a requirement the server never reports a verification, so there is nothing to wait for.
+      const isVerificationNotRequired = result !== undefined && !result.required;
       const lastVerifiedAtInMilliseconds = parseTimestamp(result?.lastVerifiedAt)?.getTime();
       const isVerified = result?.isVerified === true;
       const hasLastVerifiedAt = lastVerifiedAtInMilliseconds !== undefined;
@@ -129,7 +131,11 @@ export const useVerifiedIdStatus = (): VerifiedIdStatus => {
         (hadNoPreviousVerification ||
           lastVerifiedAtInMilliseconds > previousLastVerifiedAtInMilliseconds);
       const isNewVerificationVisible = isVerified && isNewerThanPreviousVerification;
-      if (isNewVerificationVisible || attemptNumber >= POST_VERIFICATION_MAXIMUM_ATTEMPTS) {
+      if (
+        isVerificationNotRequired ||
+        isNewVerificationVisible ||
+        attemptNumber >= POST_VERIFICATION_MAXIMUM_ATTEMPTS
+      ) {
         setConfirmingVerification(false);
         return;
       }
