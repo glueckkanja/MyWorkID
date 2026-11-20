@@ -42,11 +42,11 @@ namespace MyWorkID.Server.Features.VerifiedId.Commands
         )
         {
             string? userId = user.GetUserId();
-            await verifiedIdService.HideQrCodeForUser(userId!);
             try
             {
                 CreatePresentationRequestCallback parsedBody =
                     await verifiedIdService.ParseCreatePresentationRequestCallback(context);
+                await verifiedIdService.HideQrCodeForUser(userId!, parsedBody.RequestId);
                 await verifiedIdService.HandlePresentationCallback(
                     userId!,
                     user.GetVerifiedIdAction(),
