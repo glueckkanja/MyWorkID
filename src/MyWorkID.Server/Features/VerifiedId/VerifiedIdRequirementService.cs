@@ -16,6 +16,17 @@ namespace MyWorkID.Server.Features.VerifiedId
         /// </summary>
         public static readonly TimeSpan CLAIM_SETTLE_DELAY = TimeSpan.FromSeconds(2);
 
+        /// <summary>
+        /// How long a claim waits before reading the attribute again while the directory still returns the claimed
+        /// verification. Entra ID can take a few seconds until a freshly written attribute is readable.
+        /// </summary>
+        public static readonly TimeSpan CLAIM_READ_RETRY_INTERVAL = TimeSpan.FromSeconds(1);
+
+        /// <summary>
+        /// How often a claim reads the attribute back at most before it gives up waiting for its own write.
+        /// </summary>
+        public const int CLAIM_READ_MAXIMUM_ATTEMPTS = 10;
+
         private readonly VerifiedIdRequirementOptions _requirementOptions;
         private readonly VerifiedIdOptions _verifiedIdOptions;
         private readonly GraphServiceClient _graphClient;
@@ -145,12 +156,29 @@ namespace MyWorkID.Server.Features.VerifiedId
             // before this claim was stored land first, so exactly one of the concurrent requests reads its own claim.
             await Task.Delay(CLAIM_SETTLE_DELAY, _timeProvider, cancellationToken);
 
-            string? storedValue = await ReadTargetSecurityAttributeAsync(
-                userId,
-                attributeSetName,
-                attributeName,
-                cancellationToken
-            );
+            // A read that still returns the claimed verification has not caught up with the claim yet. Only another
+            // value proves that a concurrent request overwrote it, so such a read is repeated for a while instead of
+            // giving up the verification that was already marked as used.
+            string? storedValue = null;
+            for (int readAttempt = 1; readAttempt <= CLAIM_READ_MAXIMUM_ATTEMPTS; readAttempt++)
+            {
+                if (readAttempt > 1)
+                {
+                    await Task.Delay(CLAIM_READ_RETRY_INTERVAL, _timeProvider, cancellationToken);
+                }
+
+                User? user = await GetUserWithCustomSecurityAttributesAsync(userId, cancellationToken);
+                storedValue = LastVerificationTimestampParser.GetRawAttributeValue(
+                    user,
+                    attributeSetName,
+                    attributeName
+                );
+                if (!IsClaimedVerificationStillStored(user, attributeSetName, attributeName, verificationState))
+                {
+                    break;
+                }
+            }
+
             if (!string.Equals(storedValue, claimedValue, StringComparison.Ordinal))
             {
                 _logger.LogWarning(
@@ -291,6 +319,28 @@ namespace MyWorkID.Server.Features.VerifiedId
             await _graphClient
                 .Users[userId]
                 .PatchAsync(requestBody, cancellationToken: cancellationToken);
+        }
+
+        /// <summary>
+        /// <c>true</c> if the attribute of <paramref name="user"/> still holds the verification described by
+        /// <paramref name="verificationState"/>, i.e. a claim of it is not readable yet.
+        /// </summary>
+        private static bool IsClaimedVerificationStillStored(
+            User? user,
+            string attributeSetName,
+            string attributeName,
+            VerifiedIdVerificationState verificationState
+        )
+        {
+            return LastVerificationTimestampParser.TryGetLastVerification(
+                    user,
+                    attributeSetName,
+                    attributeName,
+                    out DateTimeOffset storedLastVerifiedAt,
+                    out VerifiedIdAction? storedVerifiedForAction
+                )
+                && storedLastVerifiedAt == verificationState.LastVerifiedAt
+                && storedVerifiedForAction == verificationState.VerifiedForAction;
         }
 
         private async Task<string?> ReadTargetSecurityAttributeAsync(
