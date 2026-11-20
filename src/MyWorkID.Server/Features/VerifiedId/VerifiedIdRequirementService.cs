@@ -11,8 +11,8 @@ namespace MyWorkID.Server.Features.VerifiedId
     public class VerifiedIdRequirementService : IVerifiedIdRequirementService
     {
         /// <summary>
-        /// How long a claim waits before it reads the attribute back. Longer than the time a concurrent request
-        /// needs between reading the verification and storing its own claim.
+        /// How long a claim or a newly recorded verification waits before it reads the attribute back. Longer than
+        /// the time a concurrent request needs between reading the verification and storing its own claim or discard.
         /// </summary>
         public static readonly TimeSpan CLAIM_SETTLE_DELAY = TimeSpan.FromSeconds(2);
 
@@ -211,13 +211,68 @@ namespace MyWorkID.Server.Features.VerifiedId
                 userId,
                 cancellationToken
             );
-            if (verificationState.VerifiedForAction != action)
+            if (
+                verificationState.VerifiedForAction != action
+                || !verificationState.LastVerifiedAt.HasValue
+            )
             {
                 return false;
             }
 
-            await MarkVerificationAsUsedAsync(userId, cancellationToken);
+            // Graph has no conditional updates, so this overwrites a verification recorded after the lookup above.
+            // The discard names the verification it was meant for, so that verification restores itself
+            // (see RestoreVerificationOverwrittenByDiscardAsync).
+            await WriteTargetSecurityAttributeAsync(
+                userId,
+                VerificationAttributeValue.CreateDiscarded(
+                    _timeProvider.GetUtcNow(),
+                    verificationState.LastVerifiedAt.Value
+                ),
+                cancellationToken
+            );
             return true;
+        }
+
+        /// <inheritdoc/>
+        public async Task RestoreVerificationOverwrittenByDiscardAsync(
+            string userId,
+            DateTimeOffset verifiedAt,
+            VerifiedIdAction? action,
+            CancellationToken cancellationToken
+        )
+        {
+            // Verifications are only discarded when every action requires its own verification.
+            if (!IsEnabled || !RequiresVerificationPerAction)
+            {
+                return;
+            }
+
+            (string attributeSetName, string attributeName) = GetTargetSecurityAttribute();
+
+            // A discard that looked up the previous verification before this one was recorded stores its value
+            // right after its lookup, so it has landed once the settle delay passed.
+            await Task.Delay(CLAIM_SETTLE_DELAY, _timeProvider, cancellationToken);
+
+            string? storedValue = await ReadTargetSecurityAttributeAsync(
+                userId,
+                attributeSetName,
+                attributeName,
+                cancellationToken
+            );
+            if (!VerificationAttributeValue.IsDiscardOfOtherVerification(storedValue, verifiedAt))
+            {
+                return;
+            }
+
+            _logger.LogWarning(
+                "A discard of an earlier Verified ID verification overwrote the new verification of user {UserId}. Restoring the new verification.",
+                userId
+            );
+            await WriteTargetSecurityAttributeAsync(
+                userId,
+                VerificationAttributeValue.Create(verifiedAt, action),
+                cancellationToken
+            );
         }
 
         private async Task WriteTargetSecurityAttributeAsync(

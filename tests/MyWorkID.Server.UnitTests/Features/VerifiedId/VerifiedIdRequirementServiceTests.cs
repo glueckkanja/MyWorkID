@@ -160,6 +160,68 @@ namespace MyWorkID.Server.UnitTests.Features.VerifiedId
         }
 
         [Fact]
+        public async Task DiscardVerificationAsync_WhenVerificationIsBoundToAction_StoresDiscardNamingTheVerification()
+        {
+            DateTimeOffset lastVerifiedAt = _now.AddMinutes(-1);
+            IRequestAdapter requestAdapter = CreateRequestAdapterStoringWrittenValue(VerificationAttributeValue.Create(lastVerifiedAt, VerifiedIdAction.ResetPassword));
+            var sut = CreateService(enabled: true, validityInMinutes: 0, requestAdapter);
+
+            bool discarded = await sut.DiscardVerificationAsync("user-id", VerifiedIdAction.ResetPassword, TestContext.Current.CancellationToken);
+
+            discarded.Should().BeTrue();
+            GetWrittenAttributeValues(requestAdapter).Should().Equal("used-v1:2026-10-20T12:00:00Z;2026-10-20T11:59:00Z");
+        }
+
+        [Fact]
+        public async Task RestoreVerificationOverwrittenByDiscardAsync_WhenDiscardOfEarlierVerificationIsStored_RestoresVerification()
+        {
+            IRequestAdapter requestAdapter = CreateRequestAdapterStoringWrittenValue(VerificationAttributeValue.CreateDiscarded(_now, _now.AddMinutes(-1)));
+            var sut = CreateService(enabled: true, validityInMinutes: 0, requestAdapter);
+
+            await sut.RestoreVerificationOverwrittenByDiscardAsync("user-id", _now, VerifiedIdAction.GenerateTemporaryAccessPass, TestContext.Current.CancellationToken);
+
+            GetWrittenAttributeValues(requestAdapter).Should().Equal(VerificationAttributeValue.Create(_now, VerifiedIdAction.GenerateTemporaryAccessPass));
+        }
+
+        [Fact]
+        public async Task RestoreVerificationOverwrittenByDiscardAsync_WhenDiscardOfThisVerificationIsStored_KeepsDiscard()
+        {
+            IRequestAdapter requestAdapter = CreateRequestAdapterStoringWrittenValue(VerificationAttributeValue.CreateDiscarded(_now, _now));
+            var sut = CreateService(enabled: true, validityInMinutes: 0, requestAdapter);
+
+            await sut.RestoreVerificationOverwrittenByDiscardAsync("user-id", _now, VerifiedIdAction.GenerateTemporaryAccessPass, TestContext.Current.CancellationToken);
+
+            GetWrittenAttributeValues(requestAdapter).Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task RestoreVerificationOverwrittenByDiscardAsync_WhenVerificationWasClaimed_KeepsClaim()
+        {
+            IRequestAdapter requestAdapter = CreateRequestAdapterStoringWrittenValue(VerificationAttributeValue.CreateClaimed(_now));
+            var sut = CreateService(enabled: true, validityInMinutes: 0, requestAdapter);
+
+            await sut.RestoreVerificationOverwrittenByDiscardAsync("user-id", _now, VerifiedIdAction.GenerateTemporaryAccessPass, TestContext.Current.CancellationToken);
+
+            GetWrittenAttributeValues(requestAdapter).Should().BeEmpty();
+        }
+
+        [Theory]
+        [InlineData(false, 0)]
+        [InlineData(true, 60)]
+        public async Task RestoreVerificationOverwrittenByDiscardAsync_WhenNotInPerActionMode_DoesNotCallGraph(bool enabled, int validityInMinutes)
+        {
+            IRequestAdapter requestAdapter = Substitute.For<IRequestAdapter>();
+            var sut = CreateService(enabled, validityInMinutes, requestAdapter);
+
+            await sut.RestoreVerificationOverwrittenByDiscardAsync("user-id", _now, null, TestContext.Current.CancellationToken);
+
+            requestAdapter.ReceivedCalls()
+                .SelectMany(call => call.GetArguments())
+                .OfType<RequestInformation>()
+                .Should().BeEmpty();
+        }
+
+        [Fact]
         public async Task MarkVerificationAsUsedAsync_WithoutTargetAttributeConfiguration_ThrowsWithoutCallingGraph()
         {
             IRequestAdapter requestAdapter = Substitute.For<IRequestAdapter>();
