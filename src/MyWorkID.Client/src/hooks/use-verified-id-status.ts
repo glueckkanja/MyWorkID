@@ -50,6 +50,12 @@ export const useVerifiedIdStatus = (): VerifiedIdStatus => {
   // Timestamp (in milliseconds) of the last verification seen by the most recently applied response.
   const lastVerifiedAtInMillisecondsRef = useRef<number | undefined>(undefined);
 
+  // Verification known when the current verification was started, captured by notifyVerificationStarted.
+  // Wrapped in an object so "no verification known at the start" can be told apart from "not captured".
+  const verificationBaselineRef = useRef<
+    { lastVerifiedAtInMilliseconds: number | undefined } | undefined
+  >(undefined);
+
   // Never rejects: failures are reported through the error state and resolve to undefined.
   // Only the most recently started request may update state, so an older response (or error)
   // that finishes late cannot overwrite a newer result. Superseded requests resolve to undefined.
@@ -89,15 +95,26 @@ export const useVerifiedIdStatus = (): VerifiedIdStatus => {
     void loadStatus();
   }, [loadStatus]);
 
+  const notifyVerificationStarted = useCallback(() => {
+    verificationBaselineRef.current = {
+      lastVerifiedAtInMilliseconds: lastVerifiedAtInMillisecondsRef.current,
+    };
+  }, []);
+
   // Tries to update the verification status after a successful verification attempt. A user may
   // re-verify while a previous verification is still valid, so retries continue until a
-  // verification newer than the one known at the start becomes visible.
+  // verification newer than the one known when the verification started becomes visible. The
+  // baseline is taken from the start, because a regular poll may already have loaded the fresh
+  // verification by the time it completes.
   const refreshAfterVerification = useCallback(() => {
     clearTimeout(postVerificationTimeoutRef.current);
     setConfirmingVerification(true);
     postVerificationRetryGenerationRef.current += 1;
     const retryGeneration = postVerificationRetryGenerationRef.current;
-    const previousLastVerifiedAtInMilliseconds = lastVerifiedAtInMillisecondsRef.current;
+    const previousLastVerifiedAtInMilliseconds = verificationBaselineRef.current
+      ? verificationBaselineRef.current.lastVerifiedAtInMilliseconds
+      : lastVerifiedAtInMillisecondsRef.current;
+    verificationBaselineRef.current = undefined;
     const attempt = async (attemptNumber: number) => {
       const result = await loadStatus();
       if (retryGeneration !== postVerificationRetryGenerationRef.current) {
@@ -213,6 +230,7 @@ export const useVerifiedIdStatus = (): VerifiedIdStatus => {
       validUntil,
       validityInMinutes: response?.validityInMinutes ?? 0,
       refresh,
+      notifyVerificationStarted,
       refreshAfterVerification,
       markVerificationAsUsed,
     }),
@@ -228,6 +246,7 @@ export const useVerifiedIdStatus = (): VerifiedIdStatus => {
       validUntil,
       response?.validityInMinutes,
       refresh,
+      notifyVerificationStarted,
       refreshAfterVerification,
       markVerificationAsUsed,
     ],

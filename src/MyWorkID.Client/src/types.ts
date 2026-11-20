@@ -184,6 +184,11 @@ export type VerifiedIdStatus = {
   validUntil: Date | undefined;
   validityInMinutes: number;
   refresh: () => void;
+  /**
+   * Call when a verification is started. Remembers the verification known at that moment, so
+   * `refreshAfterVerification` can recognize the fresh one even if a regular poll already loaded it.
+   */
+  notifyVerificationStarted: () => void;
   /** Reloads the status repeatedly until the fresh verification is visible (the directory can lag behind). */
   refreshAfterVerification: () => void;
   /** Call after a sensitive action succeeded. When every action requires its own verification, the current one no longer counts. */
