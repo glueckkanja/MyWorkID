@@ -236,6 +236,57 @@ namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
             Arg.Any<CancellationToken>());
         }
 
+        [Fact]
+        public async Task RequestPresentation_WithValidBody_SendsHubEventsWithRequestId()
+        {
+            string userId = Guid.NewGuid().ToString();
+            string requestId = Guid.NewGuid().ToString();
+            var provider = new TestClaimsProvider().WithUserId(userId);
+            var hubContext = Substitute.For<IHubContext<VerifiedIdHub, IVerifiedIdHub>>();
+            var hubClients = Substitute.For<IVerifiedIdHub>();
+            hubContext.Clients.Clients(Arg.Any<IReadOnlyList<string>>()).Returns(hubClients);
+
+            var client = _testApplicationFactory.WithAuthenticationVerifiedId(
+                provider,
+                GetVerifiedSignalRRepositoryWithConnections(),
+                hubContext,
+                CreateRequestAdapterReturningUserPrincipalName(UserPrincipalName)).CreateClient();
+
+            CreatePresentationRequestCallback createPresentationRequestCallback = GetValidPresentationRequestCallback(userId);
+            createPresentationRequestCallback.RequestId = requestId;
+
+            var response = await client.PostAsJsonAsync(_baseUrl, createPresentationRequestCallback, TestContext.Current.CancellationToken);
+
+            response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+            await hubClients.Received(1).HideQrCode(requestId);
+            await hubClients.Received(1).VerificationSuccess(requestId);
+        }
+
+        [Fact]
+        public async Task RequestPresentation_WithRequestPresentationError_SendsFailureWithRequestId()
+        {
+            string requestId = Guid.NewGuid().ToString();
+            var provider = new TestClaimsProvider().WithRandomUserId();
+            var hubContext = Substitute.For<IHubContext<VerifiedIdHub, IVerifiedIdHub>>();
+            var hubClients = Substitute.For<IVerifiedIdHub>();
+            hubContext.Clients.Clients(Arg.Any<IReadOnlyList<string>>()).Returns(hubClients);
+
+            var client = _testApplicationFactory.WithAuthenticationVerifiedId(
+                provider,
+                GetVerifiedSignalRRepositoryWithConnections(),
+                hubContext).CreateClient();
+            var createPresentationRequestCallback = new CreatePresentationRequestCallback
+            {
+                RequestStatus = "presentation_error",
+                RequestId = requestId,
+            };
+
+            var response = await client.PostAsJsonAsync(_baseUrl, createPresentationRequestCallback, TestContext.Current.CancellationToken);
+
+            response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+            await hubClients.Received(1).VerificationFailed(requestId, Arg.Any<string>());
+        }
+
         [Theory]
         [InlineData(nameof(VerifiedIdAction.DismissUserRisk), ";DismissUserRisk")]
         [InlineData(null, null)] // started without an action, e.g. from the Validate Identity card

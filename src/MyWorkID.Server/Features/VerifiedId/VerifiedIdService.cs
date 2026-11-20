@@ -161,7 +161,8 @@ namespace MyWorkID.Server.Features.VerifiedId
         /// Hides the QR code for the specified user.
         /// </summary>
         /// <param name="userId">The ID of the user.</param>
-        public async Task HideQrCodeForUser(string userId)
+        /// <param name="requestId">The ID of the presentation request whose QR code was scanned.</param>
+        public async Task HideQrCodeForUser(string userId, string? requestId)
         {
             if (
                 !_verifiedIdOptions.DisableQrCodeHide
@@ -171,7 +172,7 @@ namespace MyWorkID.Server.Features.VerifiedId
                 )
             )
             {
-                await _hubContext.Clients.Clients(connections).HideQrCode();
+                await _hubContext.Clients.Clients(connections).HideQrCode(requestId);
             }
         }
 
@@ -237,6 +238,7 @@ namespace MyWorkID.Server.Features.VerifiedId
             {
                 await NotifyVerificationFailed(
                     userId,
+                    callbackBody.RequestId,
                     callbackBody.Error?.Message ?? "Verification failed"
                 );
                 return;
@@ -255,6 +257,7 @@ namespace MyWorkID.Server.Features.VerifiedId
                 {
                     await NotifyVerificationFailed(
                         userId,
+                        callbackBody.RequestId,
                         Strings.ERROR_VERIFIED_ID_CREDENTIAL_NOT_BOUND_TO_USER
                     );
                     return;
@@ -266,7 +269,7 @@ namespace MyWorkID.Server.Features.VerifiedId
                 );
 
                 await _graphClient.Users[userId].PatchAsync(requestBody);
-                await NotifyVerificationSuccess(userId);
+                await NotifyVerificationSuccess(userId, callbackBody.RequestId);
                 await RestoreVerificationOverwrittenByDiscardAsync(userId, verifiedAt, action);
             }
         }
@@ -379,7 +382,8 @@ namespace MyWorkID.Server.Features.VerifiedId
         /// Notifies the user that verification was successful.
         /// </summary>
         /// <param name="userId">The ID of the user.</param>
-        private async Task NotifyVerificationSuccess(string userId)
+        /// <param name="requestId">The ID of the presentation request that was verified.</param>
+        private async Task NotifyVerificationSuccess(string userId, string? requestId)
         {
             if (
                 _verifiedIdSignalRRepository.TryGetConnections(
@@ -388,7 +392,7 @@ namespace MyWorkID.Server.Features.VerifiedId
                 )
             )
             {
-                await _hubContext.Clients.Clients(connections).VerificationSuccess();
+                await _hubContext.Clients.Clients(connections).VerificationSuccess(requestId);
             }
         }
 
@@ -396,8 +400,13 @@ namespace MyWorkID.Server.Features.VerifiedId
         /// Notifies the user that verification failed.
         /// </summary>
         /// <param name="userId">The ID of the user.</param>
+        /// <param name="requestId">The ID of the presentation request that failed.</param>
         /// <param name="errorMessage">The error message.</param>
-        private async Task NotifyVerificationFailed(string userId, string errorMessage)
+        private async Task NotifyVerificationFailed(
+            string userId,
+            string? requestId,
+            string errorMessage
+        )
         {
             if (
                 _verifiedIdSignalRRepository.TryGetConnections(
@@ -406,7 +415,9 @@ namespace MyWorkID.Server.Features.VerifiedId
                 )
             )
             {
-                await _hubContext.Clients.Clients(connections).VerificationFailed(errorMessage);
+                await _hubContext
+                    .Clients.Clients(connections)
+                    .VerificationFailed(requestId, errorMessage);
             }
         }
 
