@@ -2,6 +2,7 @@ import {
   memo,
   useCallback,
   useEffect,
+  useEffectEvent,
   useMemo,
   useState,
   type ReactNode,
@@ -12,10 +13,13 @@ import { DismissUserRiskPanelProps } from "../../../types";
 import { CircleCheckIcon } from "@/components/ui/icons/circle-check-icon";
 import { AlertWarningIcon } from "@/components/ui/icons/alert-warning-icon";
 import { AlertErrorIcon } from "@/components/ui/icons/alert-error-icon";
-import { InformationCircleIcon } from "@/components/ui/icons/information-circle-icon";
 import { useToast } from "@/hooks/use-toast";
 import { Spinner } from "@/components/ui/spinner";
 import { RiskLevel } from "@/lib/risk-level";
+import { BlockedActionButton } from "../blocked-action-notice";
+
+const PANEL_DESCRIPTION =
+  "Confirm that your account is safe and request risk removal. All your sessions will be revoked.";
 
 const renderConfirmationBody = (riskLevel: RiskLevel, riskLabel: string) => {
   if (
@@ -38,24 +42,14 @@ const renderConfirmationBody = (riskLevel: RiskLevel, riskLabel: string) => {
   if (riskLevel === RiskLevel.None) {
     return {
       variant: "neutral" as const,
-      content: (
-        <>
-          Your account currently has <strong>no active risk</strong>. You can
-          still confirm your account is safe. All your sessions will be revoked
-          and you will need to sign in again.
-        </>
-      ),
+      description:
+        "Your account currently has no active risk. You can still confirm your account is safe. All your sessions will be revoked and you will need to sign in again.",
     };
   }
   return {
     variant: "neutral" as const,
-    content: (
-      <>
-        Your current risk state could not be retrieved. Dismissing will still
-        confirm your account is safe. All your sessions will be revoked and you
-        will need to sign in again.
-      </>
-    ),
+    description:
+      "Your current risk state could not be retrieved. Dismissing will still confirm your account is safe. All your sessions will be revoked and you will need to sign in again.",
   };
 };
 
@@ -68,6 +62,8 @@ export const DismissUserRiskPanel = memo(function DismissUserRiskPanel({
   riskLabel,
   canDismiss,
   dismissDisabledReason,
+  waitingForVerification,
+  onVerifyIdentity,
 }: DismissUserRiskPanelProps) {
   const confirmation = useMemo(
     () => renderConfirmationBody(riskLevel, riskLabel),
@@ -81,9 +77,9 @@ export const DismissUserRiskPanel = memo(function DismissUserRiskPanel({
     onClose();
   }, [onClose]);
 
-  const triggerDismiss = useCallback(() => {
+  const triggerDismiss = useCallback((startedRightAfterVerification = false) => {
     setSubmitting(true);
-    dismissUserRisk()
+    dismissUserRisk(startedRightAfterVerification)
       .then((result) => {
         if (result.data?.sessionsRevoked === false) {
           toastSuccess(
@@ -105,16 +101,36 @@ export const DismissUserRiskPanel = memo(function DismissUserRiskPanel({
       });
   }, [toastSuccess, toastException, onDismissed, handleClose]);
 
-  // auto-dismiss risk when returning from authentication redirect
-  useEffect(() => {
-    if (!open || !comingFromRedirect || !canDismiss) {
-      return;
-    }
-    const timeoutId = setTimeout(triggerDismiss, 0);
-    return () => clearTimeout(timeoutId);
-  }, [open, comingFromRedirect, canDismiss, triggerDismiss]);
+  // auto-dismiss risk when returning from authentication redirect. The redirect is consumed once
+  // its request is dispatched, so a later toggle of comingFromRedirect or canDismiss (e.g. after a
+  // failed verification status poll recovers) cannot dispatch another dismissal; retrying after a
+  // failure stays under the user's control. Until then the request waits while dismissing is not
+  // allowed.
+  const [redirectConsumed, setRedirectConsumed] = useState(false);
+  if (open && comingFromRedirect && canDismiss && !redirectConsumed) {
+    setRedirectConsumed(true);
+  }
 
-  let confirmationBox: ReactNode;
+  // Only a new panel visit (including the return from a verification started here) may dismiss
+  // automatically again.
+  const [previousOpen, setPreviousOpen] = useState(open);
+  if (open !== previousOpen) {
+    setPreviousOpen(open);
+    if (!open) {
+      setRedirectConsumed(false);
+    }
+  }
+
+  const triggerDismissFromRedirect = useEffectEvent(() => {
+    triggerDismiss(true);
+  });
+  useEffect(() => {
+    if (redirectConsumed) {
+      triggerDismissFromRedirect();
+    }
+  }, [redirectConsumed]);
+
+  let confirmationBox: ReactNode = null;
   if (!canDismiss && dismissDisabledReason) {
     confirmationBox = (
       <div className="confirm-box">
@@ -122,14 +138,7 @@ export const DismissUserRiskPanel = memo(function DismissUserRiskPanel({
         <span>{dismissDisabledReason}</span>
       </div>
     );
-  } else if (confirmation.variant === "neutral") {
-    confirmationBox = (
-      <div className="confirm-box confirm-box--neutral">
-        <InformationCircleIcon aria-hidden="true" />
-        <span>{confirmation.content}</span>
-      </div>
-    );
-  } else {
+  } else if (confirmation.variant === "danger") {
     confirmationBox = (
       <div className="confirm-box confirm-box--warning">
         <AlertWarningIcon aria-hidden="true" />
@@ -142,26 +151,38 @@ export const DismissUserRiskPanel = memo(function DismissUserRiskPanel({
     <Panel
       open={open}
       title="Dismiss User Risk"
-      subtitle="Confirm that your account is safe and request risk removal. All your sessions will be revoked."
+      subtitle={
+        confirmation.variant === "neutral"
+          ? confirmation.description
+          : PANEL_DESCRIPTION
+      }
       onClose={handleClose}
     >
-      {submitting ? (
+      {submitting || waitingForVerification ? (
         <div className="panel-loading">
           <Spinner />
         </div>
       ) : (
         <>
           {confirmationBox}
-          <button
-            type="button"
-            className="panel-primary-button"
-            onClick={triggerDismiss}
-            disabled={!canDismiss}
-            aria-disabled={!canDismiss || undefined}
-          >
-            <CircleCheckIcon />
-            Dismiss Risk
-          </button>
+          {!canDismiss && onVerifyIdentity ? (
+            <BlockedActionButton
+              label="Dismiss Risk"
+              icon={<CircleCheckIcon />}
+              onClick={onVerifyIdentity}
+            />
+          ) : (
+            <button
+              type="button"
+              className="panel-primary-button"
+              onClick={() => triggerDismiss()}
+              disabled={!canDismiss}
+              aria-disabled={!canDismiss || undefined}
+            >
+              <CircleCheckIcon />
+              Dismiss Risk
+            </button>
+          )}
         </>
       )}
     </Panel>
