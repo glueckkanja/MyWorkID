@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
@@ -63,7 +64,10 @@ namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
             return CreateUserWithAttributeValue(Strings.VERIFIED_ID_USED_TIMESTAMP_PREFIX + usedAt.UtcDateTime.ToString("O", CultureInfo.InvariantCulture));
         }
 
-        private static User CreateUserWithAttributeValue(string attributeValue)
+        /// <summary>
+        /// Creates a Graph <see cref="User"/> whose custom security attribute holds the given raw value.
+        /// </summary>
+        internal static User CreateUserWithAttributeValue(string attributeValue)
         {
             return new User
             {
@@ -82,18 +86,55 @@ namespace MyWorkID.Server.IntegrationTests.Features.VerifiedId
         }
 
         /// <summary>
-        /// Creates a request adapter whose <c>SendAsync&lt;User&gt;</c> returns the given user for every request.
+        /// Creates a request adapter whose <c>SendAsync&lt;User&gt;</c> returns the given user. Once a request
+        /// overwrites the verification attribute, later requests return a user holding the written value, like Graph
+        /// does. Writes are only visible with <see cref="WithJsonSerialization"/>, because they are read from the body.
         /// </summary>
         internal static IRequestAdapter CreateRequestAdapterReturningUser(User? user)
         {
+            User? currentUser = user;
             var requestAdapter = Substitute.For<IRequestAdapter>();
             requestAdapter.SendAsync(
                 Arg.Any<RequestInformation>(),
                 Arg.Any<ParsableFactory<User>>(),
                 Arg.Any<Dictionary<string, ParsableFactory<IParsable>>>(),
                 Arg.Any<CancellationToken>())
-                .ReturnsForAnyArgs(user);
+                .ReturnsForAnyArgs(callInfo =>
+                {
+                    string? writtenAttributeValue = GetWrittenAttributeValue(callInfo.ArgAt<RequestInformation>(0));
+                    if (writtenAttributeValue is not null)
+                    {
+                        currentUser = CreateUserWithAttributeValue(writtenAttributeValue);
+                    }
+                    return currentUser;
+                });
             return requestAdapter;
+        }
+
+        /// <summary>
+        /// Returns the verification attribute value a request writes, or <c>null</c> if it does not write it.
+        /// </summary>
+        internal static string? GetWrittenAttributeValue(RequestInformation requestInformation)
+        {
+            if (requestInformation.HttpMethod != Method.PATCH)
+            {
+                return null;
+            }
+
+            string content = ReadContent(requestInformation);
+            if (string.IsNullOrEmpty(content))
+            {
+                return null;
+            }
+
+            using JsonDocument body = JsonDocument.Parse(content);
+            if (body.RootElement.TryGetProperty("customSecurityAttributes", out JsonElement attributeSets)
+                && attributeSets.TryGetProperty(AttributeSetName, out JsonElement attributeSet)
+                && attributeSet.TryGetProperty(AttributeName, out JsonElement attributeValue))
+            {
+                return attributeValue.GetString();
+            }
+            return null;
         }
 
         /// <summary>
