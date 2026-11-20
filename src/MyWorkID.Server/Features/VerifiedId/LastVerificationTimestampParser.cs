@@ -59,18 +59,7 @@ namespace MyWorkID.Server.Features.VerifiedId
             lastVerifiedAt = default;
             verifiedForAction = null;
 
-            IDictionary<string, object>? attributeSets = user
-                ?.CustomSecurityAttributes
-                ?.AdditionalData;
-            if (
-                attributeSets is null
-                || !TryGetCaseInsensitive(attributeSets, attributeSetName, out object? attributeSet)
-            )
-            {
-                return false;
-            }
-
-            string? rawValue = GetAttributeValue(attributeSet, attributeName);
+            string? rawValue = GetRawAttributeValue(user, attributeSetName, attributeName);
             if (string.IsNullOrWhiteSpace(rawValue))
             {
                 return false;
@@ -108,6 +97,33 @@ namespace MyWorkID.Server.Features.VerifiedId
                 DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
                 out lastVerifiedAt
             );
+        }
+
+        /// <summary>
+        /// Reads the unparsed value stored in the configured custom security attribute.
+        /// </summary>
+        /// <param name="user">The Graph user including its <c>customSecurityAttributes</c>.</param>
+        /// <param name="attributeSetName">Name of the custom security attribute set.</param>
+        /// <param name="attributeName">Name of the custom security attribute inside the set.</param>
+        /// <returns>The stored value, or <c>null</c> if the attribute is not set.</returns>
+        public static string? GetRawAttributeValue(
+            User? user,
+            string attributeSetName,
+            string attributeName
+        )
+        {
+            IDictionary<string, object>? attributeSets = user
+                ?.CustomSecurityAttributes
+                ?.AdditionalData;
+            if (
+                attributeSets is null
+                || !TryGetCaseInsensitive(attributeSets, attributeSetName, out object? attributeSet)
+            )
+            {
+                return null;
+            }
+
+            return GetAttributeValue(attributeSet, attributeName);
         }
 
         /// <summary>
