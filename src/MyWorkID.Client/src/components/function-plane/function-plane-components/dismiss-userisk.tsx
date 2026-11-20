@@ -103,11 +103,22 @@ export const DismissUserRiskPanel = memo(function DismissUserRiskPanel({
 
   // auto-dismiss risk when returning from authentication redirect. The redirect is consumed once
   // its request is dispatched, so a later toggle of comingFromRedirect or canDismiss (e.g. after a
-  // failed verification status poll recovers) cannot dispatch another dismissal. Until then the
-  // request waits while dismissing is not allowed.
+  // failed verification status poll recovers) cannot dispatch another dismissal; retrying after a
+  // failure stays under the user's control. Until then the request waits while dismissing is not
+  // allowed.
   const [redirectConsumed, setRedirectConsumed] = useState(false);
   if (open && comingFromRedirect && canDismiss && !redirectConsumed) {
     setRedirectConsumed(true);
+  }
+
+  // Only a new panel visit (including the return from a verification started here) may dismiss
+  // automatically again.
+  const [previousOpen, setPreviousOpen] = useState(open);
+  if (open !== previousOpen) {
+    setPreviousOpen(open);
+    if (!open) {
+      setRedirectConsumed(false);
+    }
   }
 
   const triggerDismissFromRedirect = useEffectEvent(() => {
