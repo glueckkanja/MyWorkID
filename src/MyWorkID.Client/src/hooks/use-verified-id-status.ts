@@ -28,9 +28,9 @@ export const useVerifiedIdStatus = (): VerifiedIdStatus => {
   const [error, setError] = useState(false);
   const [response, setResponse] = useState<TVerifiedIdStatusResponse>();
   const [confirmingVerification, setConfirmingVerification] = useState(false);
-  // Timestamp (in milliseconds) of a verification that was already used for an action while every action
-  // requires its own verification. The server marks it as used, but the directory can lag behind, so a
-  // response that still reports this verification must not unlock the actions again.
+  // Timestamp (in milliseconds) of the newest verification that was already used for an action while every
+  // action requires its own verification. The server marks it as used, but the directory can lag behind, so a
+  // response that still reports this or any older verification must not unlock the actions again.
   const [usedVerificationAtInMilliseconds, setUsedVerificationAtInMilliseconds] = useState<number>();
   // Current time in milliseconds on the server's clock, so a skewed device clock cannot make a
   // valid verification look expired (or an expired one look valid).
@@ -166,7 +166,8 @@ export const useVerifiedIdStatus = (): VerifiedIdStatus => {
   const verificationAlreadyUsed =
     requiresVerificationPerAction &&
     lastVerifiedAtInMilliseconds !== undefined &&
-    lastVerifiedAtInMilliseconds === usedVerificationAtInMilliseconds;
+    usedVerificationAtInMilliseconds !== undefined &&
+    lastVerifiedAtInMilliseconds <= usedVerificationAtInMilliseconds;
   const isVerified =
     !verificationAlreadyUsed &&
     isVerificationValidAt(response?.isVerified ?? false, validUntil, nowInMilliseconds);
@@ -175,7 +176,14 @@ export const useVerifiedIdStatus = (): VerifiedIdStatus => {
     if (!requiresVerificationPerAction) {
       return;
     }
-    setUsedVerificationAtInMilliseconds(lastVerifiedAtInMilliseconds);
+    if (lastVerifiedAtInMilliseconds !== undefined) {
+      // Only ever move the cutoff forward, so a stale response cannot re-enable an older verification.
+      setUsedVerificationAtInMilliseconds((previousUsedVerificationAtInMilliseconds) =>
+        previousUsedVerificationAtInMilliseconds === undefined
+          ? lastVerifiedAtInMilliseconds
+          : Math.max(previousUsedVerificationAtInMilliseconds, lastVerifiedAtInMilliseconds),
+      );
+    }
     refresh();
   }, [requiresVerificationPerAction, lastVerifiedAtInMilliseconds, refresh]);
 
