@@ -156,28 +156,15 @@ namespace MyWorkID.Server.Features.VerifiedId
             // before this claim was stored land first, so exactly one of the concurrent requests reads its own claim.
             await Task.Delay(CLAIM_SETTLE_DELAY, _timeProvider, cancellationToken);
 
-            // A read that still returns the claimed verification has not caught up with the claim yet. Only another
-            // value proves that a concurrent request overwrote it, so such a read is repeated for a while instead of
-            // giving up the verification that was already marked as used.
-            string? storedValue = null;
-            for (int readAttempt = 1; readAttempt <= CLAIM_READ_MAXIMUM_ATTEMPTS; readAttempt++)
-            {
-                if (readAttempt > 1)
-                {
-                    await Task.Delay(CLAIM_READ_RETRY_INTERVAL, _timeProvider, cancellationToken);
-                }
-
-                User? user = await GetUserWithCustomSecurityAttributesAsync(userId, cancellationToken);
-                storedValue = LastVerificationTimestampParser.GetRawAttributeValue(
-                    user,
-                    attributeSetName,
-                    attributeName
-                );
-                if (!IsClaimedVerificationStillStored(user, attributeSetName, attributeName, verificationState))
-                {
-                    break;
-                }
-            }
+            // Only another value than the claimed verification proves that a concurrent request overwrote the claim,
+            // so the verification that was already marked as used is not given up because of a lagging read.
+            string? storedValue = await ReadTargetSecurityAttributeOnceClaimIsReadableAsync(
+                userId,
+                attributeSetName,
+                attributeName,
+                user => IsClaimedVerificationStillStored(user, attributeSetName, attributeName, verificationState),
+                cancellationToken
+            );
 
             if (!string.Equals(storedValue, claimedValue, StringComparison.Ordinal))
             {
@@ -205,10 +192,21 @@ namespace MyWorkID.Server.Features.VerifiedId
         )
         {
             (string attributeSetName, string attributeName) = GetTargetSecurityAttribute();
-            string? storedValue = await ReadTargetSecurityAttributeAsync(
+            // A read that still returns the verification from before the claim must not keep the verification used.
+            string? storedValue = await ReadTargetSecurityAttributeOnceClaimIsReadableAsync(
                 claim.UserId,
                 attributeSetName,
                 attributeName,
+                user =>
+                    string.Equals(
+                        LastVerificationTimestampParser.GetRawAttributeValue(
+                            user,
+                            attributeSetName,
+                            attributeName
+                        ),
+                        claim.ReleasedValue,
+                        StringComparison.Ordinal
+                    ),
                 cancellationToken
             );
             if (!string.Equals(storedValue, claim.ClaimedValue, StringComparison.Ordinal))
@@ -319,6 +317,43 @@ namespace MyWorkID.Server.Features.VerifiedId
             await _graphClient
                 .Users[userId]
                 .PatchAsync(requestBody, cancellationToken: cancellationToken);
+        }
+
+        /// <summary>
+        /// Reads the attribute and reads it again while <paramref name="isClaimNotReadableYet"/> reports that the
+        /// directory still returns the value from before a claim was written, up to
+        /// <see cref="CLAIM_READ_MAXIMUM_ATTEMPTS"/> times.
+        /// </summary>
+        /// <returns>The last value read.</returns>
+        private async Task<string?> ReadTargetSecurityAttributeOnceClaimIsReadableAsync(
+            string userId,
+            string attributeSetName,
+            string attributeName,
+            Func<User?, bool> isClaimNotReadableYet,
+            CancellationToken cancellationToken
+        )
+        {
+            string? storedValue = null;
+            for (int readAttempt = 1; readAttempt <= CLAIM_READ_MAXIMUM_ATTEMPTS; readAttempt++)
+            {
+                if (readAttempt > 1)
+                {
+                    await Task.Delay(CLAIM_READ_RETRY_INTERVAL, _timeProvider, cancellationToken);
+                }
+
+                User? user = await GetUserWithCustomSecurityAttributesAsync(userId, cancellationToken);
+                storedValue = LastVerificationTimestampParser.GetRawAttributeValue(
+                    user,
+                    attributeSetName,
+                    attributeName
+                );
+                if (!isClaimNotReadableYet(user))
+                {
+                    break;
+                }
+            }
+
+            return storedValue;
         }
 
         /// <summary>

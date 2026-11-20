@@ -174,6 +174,32 @@ namespace MyWorkID.Server.UnitTests.Features.VerifiedId
         }
 
         [Fact]
+        public async Task ReleaseVerificationClaimAsync_WhenDirectoryReturnsVerificationFromBeforeClaimAtFirst_WaitsForClaimAndRestoresVerification()
+        {
+            var claim = new VerifiedIdVerificationClaim("user-id", VerificationAttributeValue.CreateClaimed(_now), VerificationAttributeValue.Create(_now.AddMinutes(-1), VerifiedIdAction.DismissUserRisk));
+            IRequestAdapter requestAdapter = CreateRequestAdapterStoringWrittenValue(claim.ClaimedValue, staleReadCount: 3, valueBeforeInitialValue: claim.ReleasedValue);
+            var sut = CreateService(enabled: true, validityInMinutes: 0, requestAdapter);
+
+            await sut.ReleaseVerificationClaimAsync(claim, TestContext.Current.CancellationToken);
+
+            GetWrittenAttributeValues(requestAdapter).Should().Equal(claim.ReleasedValue);
+            GetReadCount(requestAdapter).Should().Be(4);
+        }
+
+        [Fact]
+        public async Task ReleaseVerificationClaimAsync_WhenDirectoryNeverReturnsClaim_KeepsAttribute()
+        {
+            var claim = new VerifiedIdVerificationClaim("user-id", VerificationAttributeValue.CreateClaimed(_now), VerificationAttributeValue.Create(_now.AddMinutes(-1), VerifiedIdAction.ResetPassword));
+            IRequestAdapter requestAdapter = CreateRequestAdapterStoringWrittenValue(claim.ReleasedValue);
+            var sut = CreateService(enabled: true, validityInMinutes: 0, requestAdapter);
+
+            await sut.ReleaseVerificationClaimAsync(claim, TestContext.Current.CancellationToken);
+
+            GetWrittenAttributeValues(requestAdapter).Should().BeEmpty();
+            GetReadCount(requestAdapter).Should().Be(VerifiedIdRequirementService.CLAIM_READ_MAXIMUM_ATTEMPTS);
+        }
+
+        [Fact]
         public async Task ReleaseVerificationClaimAsync_WhenAttributeWasOverwritten_KeepsNewValue()
         {
             var claim = new VerifiedIdVerificationClaim("user-id", VerificationAttributeValue.CreateClaimed(_now), VerificationAttributeValue.Create(_now.AddMinutes(-1), VerifiedIdAction.ResetPassword));
@@ -467,13 +493,14 @@ namespace MyWorkID.Server.UnitTests.Features.VerifiedId
         /// <summary>
         /// Creates a request adapter that returns a user holding <paramref name="initialValue"/> and, like Graph,
         /// returns the last written attribute value once a request overwrote it. Like a lagging directory, the
-        /// first <paramref name="staleReadCount"/> reads after a write still return the previous value.
+        /// first <paramref name="staleReadCount"/> reads after a write still return the previous value. With
+        /// <paramref name="valueBeforeInitialValue"/>, the initial value counts as just written over it.
         /// </summary>
-        private static IRequestAdapter CreateRequestAdapterStoringWrittenValue(string initialValue, int staleReadCount = 0)
+        private static IRequestAdapter CreateRequestAdapterStoringWrittenValue(string initialValue, int staleReadCount = 0, string? valueBeforeInitialValue = null)
         {
-            User previousUser = CreateUser(initialValue);
-            User currentUser = previousUser;
-            int remainingStaleReadCount = 0;
+            User previousUser = CreateUser(valueBeforeInitialValue ?? initialValue);
+            User currentUser = CreateUser(initialValue);
+            int remainingStaleReadCount = valueBeforeInitialValue is null ? 0 : staleReadCount;
             var requestAdapter = Substitute.For<IRequestAdapter>();
             requestAdapter.SerializationWriterFactory.Returns(new JsonSerializationWriterFactory());
             requestAdapter.SendAsync(
