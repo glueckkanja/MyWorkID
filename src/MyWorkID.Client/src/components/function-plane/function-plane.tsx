@@ -269,16 +269,21 @@ const FunctionPlane = ({ maxDismissibleRiskLevel }: AppProps) => {
   );
 
   const handleVerified = useCallback(
-    (verificationAction?: VerifiedIdAction) => {
+    (verificationAction: VerifiedIdAction | undefined, abandoned: boolean) => {
       const awaitedAction = panelAwaitingVerification
         ? VERIFIED_ID_ACTION_BY_PANEL[panelAwaitingVerification]
         : undefined;
       const wasAbandoned =
-        verificationAction !== undefined &&
-        verificationAction !== awaitedAction;
+        abandoned ||
+        (verificationAction !== undefined &&
+          verificationAction !== awaitedAction);
       // The user left the verification before it completed. With a validity window it still counts,
       // but when every action requires its own verification it must not unlock the action later.
-      if (wasAbandoned && requiresVerificationPerAction) {
+      if (
+        wasAbandoned &&
+        requiresVerificationPerAction &&
+        verificationAction !== undefined
+      ) {
         discardVerification(verificationAction)
           .catch((error) => {
             console.error("Could not discard the identity verification", error);
