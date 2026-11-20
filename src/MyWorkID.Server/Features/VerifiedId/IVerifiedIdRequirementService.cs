@@ -70,7 +70,8 @@ namespace MyWorkID.Server.Features.VerifiedId
 
         /// <summary>
         /// Restores the claimed verification after the action failed, unless the attribute was overwritten in the
-        /// meantime (e.g. by a new verification).
+        /// meantime (e.g. by a new verification). While the directory still returns the verification from before the
+        /// claim, the attribute is read again like in <see cref="TryClaimVerificationAsync"/>.
         /// </summary>
         /// <param name="claim">The claim returned by <see cref="TryClaimVerificationAsync"/>.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
