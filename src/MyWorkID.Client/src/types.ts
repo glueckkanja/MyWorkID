@@ -80,8 +80,15 @@ export type PasswordResetPanelProps = {
 export type ValidateIdentityPanelProps = {
   open: boolean;
   onClose: () => void;
-  /** Called after the server confirmed a successful verification, with the action it was started for. */
-  onVerified?: (verificationAction?: VerifiedIdAction) => void;
+  /**
+   * Called after the server confirmed a successful verification started from this panel, with the
+   * action it was started for. `abandoned` is true when the panel was left before it completed; such a
+   * verification must not resume the action.
+   */
+  onVerified?: (
+    verificationAction: VerifiedIdAction | undefined,
+    abandoned: boolean,
+  ) => void;
   /** The action the verification is started for, if it was started from an action panel. */
   verificationAction?: VerifiedIdAction;
   /** Current verification requirement/state, used to explain the validity window to the user. */
