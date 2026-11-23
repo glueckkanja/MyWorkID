@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { memo, useEffect, useEffectEvent, useState } from "react";
 import { Panel } from "../../panel";
 import { CreateTapPanelProps, TapState } from "../../../types";
 import {
@@ -13,20 +13,44 @@ import { CircleXIcon } from "@/components/ui/icons/circle-x-icon";
 import { CheckmarkIcon } from "@/components/ui/icons/checkmark-icon";
 import { CopyDocumentIcon } from "@/components/ui/icons/copy-document-icon";
 import { RefreshArrowIcon } from "@/components/ui/icons/refresh-arrow-icon";
-import { InformationCircleIcon } from "@/components/ui/icons/information-circle-icon";
+import { BlockedActionNotice } from "../blocked-action-notice";
 
-export const CreateTapPanel = ({
+const PANEL_DESCRIPTION =
+  "Generate a one-time code to sign in on a new device without your regular credentials.";
+const PANEL_DESCRIPTION_WITH_PASS =
+  "Use this code to sign in on your new device. Once expired, you can generate a new pass.";
+
+export const CreateTapPanel = memo(function CreateTapPanel({
   open,
   onClose,
   comingFromRedirect,
-}: CreateTapPanelProps) => {
+  blockedReason,
+  showBlockedReason,
+  waitingForVerification,
+  onVerifyIdentity,
+  onCompleted,
+}: Readonly<CreateTapPanelProps>) {
   const [tap, setTap] = useState<TapState>({ status: "empty" });
   const [copiedTap, setCopiedTap] = useState(false);
+  // Set while the identity verification started from this panel temporarily closes it, so an
+  // existing pass survives the round trip and can still be used or revoked afterwards.
+  const [leavingForVerification, setLeavingForVerification] = useState(false);
   const { toastError, toastException } = useToast();
 
-  const createTap = () => {
-    setTap({ status: "loading" });
-    generateTAP()
+  // Expects the caller to have set the "loading" state already. A failed request keeps the pass that
+  // was shown before, because it has not been replaced.
+  const requestTemporaryAccessPass = (
+    previousTemporaryAccessPass: TapState,
+    startedRightAfterVerification = false,
+  ) => {
+    const restorePreviousTemporaryAccessPass = () => {
+      setTap(
+        previousTemporaryAccessPass.status === "ready"
+          ? previousTemporaryAccessPass
+          : { status: "empty" },
+      );
+    };
+    generateTAP(startedRightAfterVerification)
       .then((result) => {
         const password = result.data?.temporaryAccessPassword;
         const id = result.data?.temporaryAccessPassId;
@@ -37,16 +61,29 @@ export const CreateTapPanel = ({
           !!id
         ) {
           setTap({ status: "ready", id, password });
+          onCompleted?.();
         } else {
-          setTap({ status: "empty" });
+          restorePreviousTemporaryAccessPass();
           toastError();
         }
       })
       .catch((error) => {
-        setTap({ status: "empty" });
+        restorePreviousTemporaryAccessPass();
         toastException(error);
       });
   };
+
+  const createTap = () => {
+    setTap({ status: "loading" });
+    requestTemporaryAccessPass(tap);
+  };
+
+  const verifyIdentity = onVerifyIdentity
+    ? () => {
+        setLeavingForVerification(true);
+        onVerifyIdentity();
+      }
+    : undefined;
 
   const revokeTap = () => {
     if (tap.status !== "ready") {
@@ -84,23 +121,61 @@ export const CreateTapPanel = ({
       });
   };
 
-  // auto start TAP creation if coming from redirect
-  useEffect(() => {
-    if (open && comingFromRedirect) {
-      createTap();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, comingFromRedirect]);
+  // auto start TAP creation if coming from redirect: the loading state is set while rendering,
+  // the request itself is sent from the effect below. The redirect is consumed once its request
+  // is dispatched, so a later toggle of comingFromRedirect (e.g. after a failed verification
+  // status poll recovers) cannot generate another TAP. Until then the request waits while blocked.
+  const [redirectConsumed, setRedirectConsumed] = useState(false);
+  const [passReplacedByRedirect, setPassReplacedByRedirect] =
+    useState<TapState>({ status: "empty" });
+  if (open && comingFromRedirect && !blockedReason && !redirectConsumed) {
+    setRedirectConsumed(true);
+    setPassReplacedByRedirect(tap);
+    setTap({ status: "loading" });
+  }
 
-  // clear TAP state when panel is closed
+  const requestTemporaryAccessPassFromRedirect = useEffectEvent(() => {
+    requestTemporaryAccessPass(passReplacedByRedirect, true);
+  });
   useEffect(() => {
-    if (!open) {
-      setTap({ status: "empty" });
-      setCopiedTap(false);
+    if (redirectConsumed) {
+      requestTemporaryAccessPassFromRedirect();
     }
-  }, [open]);
+  }, [redirectConsumed]);
+
+  // clear TAP state when panel is closed, unless it only closed for the identity verification
+  // started from it: cancelling or failing that verification must not lose the still active pass.
+  const [previousOpen, setPreviousOpen] = useState(open);
+  if (open !== previousOpen) {
+    setPreviousOpen(open);
+    setLeavingForVerification(false);
+    if (!open) {
+      if (!leavingForVerification) {
+        setTap({ status: "empty" });
+      }
+      setCopiedTap(false);
+      // The next verification or redirect may start a pass again.
+      setRedirectConsumed(false);
+    }
+  }
 
   const renderBody = () => {
+    // An existing pass stays usable (and revocable) even when generating a new one is blocked,
+    // so only replace the body while there is no pass to revoke.
+    const hasExistingTemporaryAccessPass =
+      tap.status === "ready" || tap.status === "revoking";
+    if (blockedReason && !hasExistingTemporaryAccessPass) {
+      return (
+        <BlockedActionNotice
+          reason={blockedReason}
+          actionLabel="Generate Access Pass"
+          onVerifyIdentity={verifyIdentity}
+          showReason={showBlockedReason}
+          waiting={waitingForVerification}
+        />
+      );
+    }
+
     if (tap.status === "loading" || tap.status === "revoking") {
       return (
         <div className="panel-loading">
@@ -111,22 +186,13 @@ export const CreateTapPanel = ({
 
     if (tap.status === "empty") {
       return (
-        <>
-          <div className="form-hint">
-            <InformationCircleIcon />
-            <span>
-              Generate a one-time code to sign in on a new device without your
-              regular credentials.
-            </span>
-          </div>
-          <button
-            type="button"
-            className="panel-primary-button"
-            onClick={createTap}
-          >
-            Generate Access Pass
-          </button>
-        </>
+        <button
+          type="button"
+          className="panel-primary-button"
+          onClick={createTap}
+        >
+          Generate Access Pass
+        </button>
       );
     }
 
@@ -157,21 +223,26 @@ export const CreateTapPanel = ({
             )}
           </button>
         </div>
-        <div className="form-hint">
-          <InformationCircleIcon />
-          <span>
-            Use this code to sign in on your new device. Once expired, you can
-            generate a new pass.
-          </span>
-        </div>
-        <button
-          type="button"
-          className="panel-secondary-button"
-          onClick={createTap}
-        >
-          <RefreshArrowIcon />
-          Create New Pass
-        </button>
+        {blockedReason ? (
+          <BlockedActionNotice
+            reason={blockedReason}
+            actionLabel="Create New Pass"
+            actionIcon={<RefreshArrowIcon />}
+            actionVariant="secondary"
+            onVerifyIdentity={verifyIdentity}
+            showReason={showBlockedReason}
+            waiting={waitingForVerification}
+          />
+        ) : (
+          <button
+            type="button"
+            className="panel-secondary-button"
+            onClick={createTap}
+          >
+            <RefreshArrowIcon />
+            Create New Pass
+          </button>
+        )}
         <button
           type="button"
           className="panel-secondary-button panel-secondary-button--danger"
@@ -188,10 +259,14 @@ export const CreateTapPanel = ({
     <Panel
       open={open}
       title="Temporary Access Pass"
-      subtitle="A one-time code to sign in without your regular credentials."
+      subtitle={
+        tap.status === "ready" || tap.status === "revoking"
+          ? PANEL_DESCRIPTION_WITH_PASS
+          : PANEL_DESCRIPTION
+      }
       onClose={onClose}
     >
       {renderBody()}
     </Panel>
   );
-};
+});
