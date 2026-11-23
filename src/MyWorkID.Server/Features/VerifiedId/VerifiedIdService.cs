@@ -182,7 +182,7 @@ namespace MyWorkID.Server.Features.VerifiedId
         )
         {
             using StreamReader streamReader = new StreamReader(context.Request.Body);
-            string callbackBody = await streamReader.ReadToEndAsync();
+            string callbackBody = await streamReader.ReadToEndAsync(context.RequestAborted);
 
             CreatePresentationRequestCallback? parsedBody = null;
 
