@@ -57,16 +57,18 @@ namespace MyWorkID.Server.Features.VerifiedId
                 return false;
             }
 
-            foreach (VerifiedIdAction candidate in Enum.GetValues<VerifiedIdAction>())
+            VerifiedIdAction? matchingAction = Enum.GetValues<VerifiedIdAction>()
+                .Where(candidate => string.Equals(candidate.ToString(), value, StringComparison.Ordinal))
+                .Select(candidate => (VerifiedIdAction?)candidate)
+                .FirstOrDefault();
+
+            if (!matchingAction.HasValue)
             {
-                if (string.Equals(candidate.ToString(), value, StringComparison.Ordinal))
-                {
-                    action = candidate;
-                    return true;
-                }
+                return false;
             }
 
-            return false;
+            action = matchingAction.Value;
+            return true;
         }
 
         private static string FormatTimestamp(DateTimeOffset timestamp)
