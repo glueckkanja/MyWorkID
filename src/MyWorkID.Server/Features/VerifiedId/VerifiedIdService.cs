@@ -52,10 +52,13 @@ namespace MyWorkID.Server.Features.VerifiedId
         /// Creates a presentation request for the specified user.
         /// </summary>
         /// <param name="userId">The ID of the user.</param>
+        /// <param name="action">The action the verification is started for, if any.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The response of the create presentation request.</returns>
         /// <exception cref="CreatePresentationException">Thrown when the presentation request fails.</exception>
         public async Task<CreatePresentationResponse?> CreatePresentationRequest(
             string userId,
+            VerifiedIdAction? action,
             CancellationToken cancellationToken
         )
         {
@@ -71,7 +74,7 @@ namespace MyWorkID.Server.Features.VerifiedId
                 {
                     {
                         "Authorization",
-                        $"Bearer {JwtTokenProvider.GenerateToken(userId, jwtSigningKey)}"
+                        $"Bearer {JwtTokenProvider.GenerateToken(userId, jwtSigningKey, action)}"
                     },
                 }
             );
@@ -90,8 +93,9 @@ namespace MyWorkID.Server.Features.VerifiedId
             List<RequestCredential> credentialList = new()
             {
                 new RequestCredential(
-                    type: "VerifiedEmployee",
+                    type: Strings.VERIFIED_ID_VERIFIED_EMPLOYEE_CREDENTIAL_TYPE,
                     purpose: "Verify users identity",
+                    acceptedIssuers: [_verifiedIdOptions.DecentralizedIdentifier!],
                     configuration: new Entities.Configuration(validation)
                 ),
             };
@@ -178,7 +182,7 @@ namespace MyWorkID.Server.Features.VerifiedId
         )
         {
             using StreamReader streamReader = new StreamReader(context.Request.Body);
-            string callbackBody = await streamReader.ReadToEndAsync();
+            string callbackBody = await streamReader.ReadToEndAsync(context.RequestAborted);
 
             CreatePresentationRequestCallback? parsedBody = null;
 
@@ -210,11 +214,13 @@ namespace MyWorkID.Server.Features.VerifiedId
         /// Handles the presentation callback for the specified user.
         /// </summary>
         /// <param name="userId">The ID of the user.</param>
+        /// <param name="action">The action the verification was started for, if any. The recorded verification only unlocks this action when every action requires its own verification.</param>
         /// <param name="callbackBody">The callback body.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
         /// <exception cref="PresentationCallbackException">Thrown when the callback handling fails.</exception>
         public async Task HandlePresentationCallback(
             string userId,
+            VerifiedIdAction? action,
             CreatePresentationRequestCallback callbackBody
         )
         {
@@ -241,13 +247,97 @@ namespace MyWorkID.Server.Features.VerifiedId
                     );
                 }
 
+                if (!await IsCredentialBoundToUser(userId, callbackBody))
+                {
+                    await NotifyVerificationFailed(
+                        userId,
+                        Strings.ERROR_VERIFIED_ID_CREDENTIAL_NOT_BOUND_TO_USER
+                    );
+                    return;
+                }
+
                 User requestBody = CreateSetTargetSecurityAttributeRequestBody(
-                    DateTime.UtcNow.ToString("O")
+                    VerificationAttributeValue.Create(DateTimeOffset.UtcNow, action)
                 );
 
                 await _graphClient.Users[userId].PatchAsync(requestBody);
                 await NotifyVerificationSuccess(userId);
             }
+        }
+
+        /// <summary>
+        /// Checks that the presentation contains a <c>VerifiedEmployee</c> credential issued by the
+        /// configured authority whose <c>revocationId</c> claim (the user's userPrincipalName) matches the
+        /// given user. Without this
+        /// check, anyone with access to a user's session could present their own credential and record a
+        /// verification for that user.
+        /// </summary>
+        /// <param name="userId">The object ID of the user the verification is recorded for.</param>
+        /// <param name="callbackBody">The verified presentation callback.</param>
+        /// <returns><c>true</c> if a matching credential was presented.</returns>
+        private async Task<bool> IsCredentialBoundToUser(
+            string userId,
+            CreatePresentationRequestCallback callbackBody
+        )
+        {
+            string? trustedIssuer = _verifiedIdOptions.DecentralizedIdentifier;
+            List<VerifiedCredentialsData> trustedCredentials = (
+                callbackBody.VerifiedCredentialsData ?? []
+            )
+                .Where(credential =>
+                    !string.IsNullOrWhiteSpace(trustedIssuer)
+                    && string.Equals(credential.Issuer, trustedIssuer, StringComparison.Ordinal)
+                    && (credential.Type ?? []).Contains(
+                        Strings.VERIFIED_ID_VERIFIED_EMPLOYEE_CREDENTIAL_TYPE,
+                        StringComparer.Ordinal
+                    )
+                )
+                .ToList();
+            if (trustedCredentials.Count == 0)
+            {
+                _logger.LogWarning(
+                    "Verified ID presentation for user {UserId} contains no VerifiedEmployee credential from the trusted issuer.",
+                    userId
+                );
+                return false;
+            }
+
+            User? user = await _graphClient
+                .Users[userId]
+                .GetAsync(requestConfiguration =>
+                {
+                    requestConfiguration.QueryParameters.Select = ["id", "userPrincipalName"];
+                });
+            string? userPrincipalName = user?.UserPrincipalName;
+            if (string.IsNullOrWhiteSpace(userPrincipalName))
+            {
+                _logger.LogWarning(
+                    "Could not resolve the userPrincipalName of user {UserId}.",
+                    userId
+                );
+                return false;
+            }
+
+            bool isBound = trustedCredentials.Any(credential =>
+                credential.Claims is not null
+                && credential.Claims.TryGetValue(
+                    Strings.VERIFIED_ID_USER_PRINCIPAL_NAME_CLAIM,
+                    out string? credentialUserPrincipalName
+                )
+                && string.Equals(
+                    credentialUserPrincipalName,
+                    userPrincipalName,
+                    StringComparison.OrdinalIgnoreCase
+                )
+            );
+            if (!isBound)
+            {
+                _logger.LogWarning(
+                    "Verified ID presentation for user {UserId} was made with a credential of a different user.",
+                    userId
+                );
+            }
+            return isBound;
         }
 
         /// <summary>
@@ -292,30 +382,11 @@ namespace MyWorkID.Server.Features.VerifiedId
         /// <returns>The user object with the target security attribute set.</returns>
         public User CreateSetTargetSecurityAttributeRequestBody(string targetSecurityAttributeValue)
         {
-            return new User
-            {
-                CustomSecurityAttributes = new CustomSecurityAttributeValue
-                {
-                    AdditionalData = new Dictionary<string, object>
-                    {
-                        {
-                            _verifiedIdOptions.TargetSecurityAttributeSet!,
-                            new CustomSecurityAttributeValue()
-                            {
-                                OdataType =
-                                    "#Microsoft.DirectoryServices.CustomSecurityAttributeValue",
-                                AdditionalData = new Dictionary<string, object>
-                                {
-                                    {
-                                        _verifiedIdOptions.TargetSecurityAttribute!,
-                                        targetSecurityAttributeValue
-                                    },
-                                },
-                            }
-                        },
-                    },
-                },
-            };
+            return TargetSecurityAttributeRequestBody.Create(
+                _verifiedIdOptions.TargetSecurityAttributeSet!,
+                _verifiedIdOptions.TargetSecurityAttribute!,
+                targetSecurityAttributeValue
+            );
         }
     }
 }
