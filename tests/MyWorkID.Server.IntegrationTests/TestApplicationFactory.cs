@@ -39,6 +39,12 @@ namespace MyWorkID.Server.IntegrationTests
             builder.UseEnvironment("Test");
             builder.ConfigureHostConfiguration(config =>
             {
+                // Every test host would otherwise watch the appsettings files for changes. The hosts are not disposed,
+                // so on Linux the watchers exhaust the inotify instance limit (128) once enough tests ran.
+                config.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["hostBuilder:reloadConfigOnChange"] = "false",
+                });
                 config.SetBasePath(Directory.GetCurrentDirectory());
                 config.AddJsonFile($"TestSettings/validMinimalSettings.json", optional: false, reloadOnChange: false);
             });

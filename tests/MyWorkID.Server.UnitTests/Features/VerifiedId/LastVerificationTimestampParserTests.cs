@@ -262,6 +262,20 @@ namespace MyWorkID.Server.UnitTests.Features.VerifiedId
             }
             VerificationAttributeValue.CreateUsed(latestTimestamp).Length
                 .Should().BeLessThanOrEqualTo(VerificationAttributeValue.MAXIMUM_LENGTH);
+            VerificationAttributeValue.CreateClaimed(latestTimestamp).Length
+                .Should().BeLessThanOrEqualTo(VerificationAttributeValue.MAXIMUM_LENGTH);
+        }
+
+        [Fact]
+        public void VerificationAttributeValue_CreateClaimed_IsUniqueAndNotRecognizedAsVerification()
+        {
+            string firstClaim = VerificationAttributeValue.CreateClaimed(_timestamp);
+            string secondClaim = VerificationAttributeValue.CreateClaimed(_timestamp);
+
+            firstClaim.Should().StartWith("used-v1:2026-10-20T08:30:15Z;");
+            firstClaim.Should().NotBe(secondClaim);
+            LastVerificationTimestampParser.TryGetLastVerification(CreateUserWithUntypedAttribute(firstClaim), AttributeSetName, AttributeName, out _, out _)
+                .Should().BeFalse();
         }
 
         [Fact]

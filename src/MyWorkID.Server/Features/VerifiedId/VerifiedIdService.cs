@@ -20,6 +20,7 @@ namespace MyWorkID.Server.Features.VerifiedId
         private readonly GraphServiceClient _graphClient;
         private readonly IVerifiedIdSignalRRepository _verifiedIdSignalRRepository;
         private readonly IHubContext<VerifiedIdHub, IVerifiedIdHub> _hubContext;
+        private readonly IVerifiedIdRequirementService _verifiedIdRequirementService;
         private readonly ILogger _logger;
 
         /// <summary>
@@ -30,6 +31,7 @@ namespace MyWorkID.Server.Features.VerifiedId
         /// <param name="graphClient">The Graph service client.</param>
         /// <param name="verifiedIdSignalRRepository">The SignalR repository for Verified ID operations.</param>
         /// <param name="hubContext">The SignalR hub context.</param>
+        /// <param name="verifiedIdRequirementService">The service that manages the verification state.</param>
         /// <param name="logger">The logger instance.</param>
         public VerifiedIdService(
             HttpClient verifiedIdClient,
@@ -37,6 +39,7 @@ namespace MyWorkID.Server.Features.VerifiedId
             GraphServiceClient graphClient,
             IVerifiedIdSignalRRepository verifiedIdSignalRRepository,
             IHubContext<VerifiedIdHub, IVerifiedIdHub> hubContext,
+            IVerifiedIdRequirementService verifiedIdRequirementService,
             ILogger<VerifiedIdService> logger
         )
         {
@@ -45,6 +48,7 @@ namespace MyWorkID.Server.Features.VerifiedId
             _graphClient = graphClient;
             _verifiedIdSignalRRepository = verifiedIdSignalRRepository;
             _hubContext = hubContext;
+            _verifiedIdRequirementService = verifiedIdRequirementService;
             _logger = logger;
         }
 
@@ -157,7 +161,8 @@ namespace MyWorkID.Server.Features.VerifiedId
         /// Hides the QR code for the specified user.
         /// </summary>
         /// <param name="userId">The ID of the user.</param>
-        public async Task HideQrCodeForUser(string userId)
+        /// <param name="requestId">The ID of the presentation request whose QR code was scanned.</param>
+        public async Task HideQrCodeForUser(string userId, string? requestId)
         {
             if (
                 !_verifiedIdOptions.DisableQrCodeHide
@@ -167,7 +172,7 @@ namespace MyWorkID.Server.Features.VerifiedId
                 )
             )
             {
-                await _hubContext.Clients.Clients(connections).HideQrCode();
+                await _hubContext.Clients.Clients(connections).HideQrCode(requestId);
             }
         }
 
@@ -233,6 +238,7 @@ namespace MyWorkID.Server.Features.VerifiedId
             {
                 await NotifyVerificationFailed(
                     userId,
+                    callbackBody.RequestId,
                     callbackBody.Error?.Message ?? "Verification failed"
                 );
                 return;
@@ -251,17 +257,49 @@ namespace MyWorkID.Server.Features.VerifiedId
                 {
                     await NotifyVerificationFailed(
                         userId,
+                        callbackBody.RequestId,
                         Strings.ERROR_VERIFIED_ID_CREDENTIAL_NOT_BOUND_TO_USER
                     );
                     return;
                 }
 
+                DateTimeOffset verifiedAt = DateTimeOffset.UtcNow;
                 User requestBody = CreateSetTargetSecurityAttributeRequestBody(
-                    VerificationAttributeValue.Create(DateTimeOffset.UtcNow, action)
+                    VerificationAttributeValue.Create(verifiedAt, action)
                 );
 
                 await _graphClient.Users[userId].PatchAsync(requestBody);
-                await NotifyVerificationSuccess(userId);
+                await NotifyVerificationSuccess(userId, callbackBody.RequestId);
+                await RestoreVerificationOverwrittenByDiscardAsync(userId, verifiedAt, action);
+            }
+        }
+
+        /// <summary>
+        /// Restores the recorded verification if a concurrent discard of an earlier verification overwrote it.
+        /// The verification was already recorded and reported, so a failure is logged instead of failing the callback.
+        /// </summary>
+        private async Task RestoreVerificationOverwrittenByDiscardAsync(
+            string userId,
+            DateTimeOffset verifiedAt,
+            VerifiedIdAction? action
+        )
+        {
+            try
+            {
+                await _verifiedIdRequirementService.RestoreVerificationOverwrittenByDiscardAsync(
+                    userId,
+                    verifiedAt,
+                    action,
+                    CancellationToken.None
+                );
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(
+                    exception,
+                    "Could not check whether a concurrent discard overwrote the Verified ID verification of user {UserId}.",
+                    userId
+                );
             }
         }
 
@@ -344,7 +382,8 @@ namespace MyWorkID.Server.Features.VerifiedId
         /// Notifies the user that verification was successful.
         /// </summary>
         /// <param name="userId">The ID of the user.</param>
-        private async Task NotifyVerificationSuccess(string userId)
+        /// <param name="requestId">The ID of the presentation request that was verified.</param>
+        private async Task NotifyVerificationSuccess(string userId, string? requestId)
         {
             if (
                 _verifiedIdSignalRRepository.TryGetConnections(
@@ -353,7 +392,7 @@ namespace MyWorkID.Server.Features.VerifiedId
                 )
             )
             {
-                await _hubContext.Clients.Clients(connections).VerificationSuccess();
+                await _hubContext.Clients.Clients(connections).VerificationSuccess(requestId);
             }
         }
 
@@ -361,8 +400,13 @@ namespace MyWorkID.Server.Features.VerifiedId
         /// Notifies the user that verification failed.
         /// </summary>
         /// <param name="userId">The ID of the user.</param>
+        /// <param name="requestId">The ID of the presentation request that failed.</param>
         /// <param name="errorMessage">The error message.</param>
-        private async Task NotifyVerificationFailed(string userId, string errorMessage)
+        private async Task NotifyVerificationFailed(
+            string userId,
+            string? requestId,
+            string errorMessage
+        )
         {
             if (
                 _verifiedIdSignalRRepository.TryGetConnections(
@@ -371,7 +415,9 @@ namespace MyWorkID.Server.Features.VerifiedId
                 )
             )
             {
-                await _hubContext.Clients.Clients(connections).VerificationFailed(errorMessage);
+                await _hubContext
+                    .Clients.Clients(connections)
+                    .VerificationFailed(requestId, errorMessage);
             }
         }
 
