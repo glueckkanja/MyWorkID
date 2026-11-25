@@ -14,11 +14,11 @@
     <PackageReference Include="Azure.Identity" Version="1.21.0" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="3.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.SpaProxy">
-      <Version>10.0.14</Version>
+      <Version>10.0.15</Version>
     </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Logging.AzureAppServices" Version="10.0.14" />
-    <PackageReference Include="Microsoft.Graph" Version="6.9.0" />
-    <PackageReference Include="Microsoft.Identity.Web" Version="4.16.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.AzureAppServices" Version="10.0.15" />
+    <PackageReference Include="Microsoft.Graph" Version="6.10.0" />
+    <PackageReference Include="Microsoft.Identity.Web" Version="4.18.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.3.1" />
   </ItemGroup>
 
