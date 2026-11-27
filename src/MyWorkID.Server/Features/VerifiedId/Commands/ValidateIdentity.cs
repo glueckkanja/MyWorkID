@@ -1,5 +1,6 @@
 ﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Identity.Web;
 using MyWorkID.Server.Common;
 using MyWorkID.Server.Features.VerifiedId.Entities;
@@ -32,20 +33,38 @@ namespace MyWorkID.Server.Features.VerifiedId.Commands
         /// </summary>
         /// <param name="verifiedIdService">The verified ID service.</param>
         /// <param name="user">The claims principal representing the user.</param>
+        /// <param name="action">Optional. The action the verification is started for. When every action requires its own verification, the verification only unlocks this action.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A result indicating the success or failure of the identity validation request.</returns>
         [Authorize(Roles = Strings.VALIDATE_IDENTITY_ROLE)]
         public static async Task<IResult> HandleAsync(
             VerifiedIdService verifiedIdService,
             ClaimsPrincipal user,
+            [FromQuery] string? action,
             CancellationToken cancellationToken
         )
         {
             string? userId = user.GetObjectId();
+            VerifiedIdAction? verifiedIdAction = null;
+            if (action is not null)
+            {
+                if (!VerificationAttributeValue.TryParseAction(action, out VerifiedIdAction parsedAction))
+                {
+                    return TypedResults.Problem(
+                        Strings.ERROR_VERIFIED_ID_UNKNOWN_ACTION,
+                        statusCode: StatusCodes.Status400BadRequest
+                    );
+                }
+                verifiedIdAction = parsedAction;
+            }
             try
             {
                 CreatePresentationResponse? response =
-                    await verifiedIdService.CreatePresentationRequest(userId!, cancellationToken);
+                    await verifiedIdService.CreatePresentationRequest(
+                        userId!,
+                        verifiedIdAction,
+                        cancellationToken
+                    );
                 return TypedResults.Created(string.Empty, response);
             }
             catch (CreatePresentationException)
