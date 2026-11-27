@@ -29,7 +29,8 @@ namespace MyWorkID.Server.UnitTests.Features.VerifiedId
             var verifiedIdSignalRRepository = Substitute.For<IVerifiedIdSignalRRepository>();
             var hubContext = Substitute.For<IHubContext<VerifiedIdHub, IVerifiedIdHub>>();
             var logger = Substitute.For<ILogger<VerifiedIdService>>();
-            var sut = new VerifiedIdService(verifiedIdClient, options, graphClient, verifiedIdSignalRRepository, hubContext, logger);
+            var verifiedIdRequirementService = Substitute.For<IVerifiedIdRequirementService>();
+            var sut = new VerifiedIdService(verifiedIdClient, options, graphClient, verifiedIdSignalRRepository, hubContext, verifiedIdRequirementService, logger);
 
             var user = sut.CreateSetTargetSecurityAttributeRequestBody(targetSecurityAttributeValue);
 
